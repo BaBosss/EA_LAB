@@ -264,11 +264,17 @@ Write-Host '=== I: delayed post-exit XML flush is collected inside bounded grace
 $reportI = 'FLUSH_' + [guid]::NewGuid().ToString('N').Substring(0,12)
 $delayedSrc = Join-Path $dataDir ($reportI + '.xml')
 $delayedDest = Join-Path $guardYes ('_mt5_auto\optimizations\' + $reportI + '.xml')
-$job = Start-Job -ScriptBlock { param($p) Start-Sleep -Seconds 7; Set-Content -LiteralPath $p -Encoding UTF8 -Value '<Workbook />' } -ArgumentList $delayedSrc
+# The launcher refuses a non-zero terminal exit (R3), and hostname.exe exits 1 on '/config:' arguments,
+# so this case uses a stub terminal that exits 0 and produces no XML itself.
+$okTerminal = Join-Path $work 'fake_terminal_ok.cmd'
+Set-Content -LiteralPath $okTerminal -Encoding ASCII -Value '@exit /b 0'
+$job = Start-Job -ScriptBlock { param($p) Start-Sleep -Seconds 7
+    # Minimal well-formed SpreadsheetML: the launcher verifies Worksheet/Table/>=2 Rows and the closing tag (R3-3).
+    Set-Content -LiteralPath $p -Encoding UTF8 -Value '<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Tester Optimizator Results"><Table><Row><Cell><Data ss:Type="String">Pass</Data></Cell></Row><Row><Cell><Data ss:Type="Number">0</Data></Cell></Row></Table></Worksheet></Workbook>' } -ArgumentList $delayedSrc
 try {
     $r = Invoke-Child (@('-NoProfile','-File', (Join-Path $guardYes 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
-        '-SetFile', $undeclaredSet, '-ReportName', $reportI, '-Terminal', $realHostname, '-DataDir', $dataDir,
-        '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '1', '-XmlFlushGraceSec', '5'))
+        '-SetFile', $undeclaredSet, '-ReportName', $reportI, '-Terminal', $okTerminal, '-DataDir', $dataDir,
+        '-CapabilityFile', $capabilityFile, '-AllowLegacyIdentity', '-Force', '-TimeoutSec', '1', '-XmlFlushGraceSec', '15'))
     $iOutText = ($r.Output -join "`n")
     Assert-Equal 'I delayed XML run exits 0 after bounded flush collection' 0 $r.ExitCode
     Assert-True 'I delayed source XML was moved into the fixture optimization destination' (Test-Path -LiteralPath $delayedDest -PathType Leaf)

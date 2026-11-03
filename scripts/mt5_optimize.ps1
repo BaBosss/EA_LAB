@@ -58,7 +58,12 @@ param(
   [Nullable[int]]$GuardBuild = $null,
   [string]$LaneId = '',
   [string]$UniversePath = '',
-  [string]$CapabilityFile = ''
+  [string]$CapabilityFile = '',
+  # Test hooks (ORDER-1707 lifecycle tests): alternate _mt5_auto root, decision log, and a mock in
+  # place of terminal64. Defaults keep production behaviour.
+  [string]$AutoDir = '',
+  [string]$DecisionLogPath = '',
+  [scriptblock]$MockProcessRunner = $null
 )
 $ErrorActionPreference = "Stop"
 if (-not (Test-Path -LiteralPath $Terminal -PathType Leaf)) {
@@ -86,48 +91,141 @@ catch {
 }
 $TesterSymbol = $symbolResolution.tester_symbol
 Write-Output "symbol preflight: logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol status=$($symbolResolution.comparison_status) economics=$($symbolResolution.economics_check) source=$($symbolResolution.capability_source)"
+
+function Test-Mt5OptimizeXmlArtifact {
+  param(
+    [Parameter(Mandatory)][string]$XmlPath,
+    [Parameter(Mandatory)][string]$ExpectedReportName,
+    [Parameter(Mandatory)][string]$ExpectedExpert,
+    [Parameter(Mandatory)][datetime]$InvocationStartUtc
+  )
+  if (-not (Test-Path -LiteralPath $XmlPath)) {
+    return [pscustomobject]@{ ok = $false; reason = "XML report does not exist at $XmlPath" }
+  }
+  $item1 = Get-Item -LiteralPath $XmlPath -ErrorAction Stop
+  if ($item1.LastWriteTimeUtc -lt $InvocationStartUtc.AddSeconds(-2)) {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "XML report LastWriteTimeUtc ($($item1.LastWriteTimeUtc.ToString('o'))) predates invocation start ($($InvocationStartUtc.ToString('o')))"
+    }
+  }
+  if ($item1.Length -le 0) {
+    return [pscustomobject]@{ ok = $false; reason = "XML report is 0 bytes at $XmlPath" }
+  }
+  $bytes1 = [System.IO.File]::ReadAllBytes($XmlPath)
+  $hash1  = [System.BitConverter]::ToString(
+    [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes1)
+  ).Replace("-", "").ToLowerInvariant()
+
+  Start-Sleep -Milliseconds 200
+
+  if (-not (Test-Path -LiteralPath $XmlPath)) {
+    return [pscustomobject]@{ ok = $false; reason = "XML report disappeared during stability check: $XmlPath" }
+  }
+  $bytes2 = [System.IO.File]::ReadAllBytes($XmlPath)
+  $hash2  = [System.BitConverter]::ToString(
+    [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes2)
+  ).Replace("-", "").ToLowerInvariant()
+
+  if (($bytes1.Length -ne $bytes2.Length) -or ($hash1 -ne $hash2)) {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "XML report size/SHA256 unstable across two reads ($($bytes1.Length)/$hash1 vs $($bytes2.Length)/$hash2)"
+    }
+  }
+
+  if ($bytes2.Length -ge 2 -and $bytes2[0] -eq 0xFF -and $bytes2[1] -eq 0xFE) {
+    $rawText = [System.Text.Encoding]::Unicode.GetString($bytes2, 2, $bytes2.Length - 2)
+  } elseif ($bytes2.Length -ge 2 -and $bytes2[0] -eq 0xFE -and $bytes2[1] -eq 0xFF) {
+    $rawText = [System.Text.Encoding]::BigEndianUnicode.GetString($bytes2, 2, $bytes2.Length - 2)
+  } elseif ($bytes2.Length -ge 3 -and $bytes2[0] -eq 0xEF -and $bytes2[1] -eq 0xBB -and $bytes2[2] -eq 0xBF) {
+    $rawText = [System.Text.Encoding]::UTF8.GetString($bytes2, 3, $bytes2.Length - 3)
+  } else {
+    $rawText = [System.Text.Encoding]::UTF8.GetString($bytes2)
+  }
+  $rawText = $rawText.TrimStart([char]0xFEFF)
+  if ($rawText.TrimEnd() -notmatch '</(?:\w+:)?Workbook>\s*$') {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "XML report does not end with a closing </Workbook> tag (truncated output)"
+    }
+  }
+
+  $xmlDoc = New-Object System.Xml.XmlDocument
+  try {
+    $xmlDoc.LoadXml($rawText)
+  } catch {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "Malformed XML in report ($XmlPath): $($_.Exception.Message)"
+    }
+  }
+
+  if (-not $xmlDoc.DocumentElement -or $xmlDoc.DocumentElement.LocalName -ne "Workbook") {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "Root XML element is not Workbook (got '$($xmlDoc.DocumentElement.LocalName)')"
+    }
+  }
+
+  $worksheets = $xmlDoc.SelectNodes("//*[local-name()='Worksheet']")
+  $tables     = $xmlDoc.SelectNodes("//*[local-name()='Table']")
+  $rows       = $xmlDoc.SelectNodes("//*[local-name()='Row']")
+  if (-not $worksheets -or $worksheets.Count -lt 1 -or -not $tables -or $tables.Count -lt 1 -or -not $rows -or $rows.Count -lt 2) {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "Incomplete SpreadsheetML structure (Worksheets=$($worksheets.Count), Tables=$($tables.Count), Rows=$($rows.Count); expected >=1 Worksheet, >=1 Table, >=2 Rows)"
+    }
+  }
+
+  $leafStem = [System.IO.Path]::GetFileNameWithoutExtension($XmlPath)
+  if ($leafStem -ne $ExpectedReportName) {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "XML filename stem '$leafStem' does not match expected ReportName '$ExpectedReportName'"
+    }
+  }
+
+  $titleNode = $xmlDoc.SelectSingleNode("//*[local-name()='DocumentProperties']/*[local-name()='Title']")
+  if ($null -ne $titleNode -and -not [string]::IsNullOrWhiteSpace($titleNode.InnerText)) {
+    $titleText  = $titleNode.InnerText.Trim()
+    $expertLeaf = ($ExpectedExpert -split '[\\/]')[-1]
+    $matchesReport = ($titleText.IndexOf($ExpectedReportName, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+    $matchesExpert = ($titleText.IndexOf($expertLeaf, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+    if (-not $matchesReport -and -not $matchesExpert) {
+      return [pscustomobject]@{
+        ok     = $false
+        reason = "XML DocumentProperties/Title '$titleText' does not match ReportName '$ExpectedReportName' or Expert '$expertLeaf'"
+      }
+    }
+  }
+
+  return [pscustomobject]@{
+    ok     = $true
+    reason = "OK"
+    sha256 = $hash2
+    bytes  = $bytes2.Length
+    rows   = $rows.Count
+  }
+}
+
+# --- 1. NON-MUTATING PREFLIGHTS (ORDER-1707: everything below up to section 2 reads only; no .opt
+# cache delete, report delete, destination quarantine or final INI write happens before they pass) ---
 # guard scoped by exe PATH (same convention as mt5_run.ps1) so the two installs
 # can run in parallel without aborting each other
-$running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Terminal }
-if ($running -and -not $Force) {
-  Write-Output "ABORT: this MT5 instance is running ($Terminal). Close it first, or -Force."; exit 2
+if ($null -eq $MockProcessRunner) {
+  $running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Terminal }
+  if ($running -and -not $Force) {
+    Write-Output "ABORT: this MT5 instance is running ($Terminal). Close it first, or -Force."; exit 2
+  }
 }
 
 $auto = Join-Path $repoRoot "_mt5_auto"
+if ($AutoDir) { $auto = $AutoDir }
+# Creating the two empty output folders is not a mutation ORDER-1707 forbids (no cache, report or INI change).
 New-Item -ItemType Directory -Force "$auto\optimizations", "$auto\ini" | Out-Null
 $srcXml = Join-Path $DataDir "$ReportName.xml"
 $destXml = "$auto\optimizations\$ReportName.xml"
-Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
-
-# A-F2: CLEAR THE DESTINATION TOO, BEFORE THE LAUNCH.
-# The line above clears the SOURCE side only. The destination is keyed on the report name, and the
-# collection step at the bottom of this script is conditional (`if (Test-Path $srcXml)`), so a run
-# that produced nothing used to leave the PREVIOUS run's XML sitting at
-# _mt5_auto\optimizations\<ReportName>.xml -- which is the path every downstream consumer reads
-# (scripts\pilot_probe.ps1 records it as this run's `xml`; scripts\pilot_probe_select.py loads
-# surfaces out of that directory). pilot_probe.ps1's own comment records a smoke run where exactly
-# that happened: a cell whose launcher aborted found the XML from that cell's earlier successful
-# run and reported xml_present=true. That reader was given an mtime freshness test; the launcher
-# was not, so the stale artefact stayed readable by everyone else.
-#
-# QUARANTINED, NOT DELETED. The file may be another lane's evidence, so it is renamed rather than
-# removed and the rename is PRINTED -- an artefact that disappears silently is its own problem.
-# SCOPE IS EXACTLY THIS REPORT NAME: this touches $destXml and nothing else in the directory.
-if (Test-Path -LiteralPath $destXml -PathType Leaf) {
-  $supersededXml = $destXml + '.superseded-' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
-  Move-Item -LiteralPath $destXml -Destination $supersededXml -Force
-  Write-Output "STALE DEST XML: a previous artefact was already at $destXml under this report name. Quarantined to $supersededXml so this run cannot be read off it. Nothing else in $auto\optimizations was touched."
-}
-
-# Hygiene: clear the optimization cache so every run is provably fresh.
-# (2026-07-04 note: a suspected cross-date cache-reuse bug was DISPROVEN by a
-# controlled rerun - identical IS vs full-window rows on GBPAUD turned out to be
-# genuine range-dormancy, both resting-stop sides unhit for the final 13 months.
-# Clearing stays as cheap insurance against ever confusing the two cases.)
-$testerCache = Join-Path $DataDir "Tester\cache"
-if (Test-Path $testerCache) {
-  Get-ChildItem $testerCache -Filter "*.opt" -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-}
 
 # ORDER-1268: the same REFUSE-OR-RECORD gate mt5_run.ps1 applies, and this launcher needed it
 # MORE. mt5_run at least warned when no .set was supplied; this one read whatever it was handed
@@ -168,6 +266,24 @@ if ($AllowLegacyIdentity) {
   Write-Output (Format-LaunchIdentityLine -Build $buildIdentity -Config $configIdentity)
 }
 
+# ORDER-1707 / R3-3: for template wrappers (ea_template\<Wrapper>.mq5), verify that the .set keys
+# match the wrapper's ACTUAL #include/#ifdef input surface via check_template_presets.py before any
+# .opt cache delete, report delete, or final INI write (Get-SetSurfaceState checks only key count vs
+# header comment; a wrong/substituted or duplicate key with the same line count would otherwise slip past).
+$pyExe = Join-Path $repoRoot "tools\python312\python.exe"
+$expertLeaf = [System.IO.Path]::GetFileNameWithoutExtension(($Expert -replace '/', '\'))
+$templateWrapperMq5 = Join-Path $repoRoot ("ea_template\" + $expertLeaf + ".mq5")
+$templateCheckPy    = Join-Path $PSScriptRoot "check_template_presets.py"
+if (($surface.State -ne 'NOSETFILE') -and (Test-Path -LiteralPath $templateWrapperMq5) -and (Test-Path -LiteralPath $pyExe) -and (Test-Path -LiteralPath $templateCheckPy)) {
+  $tplOut = & $pyExe $templateCheckPy --root $repoRoot --preset "${expertLeaf}=$SetFile" 2>&1
+  $tplExit = $LASTEXITCODE
+  $tplOut | Write-Output
+  if ($tplExit -ne 0) {
+    Write-Output "ABORT: check_template_presets.py refused preset surface against actual include-graph for $expertLeaf ($SetFile)."
+    exit 2
+  }
+}
+
 # ORDER-1461, and this is the entry point that mattered most. An OPTIMIZATION run does not
 # merely report a wrong number off a stale binary -- it SELECTS the parameters everything
 # downstream is built on. The rule and its measurements live in scripts\lib\binary_staleness.ps1,
@@ -193,9 +309,6 @@ $lines = @(
   # tester falls back to the server default (observed: OPT_MDX_GBP ran at 1:2000).
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
 ) + $inputs
-$ini = "$auto\ini\$ReportName.ini"
-[IO.File]::WriteAllLines($ini, $lines)
-
 # ORDER-198 follow-up (user 2026-07-24: "บังคับแบบ warn + override ได้"): pre-flight every
 # optimize pass through optimize_guard.ps1 (ORDER-192b) BEFORE burning tester wall-clock on
 # a sweep that provably can't do anything (dead/overridden/inactive dimension) or that
@@ -215,7 +328,10 @@ $guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
 # The repo root is derived, not typed: a hardcoded D:\EA_LAB defeats the worktree cage (memory
 # `hardcoded-repo-path-defeats-worktree-cage`; the `$auto` line above was once an instance of
 # this and is now derived from `$repoRoot` -- see run_mt5_optimize_launcher_hardening_tests.ps1).
-$decisionLog = Join-Path $repoRoot "factory\optimize_decisions.jsonl"
+$decisionLog = if ($DecisionLogPath) { $DecisionLogPath } else { Join-Path $repoRoot "factory\optimize_decisions.jsonl" }
+# Pre-Optimization contract gatekeeper (OPT-01) runs on the same temporary preflight INI as the guard.
+$pyExe = Join-Path $repoRoot "tools\python312\python.exe"
+$contractScript = Join-Path $repoRoot "tools\quant_engine\check_contract.py"
 $guardExtra = @{ DecisionLog = $decisionLog; Lane = $Terminal }
 if ($HypothesisRevision -ne '') { $guardExtra['HypothesisRevision'] = $HypothesisRevision }
 if ($BindingsRoot -ne '')       { $guardExtra['BindingsRoot'] = $BindingsRoot }
@@ -230,32 +346,86 @@ if (-not (Test-Path -LiteralPath $guardScript -PathType Leaf)) {
   Write-Output "        Corrective action: restore the file (e.g. 'git checkout -- scripts\optimize_guard.ps1'), or run from a repo checkout that has it. -SkipOptimizeGuard only overrides a REFUSE verdict from an EXISTING guard; it cannot substitute for a missing one."
   exit 5
 }
-if ($SkipOptimizeGuard) {
-  Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
-  & $guardScript -IniPath $ini -WarnOnly @guardExtra | Write-Output
-}
-else {
-  & $guardScript -IniPath $ini @guardExtra | Write-Output
-  if ($LASTEXITCODE -ne 0) {
-    Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
-    Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
-    exit 3
+$tmpPreflightIni = Join-Path ([IO.Path]::GetTempPath()) ("mt5_opt_preflight_" + [guid]::NewGuid().ToString("N") + ".ini")
+try {
+  [IO.File]::WriteAllLines($tmpPreflightIni, $lines)
+  if ((Test-Path -LiteralPath $pyExe) -and (Test-Path -LiteralPath $contractScript)) {
+    & $pyExe $contractScript --expert $Expert --symbol $Symbol --timeframe $Period --from-date $FromDate --to-date $ToDate --ini $tmpPreflightIni | Write-Output
+    if ($LASTEXITCODE -ne 0) {
+      Write-Output "ABORT: check_contract.py (OPT-01) refused optimization contract for $ReportName."
+      exit 3
+    }
   }
+  if ($SkipOptimizeGuard) {
+    Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
+    & $guardScript -IniPath $tmpPreflightIni -WarnOnly @guardExtra | Write-Output
+  }
+  else {
+    & $guardScript -IniPath $tmpPreflightIni @guardExtra | Write-Output
+    if ($LASTEXITCODE -ne 0) {
+      Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ReportName.ini (see REFUSE lines above)."
+      Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
+      exit 3
+    }
+  }
+} finally {
+  Remove-Item -LiteralPath $tmpPreflightIni -Force -ErrorAction SilentlyContinue
 }
 
-Write-Output "OPTIMIZE: $Expert | logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol $Period | $FromDate..$ToDate | mode=$Optimization"
-$mtArgs = @("/config:`"$ini`""); if ($Portable) { $mtArgs += "/portable" }
-$proc = Start-Process -FilePath $Terminal -ArgumentList $mtArgs -PassThru
-$sw = [Diagnostics.Stopwatch]::StartNew()
-while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
-  if (Test-Path $srcXml) { Start-Sleep -Seconds 2; break }
-  if ($proc.HasExited -and $sw.Elapsed.TotalSeconds -gt 10) { Start-Sleep -Seconds 2; break }
-  Start-Sleep -Seconds 6
+# --- 2. MUTATING CLEANUP & INI MATERIALIZATION (only after every preflight above passed) ---
+Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+
+# A-F2: CLEAR THE DESTINATION TOO, BEFORE THE LAUNCH.
+# The line above clears the SOURCE side only. The destination is keyed on the report name, and the
+# collection step at the bottom of this script is conditional (`if (Test-Path $srcXml)`), so a run
+# that produced nothing used to leave the PREVIOUS run's XML sitting at
+# _mt5_auto\optimizations\<ReportName>.xml -- which is the path every downstream consumer reads
+# (scripts\pilot_probe.ps1 records it as this run's `xml`; scripts\pilot_probe_select.py loads
+# surfaces out of that directory). pilot_probe.ps1's own comment records a smoke run where exactly
+# that happened: a cell whose launcher aborted found the XML from that cell's earlier successful
+# run and reported xml_present=true. That reader was given an mtime freshness test; the launcher
+# was not, so the stale artefact stayed readable by everyone else.
+#
+# QUARANTINED, NOT DELETED. The file may be another lane's evidence, so it is renamed rather than
+# removed and the rename is PRINTED -- an artefact that disappears silently is its own problem.
+# SCOPE IS EXACTLY THIS REPORT NAME: this touches $destXml and nothing else in the directory.
+if (Test-Path -LiteralPath $destXml -PathType Leaf) {
+  $supersededXml = $destXml + '.superseded-' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
+  Move-Item -LiteralPath $destXml -Destination $supersededXml -Force
+  Write-Output "STALE DEST XML: a previous artefact was already at $destXml under this report name. Quarantined to $supersededXml so this run cannot be read off it. Nothing else in $auto\optimizations was touched."
 }
-# Some MT5 builds flush the optimizer XML a few seconds AFTER terminal64.exe exits.
-# Do not convert that exporter race into a false NO-XML failure: once the process is known
-# exited, give only this exact source path a bounded grace period. Stale-destination quarantine
-# above remains unchanged, and a genuinely absent XML still exits 4.
+
+# Hygiene: clear the optimization cache so every run is provably fresh.
+# (2026-07-04 note: a suspected cross-date cache-reuse bug was DISPROVEN by a
+# controlled rerun - identical IS vs full-window rows on GBPAUD turned out to be
+# genuine range-dormancy, both resting-stop sides unhit for the final 13 months.
+# Clearing stays as cheap insurance against ever confusing the two cases.)
+$testerCache = Join-Path $DataDir "Tester\cache"
+if (Test-Path $testerCache) {
+  Get-ChildItem $testerCache -Filter "*.opt" -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
+$ini = "$auto\ini\$ReportName.ini"
+[IO.File]::WriteAllLines($ini, $lines)
+
+Write-Output "OPTIMIZE: $Expert | logical=$($symbolResolution.logical_symbol) tester=$TesterSymbol $Period | $FromDate..$ToDate | mode=$Optimization"
+# --- 3. LAUNCH & STRICT PROCESS-EXIT WAIT (never wait on file creation alone; never kill on timeout) ---
+$runStartUtc = (Get-Date).ToUniversalTime()
+$mtArgs = @("/config:`"$ini`""); if ($Portable) { $mtArgs += "/portable" }
+if ($null -ne $MockProcessRunner) {
+  $proc = & $MockProcessRunner $ini $srcXml $ReportName
+} else {
+  $proc = Start-Process -FilePath $Terminal -ArgumentList $mtArgs -PassThru -WindowStyle Hidden
+}
+$sw = [Diagnostics.Stopwatch]::StartNew()
+while (-not $proc.HasExited -and $sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
+  Start-Sleep -Milliseconds 500
+}
+if (-not $proc.HasExited) {
+  Write-Output "ABORT TIMEOUT: terminal64 (PID $($proc.Id)) is still active after ${TimeoutSec}s; refusing to kill process or move/publish partial report."
+  exit 2
+}
+if ($proc.PSObject.Methods.Match('WaitForExit').Count -gt 0) { $proc.WaitForExit() }
 if (-not (Test-Path -LiteralPath $srcXml) -and $proc.HasExited -and $XmlFlushGraceSec -gt 0) {
   $flushSw = [Diagnostics.Stopwatch]::StartNew()
   while ($flushSw.Elapsed.TotalSeconds -lt $XmlFlushGraceSec) {
@@ -266,13 +436,7 @@ if (-not (Test-Path -LiteralPath $srcXml) -and $proc.HasExited -and $XmlFlushGra
     Start-Sleep -Milliseconds 500
   }
 }
-if (Test-Path $srcXml) {
-  Move-Item $srcXml $destXml -Force
-  Write-Output "OK OPTIMIZER XML: $destXml"
-  . (Join-Path $PSScriptRoot 'lib\optimize_next_step.ps1')
-  Write-Output (Get-OptimizeNextStepMessage -DestXml $destXml -HypothesisRevision $HypothesisRevision)
-}
-else {
+if (-not (Test-Path -LiteralPath $srcXml)) {
   Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the $ReportName files in $DataDir and the Tester logs."
   # A-F2: state the CONSUMER-side fact, not only the source-side one. The destination was
   # quarantined before launch, so a reader of $destXml sees an absent artefact rather than a
@@ -296,3 +460,28 @@ else {
   # side effect: each of them was accepting "no optimization happened" as a completed pass.
   exit 4
 }
+
+# A non-zero terminal exit never publishes, even when an XML exists (checked after the NO-XML path so that
+# path keeps its consumer-side statement).
+$exitCode = [int]$proc.ExitCode
+if ($exitCode -ne 0) {
+  Write-Output "ABORT EXITCODE: terminal64 exited with non-zero code $exitCode; refusing to move/publish report."
+  exit 4
+}
+
+# --- 4. POST-EXIT WELL-FORMED SPREADSHEETML XML & INVOCATION BINDING VERIFICATION ---
+$xmlCheck = Test-Mt5OptimizeXmlArtifact -XmlPath $srcXml -ExpectedReportName $ReportName -ExpectedExpert $Expert -InvocationStartUtc $runStartUtc
+if (-not $xmlCheck.ok) {
+  Write-Output "INVALID XML: $($xmlCheck.reason)"
+  exit 4
+}
+# The destination was quarantined before launch (A-F2); one that reappeared during the run is not ours.
+if ((Test-Path -LiteralPath $destXml) -and -not $Force) {
+  Write-Output "ABORT: destination optimizer report appeared during run ($destXml) and -Force is not set."
+  exit 2
+}
+Move-Item -LiteralPath $srcXml -Destination $destXml -Force
+Write-Output "OK OPTIMIZER XML: $destXml (sha256=$($xmlCheck.sha256), rows=$($xmlCheck.rows))"
+. (Join-Path $PSScriptRoot 'lib\optimize_next_step.ps1')
+Write-Output (Get-OptimizeNextStepMessage -DestXml $destXml -HypothesisRevision $HypothesisRevision)
+exit 0
