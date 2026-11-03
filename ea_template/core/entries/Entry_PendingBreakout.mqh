@@ -1,5 +1,7 @@
 // A10 C2 port 2026-11-03: ported from the untracked local D:\EA_LAB file core/entries/Entry_PendingBreakout.mqh
-// sha256 7ff768556bbb44af6c7217a0932eeef4ec7ad2d38b996b94fd8ee0cb8abe0577; renumbered 19 -> 29 (inputs _19_* -> _29_*). Logic unchanged.
+// sha256 7ff768556bbb44af6c7217a0932eeef4ec7ad2d38b996b94fd8ee0cb8abe0577; renumbered 19 -> 29 (inputs _19_* -> _29_*). Logic unchanged
+// except two fail-closed review fixes (marked "A10 C2 review fix"): the new-bar ladder refresh
+// re-arms only after the old pendings are confirmed gone, and a staged partial TP fires once per ticket.
 //+------------------------------------------------------------------+
 //| Entry_PendingBreakout.mqh (V2) - Entry 29 Pending Stop Ladder    |
 //| Multi-level BUY STOP above range High, SELL STOP below range Low |
@@ -24,10 +26,12 @@
 
 // Recompile-safe internal state
 datetime g_pb_last_bar = 0;
+ulong    g_pb_partial_done[];   // tickets already partially closed by the staged-TP exit
 
 void PendingBreakout_Init()
 {
    g_pb_last_bar = 0;
+   ArrayResize(g_pb_partial_done, 0);
 }
 
 EntrySignal Entry_Evaluate()
@@ -389,7 +393,10 @@ void PB_ManageStagedExits()
          string comment   = PositionGetString(POSITION_COMMENT);
          
          if(StringFind(comment, "_PCLOSE") >= 0) continue;
-         
+         // A10 C2 review fix: nothing ever set the _PCLOSE marker, so a profitable position was
+         // partially closed again on every tick. Record each ticket once it has been staged.
+         if(Exec_TicketInList(ticket, g_pb_partial_done)) continue;
+
          bool trigger = false;
          if(type == POSITION_TYPE_BUY && (t.bid - openPrice >= trigDist)) trigger = true;
          if(type == POSITION_TYPE_SELL && (openPrice - t.ask >= trigDist)) trigger = true;
@@ -401,6 +408,9 @@ void PB_ManageStagedExits()
             {
                if(Exec_ClosePartialTicket(ticket, closeVol))
                {
+                  int pn = ArraySize(g_pb_partial_done);
+                  ArrayResize(g_pb_partial_done, pn + 1);
+                  g_pb_partial_done[pn] = ticket;
                   PrintFormat("[PB_STAGED] Partial TP closed %.2f lots of ticket %d (remaining=%.2f)",
                               closeVol, ticket, vol - closeVol);
                   double lockDist = (_29_BeLockPts > 0.0 ? _29_BeLockPts * point : 20.0 * point);
@@ -898,7 +908,10 @@ bool PendingBreakout_OnTick()
             {
                Print("[PB] Range shifted on new bar -> refreshing pending ladder");
                PB_CancelPendingDir(0);
-               PB_ArmLadder();
+               // A10 C2 review fix: re-arm only once the broker shows the old ladder gone. A
+               // rejected delete would otherwise leave BOTH ladders executable.
+               if(PB_CountPendingDir(0) == 0) PB_ArmLadder();
+               else Print("[PB] old pending ladder not fully cancelled -> refresh skipped this bar");
             }
          }
       }

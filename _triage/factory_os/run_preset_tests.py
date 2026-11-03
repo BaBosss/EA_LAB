@@ -608,11 +608,13 @@ def p9_specificity(mod):
             except mod.PresetRefusal as exc:
                 return ('%s default %r on %s does not resolve: %s'
                         % (decl.name, decl.default_expr, tag, str(exc)[:90]))
-    # Re-measured 2026-11-03 (A10 C2 port): build 29 PendingBreakout = 192 (41 entry inputs of
-    # its own); every other build is unchanged (max 173). The band is a parser-sanity bound -- a
-    # parser selecting the wrong #ifdef branches lands far outside it -- not a target.
-    if not all(100 <= n <= 192 for n in sizes.values()):
-        return 'a real build surface is outside the measured current R4 band (max 192): %r' % sizes
+    # Measured bands, per build (A10 C2 port 2026-11-03): build 29 PendingBreakout = 192 (41 entry
+    # inputs of its own). Every other build keeps the original measured ceiling of 173, so a small
+    # accidental growth of an existing surface is still refused. The band is a parser-sanity
+    # bound -- a parser selecting the wrong #ifdef branches lands far outside it -- not a target.
+    ceiling = {'LAB_ENTRY_29': 192}
+    if not all(100 <= n <= ceiling.get(tag, 173) for tag, n in sizes.items()):
+        return 'a real build surface is outside its measured R4 band (max 173; build 29 max 192): %r' % sizes
     bad = refuses(lambda: mod.parse_surface(text, 'LAB_ENTRY_99'), 'LAB_ENTRY_99')
     if bad:
         return 'an undeclared build tag was accepted: %s' % bad
