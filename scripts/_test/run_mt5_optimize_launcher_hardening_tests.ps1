@@ -268,9 +268,10 @@ $delayedDest = Join-Path $guardYes ('_mt5_auto\optimizations\' + $reportI + '.xm
 # so this case uses a stub terminal that exits 0 and produces no XML itself.
 $okTerminal = Join-Path $work 'fake_terminal_ok.cmd'
 Set-Content -LiteralPath $okTerminal -Encoding ASCII -Value '@exit /b 0'
-$job = Start-Job -ScriptBlock { param($p) Start-Sleep -Seconds 7
-    # Minimal well-formed SpreadsheetML: the launcher verifies Worksheet/Table/>=2 Rows and the closing tag (R3-3).
-    Set-Content -LiteralPath $p -Encoding UTF8 -Value '<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Tester Optimizator Results"><Table><Row><Cell><Data ss:Type="String">Pass</Data></Cell></Row><Row><Cell><Data ss:Type="Number">0</Data></Cell></Row></Table></Worksheet></Workbook>' } -ArgumentList $delayedSrc
+$job = Start-Job -ScriptBlock { param($p, $title) Start-Sleep -Seconds 7
+    # Minimal well-formed SpreadsheetML as MT5 writes it: namespaced Workbook, DocumentProperties/Title
+    # naming the run, and >=2 Rows nested in Worksheet/Table, closed by </Workbook> (R3-3).
+    Set-Content -LiteralPath $p -Encoding UTF8 -Value ('<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Title>' + $title + '</Title></DocumentProperties><Worksheet ss:Name="Tester Optimizator Results"><Table><Row><Cell><Data ss:Type="String">Pass</Data></Cell></Row><Row><Cell><Data ss:Type="Number">0</Data></Cell></Row></Table></Worksheet></Workbook>') } -ArgumentList $delayedSrc, $reportI
 try {
     $r = Invoke-Child (@('-NoProfile','-File', (Join-Path $guardYes 'scripts\mt5_optimize.ps1')) + $commonArgs + @(
         '-SetFile', $undeclaredSet, '-ReportName', $reportI, '-Terminal', $okTerminal, '-DataDir', $dataDir,

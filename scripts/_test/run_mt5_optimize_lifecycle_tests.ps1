@@ -234,6 +234,32 @@ try {
     Assert-Case "C8.a valid invocation exits 0" ($codeC8 -eq 0 -and ($outC8 -join " ") -match "OK OPTIMIZER XML") "exit=$codeC8 out=$($outC8 -join ' ')"
     Assert-Case "C8.b valid XML published to optimizations/" (Test-Path -LiteralPath $destC8)
 
+    # --- C11: structurally wrong XML that is fresh, stable and closed by </Workbook> is refused (GPT review of 9f5bc206) ---
+    $validC11 = New-ValidSpreadsheetMlXml -TitleTag "TAG_C11"
+    $c11Cases = @(
+        @{ Tag = "TAG_C11_NO_TITLE";     Expect = "no DocumentProperties/Title"; Xml = ($validC11 -replace '(?s)\s*<DocumentProperties.*?</DocumentProperties>', '') }
+        @{ Tag = "TAG_C11_BLANK_TITLE";  Expect = "no DocumentProperties/Title"; Xml = ($validC11 -replace '<Title>TAG_C11</Title>', '<Title>  </Title>') }
+        @{ Tag = "TAG_C11_LOOSE_ROWS";   Expect = "Incomplete SpreadsheetML structure"; Xml = '<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"><DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Title>TAG_C11_LOOSE_ROWS</Title></DocumentProperties><Worksheet/><Table/><Row/><Row/></Workbook>' }
+        @{ Tag = "TAG_C11_NO_NAMESPACE"; Expect = "not in the SpreadsheetML namespace"; Xml = ($validC11 -replace 'xmlns="urn:schemas-microsoft-com:office:spreadsheet"', '') }
+    )
+    foreach ($case in $c11Cases) {
+        $tag  = $case.Tag
+        $dest = Join-Path $autoDir "optimizations\$tag.xml"
+        $fix  = Join-Path $tmpRoot "fix_$tag.xml"
+        ($case.Xml -replace 'TAG_C11(?=</Title>)', $tag) | Set-Content -LiteralPath $fix -Encoding UTF8
+        $out = & powershell -NoProfile -ExecutionPolicy Bypass -Command "
+            & '$optScript' -Expert 'TestPkg\SyntheticOptEA' -SetFile '$validSet' -Symbol 'XAUUSD' -Period 'H1' -FromDate '2023.01.01' -ToDate '2025.01.01' -TimeoutSec 5 -Terminal '$env:SystemRoot\System32\hostname.exe' -CapabilityFile '$capFile' -AllowLegacyIdentity -ReportName '$tag' -DataDir '$dataDir' -AutoDir '$autoDir' -DecisionLogPath '$decisionLog' -MockProcessRunner {
+                param(`$ini, `$srcXml, `$repName)
+                Copy-Item -LiteralPath '$fix' -Destination `$srcXml -Force
+                return [pscustomobject]@{ Id = 91011; HasExited = `$true; ExitCode = 0 }
+            }
+            exit `$LASTEXITCODE
+        " 2>&1
+        $code = $LASTEXITCODE
+        Assert-Case "C11 $tag refused with INVALID XML (exit 4)" ($code -eq 4 -and ($out -join " ") -match [regex]::Escape($case.Expect)) "exit=$code out=$($out -join ' ')"
+        Assert-Case "C11 $tag is NOT published" (-not (Test-Path -LiteralPath $dest))
+    }
+
     # --- C9: Static source checks on scripts\mt5_optimize.ps1 ---
     $srcText = Get-Content -LiteralPath $optScript -Raw
     Assert-Case "C9.a mt5_optimize.ps1 uses -WindowStyle Hidden" ($srcText -match "-WindowStyle\s+Hidden")

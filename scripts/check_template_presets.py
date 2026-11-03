@@ -178,13 +178,19 @@ def read_set(path):
     return values, errors
 
 
-def audit(root, overrides=None):
+def audit(root, overrides=None, only=None):
     root = Path(root).resolve()
     overrides = overrides or {}
     source = (root / "ea_template/core/Inputs.mqh").read_text(encoding="utf-8-sig")
     wrappers = sorted((root / "ea_template").glob("Boss_*.mq5"))
     results = []
     names = {wrapper.stem for wrapper in wrappers}
+    # --only narrows the audit to the named builds (the launcher checks the one it optimizes);
+    # a name with no discovered wrapper is refused, never silently dropped.
+    if only:
+        for unknown in sorted(set(only) - names):
+            results.append({"expert": unknown, "errors": ["--only names no discovered Boss wrapper"], "ok": False})
+        wrappers = [wrapper for wrapper in wrappers if wrapper.stem in only]
     for unknown in sorted(set(overrides) - names):
         results.append({"expert": unknown, "errors": ["preset override has no discovered Boss wrapper"], "ok": False})
     if not wrappers:
@@ -235,6 +241,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--preset", action="append", default=[], metavar="EXPERT=PATH", help="effective caller-selected preset; unspecified builds use their defaults.set")
+    parser.add_argument("--only", action="append", default=[], metavar="EXPERT", help="audit only these builds (default: every Boss wrapper)")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     overrides = {}
@@ -244,7 +251,7 @@ def main(argv=None):
             parser.error("each --preset must be a unique EXPERT=PATH")
         overrides[name] = path
     try:
-        results = audit(args.root, overrides)
+        results = audit(args.root, overrides, set(args.only))
     except (OSError, UnicodeError) as error:
         results = [{"expert": "<source>", "errors": [str(error)], "ok": False}]
     if args.json:

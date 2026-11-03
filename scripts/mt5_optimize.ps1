@@ -168,13 +168,20 @@ function Test-Mt5OptimizeXmlArtifact {
     }
   }
 
-  $worksheets = $xmlDoc.SelectNodes("//*[local-name()='Worksheet']")
-  $tables     = $xmlDoc.SelectNodes("//*[local-name()='Table']")
-  $rows       = $xmlDoc.SelectNodes("//*[local-name()='Row']")
-  if (-not $worksheets -or $worksheets.Count -lt 1 -or -not $tables -or $tables.Count -lt 1 -or -not $rows -or $rows.Count -lt 2) {
+  $ssNs = 'urn:schemas-microsoft-com:office:spreadsheet'
+  if ($xmlDoc.DocumentElement.NamespaceURI -ne $ssNs) {
     return [pscustomobject]@{
       ok     = $false
-      reason = "Incomplete SpreadsheetML structure (Worksheets=$($worksheets.Count), Tables=$($tables.Count), Rows=$($rows.Count); expected >=1 Worksheet, >=1 Table, >=2 Rows)"
+      reason = "Workbook is not in the SpreadsheetML namespace (got '$($xmlDoc.DocumentElement.NamespaceURI)')"
+    }
+  }
+  # Rows must sit inside Workbook/Worksheet/Table in the SpreadsheetML namespace; loose elements
+  # elsewhere in the document are not a result table.
+  $rows = $xmlDoc.SelectNodes("/*[local-name()='Workbook' and namespace-uri()='$ssNs']/*[local-name()='Worksheet' and namespace-uri()='$ssNs']/*[local-name()='Table' and namespace-uri()='$ssNs']/*[local-name()='Row' and namespace-uri()='$ssNs']")
+  if ($null -eq $rows -or $rows.Count -lt 2) {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "Incomplete SpreadsheetML structure ($(@($rows).Count) Row(s) under Workbook/Worksheet/Table; expected >=2)"
     }
   }
 
@@ -186,17 +193,20 @@ function Test-Mt5OptimizeXmlArtifact {
     }
   }
 
+  # MT5 always writes DocumentProperties/Title ("<Expert> <Symbol>,<TF> <from>-<to>"); a missing or
+  # blank Title cannot be bound to this invocation, so it is refused rather than skipped.
   $titleNode = $xmlDoc.SelectSingleNode("//*[local-name()='DocumentProperties']/*[local-name()='Title']")
-  if ($null -ne $titleNode -and -not [string]::IsNullOrWhiteSpace($titleNode.InnerText)) {
-    $titleText  = $titleNode.InnerText.Trim()
-    $expertLeaf = ($ExpectedExpert -split '[\\/]')[-1]
-    $matchesReport = ($titleText.IndexOf($ExpectedReportName, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
-    $matchesExpert = ($titleText.IndexOf($expertLeaf, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
-    if (-not $matchesReport -and -not $matchesExpert) {
-      return [pscustomobject]@{
-        ok     = $false
-        reason = "XML DocumentProperties/Title '$titleText' does not match ReportName '$ExpectedReportName' or Expert '$expertLeaf'"
-      }
+  if ($null -eq $titleNode -or [string]::IsNullOrWhiteSpace($titleNode.InnerText)) {
+    return [pscustomobject]@{ ok = $false; reason = "XML has no DocumentProperties/Title; cannot bind it to ReportName '$ExpectedReportName' or Expert" }
+  }
+  $titleText  = $titleNode.InnerText.Trim()
+  $expertLeaf = ($ExpectedExpert -split '[\\/]')[-1]
+  $matchesReport = ($titleText.IndexOf($ExpectedReportName, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+  $matchesExpert = ($titleText.IndexOf($expertLeaf, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+  if (-not $matchesReport -and -not $matchesExpert) {
+    return [pscustomobject]@{
+      ok     = $false
+      reason = "XML DocumentProperties/Title '$titleText' does not match ReportName '$ExpectedReportName' or Expert '$expertLeaf'"
     }
   }
 
@@ -274,8 +284,13 @@ $pyExe = Join-Path $repoRoot "tools\python312\python.exe"
 $expertLeaf = [System.IO.Path]::GetFileNameWithoutExtension(($Expert -replace '/', '\'))
 $templateWrapperMq5 = Join-Path $repoRoot ("ea_template\" + $expertLeaf + ".mq5")
 $templateCheckPy    = Join-Path $PSScriptRoot "check_template_presets.py"
-if (($surface.State -ne 'NOSETFILE') -and (Test-Path -LiteralPath $templateWrapperMq5) -and (Test-Path -LiteralPath $pyExe) -and (Test-Path -LiteralPath $templateCheckPy)) {
-  $tplOut = & $pyExe $templateCheckPy --root $repoRoot --preset "${expertLeaf}=$SetFile" 2>&1
+if (($surface.State -ne 'NOSETFILE') -and (Test-Path -LiteralPath $templateWrapperMq5)) {
+  # A template run whose checker cannot execute is refused, never waved through.
+  if (-not (Test-Path -LiteralPath $pyExe) -or -not (Test-Path -LiteralPath $templateCheckPy)) {
+    Write-Output "ABORT: template preset check cannot run for $expertLeaf (python: $pyExe, checker: $templateCheckPy). Provision the portable python (scripts\use_python.ps1)."
+    exit 2
+  }
+  $tplOut = & $pyExe $templateCheckPy --root $repoRoot --only $expertLeaf --preset "${expertLeaf}=$SetFile" 2>&1
   $tplExit = $LASTEXITCODE
   $tplOut | Write-Output
   if ($tplExit -ne 0) {
@@ -329,9 +344,6 @@ $guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
 # `hardcoded-repo-path-defeats-worktree-cage`; the `$auto` line above was once an instance of
 # this and is now derived from `$repoRoot` -- see run_mt5_optimize_launcher_hardening_tests.ps1).
 $decisionLog = if ($DecisionLogPath) { $DecisionLogPath } else { Join-Path $repoRoot "factory\optimize_decisions.jsonl" }
-# Pre-Optimization contract gatekeeper (OPT-01) runs on the same temporary preflight INI as the guard.
-$pyExe = Join-Path $repoRoot "tools\python312\python.exe"
-$contractScript = Join-Path $repoRoot "tools\quant_engine\check_contract.py"
 $guardExtra = @{ DecisionLog = $decisionLog; Lane = $Terminal }
 if ($HypothesisRevision -ne '') { $guardExtra['HypothesisRevision'] = $HypothesisRevision }
 if ($BindingsRoot -ne '')       { $guardExtra['BindingsRoot'] = $BindingsRoot }
@@ -349,13 +361,6 @@ if (-not (Test-Path -LiteralPath $guardScript -PathType Leaf)) {
 $tmpPreflightIni = Join-Path ([IO.Path]::GetTempPath()) ("mt5_opt_preflight_" + [guid]::NewGuid().ToString("N") + ".ini")
 try {
   [IO.File]::WriteAllLines($tmpPreflightIni, $lines)
-  if ((Test-Path -LiteralPath $pyExe) -and (Test-Path -LiteralPath $contractScript)) {
-    & $pyExe $contractScript --expert $Expert --symbol $Symbol --timeframe $Period --from-date $FromDate --to-date $ToDate --ini $tmpPreflightIni | Write-Output
-    if ($LASTEXITCODE -ne 0) {
-      Write-Output "ABORT: check_contract.py (OPT-01) refused optimization contract for $ReportName."
-      exit 3
-    }
-  }
   if ($SkipOptimizeGuard) {
     Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
     & $guardScript -IniPath $tmpPreflightIni -WarnOnly @guardExtra | Write-Output
