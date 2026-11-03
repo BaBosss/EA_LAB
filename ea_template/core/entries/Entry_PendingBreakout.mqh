@@ -406,7 +406,13 @@ void PB_ManageStagedExits()
             double closeVol = Exec_NormalizeLot(vol * (_29_PartialClosePct / 100.0));
             if(closeVol > 0.0 && closeVol < vol)
             {
+               // Latch completion only on a CONFIRMED reduction: a server-accepted retcode
+               // (Exec_ClosePartialTicket) AND the position re-read with less volume. Otherwise
+               // nothing is recorded and the next tick retries.
+               bool reduced = false;
                if(Exec_ClosePartialTicket(ticket, closeVol))
+                  reduced = (DryRun || (PositionSelectByTicket(ticket) && PositionGetDouble(POSITION_VOLUME) < vol));
+               if(reduced)
                {
                   int pn = ArraySize(g_pb_partial_done);
                   ArrayResize(g_pb_partial_done, pn + 1);

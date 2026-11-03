@@ -1882,7 +1882,11 @@ bool Exec_ClosePartialTicket(const ulong ticket, const double volume)
       PrintFormat("[DRYRUN] partial-close ticket %I64u volume=%.4f", ticket, volume);
       return true;
    }
-   return g_trade.PositionClosePartial(ticket, volume);
+   // The CTrade boolean proves only the client-side request; require a server-accepted
+   // retcode before reporting success (same rule as Exec_PlacePending, ORDER-132b).
+   if(!g_trade.PositionClosePartial(ticket, volume)) return false;
+   uint rc = g_trade.ResultRetcode();
+   return (rc == TRADE_RETCODE_DONE || rc == TRADE_RETCODE_DONE_PARTIAL);
 }
 #endif // LAB_EXEC_INTENT_API
 
