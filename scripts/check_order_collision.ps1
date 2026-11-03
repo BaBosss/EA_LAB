@@ -38,6 +38,13 @@
         globs ('_mt5_auto/**'). Every staged path that matches one is reported with
         the owning session id. This rule can never change the exit code.
 
+    RULE 5 -- ORDER header written into the manifest itself (BLOCK)
+        AGENT_TASKBOARD.md is a manifest; every scanner reconstructs the queue from the
+        declared PARTS only (scripts/lib/taskboard_source.ps1) and discards the manifest's
+        own text. A '## ORDER-' header typed into a split manifest therefore parses as
+        nothing: RULES 1 and 2, the digest and the archive guard never see it. It is blocked
+        when the STAGED manifest carries the TASKBOARD-ACTIVE-PARTS marker and any header.
+
     Exit 0 = pass (or nothing relevant staged). Exit 1 = a BLOCK rule fired.
     Exit 2 = tooling failure (git unavailable, ledger present but unparseable).
 
@@ -64,7 +71,11 @@ param(
     # a question about HISTORY, not about any content this script is handed -- has no other way
     # to be expressed. A single element 'NONE' means "the empty list", the spelled-sentinel
     # convention this repo already uses because `powershell -File` cannot pass @().
-    [AllowEmptyCollection()][string[]]$RestorableIdsOverride
+    [AllowEmptyCollection()][string[]]$RestorableIdsOverride,
+    # RULE 5's subject: the STAGED manifest text itself (the other overrides carry the
+    # reconstructed logical board, which by construction excludes it). Unbound in offline
+    # mode = the rule is not armed, so every existing offline case keeps its verdict.
+    [AllowEmptyString()][string]$StagedManifestContent
 )
 
 $ErrorActionPreference = 'Stop'
@@ -450,7 +461,7 @@ function Test-PathOwned {
 # input acquisition -- offline (test overrides) or git
 # ===========================================================================
 
-$overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent', 'LedgerContent', 'StagedLedgerContent', 'StagedFileList', 'RestorableIdsOverride')
+$overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent', 'LedgerContent', 'StagedLedgerContent', 'StagedFileList', 'RestorableIdsOverride', 'StagedManifestContent')
 $offline = $false
 foreach ($n in $overrideNames) { if ($PSBoundParameters.ContainsKey($n)) { $offline = $true } }
 
@@ -614,6 +625,23 @@ if ($offline) {
 }
 
 $violations = New-Object System.Collections.Generic.List[string]
+
+# ===========================================================================
+# RULE 5 -- ORDER header inside the split manifest itself (invisible to every scanner)
+# ===========================================================================
+
+# snapshot: index -- a claim about the manifest this commit will contain. $null = not armed.
+$stagedManifest = $null
+if ($offline) {
+    if ($PSBoundParameters.ContainsKey('StagedManifestContent')) { $stagedManifest = $StagedManifestContent }
+} else {
+    $stagedManifest = Get-GitBlobText -Spec (':{0}' -f $ActivePath)
+}
+if ($null -ne $stagedManifest -and $stagedManifest.IndexOf('TASKBOARD-ACTIVE-PARTS') -ge 0) {
+    foreach ($h in @(Get-OrderHeaders -Text $stagedManifest)) {
+        $violations.Add(('ORDER-{0} header at line {1} of the staged {2} manifest itself: scanners read only the declared taskboards/active/* parts, so this block is invisible to every order guard -- move it into a part' -f $h.Id, $h.Line, $ActivePath))
+    }
+}
 
 # ===========================================================================
 # RULE 1 -- duplicate order id

@@ -535,6 +535,41 @@ try {
         LedgerContent       = $ledgerNoStatusCol
     } -MustContain @('TOOLING', 'no lane table')
 
+    # ------------------------------------------------------------------ RULE 5
+    # The split manifest's own text is discarded by every scanner, so an ORDER header typed into it
+    # is invisible to RULES 1-2. ATTACK / SPECIFICITY x2 / ENGAGEMENT, per the repo's gate rule.
+    $manifestMarker = "<!-- TASKBOARD-ACTIVE-PARTS$([char]10)taskboards/active/P01.md$([char]10)-->"
+    $manifestClean  = '# AGENT_TASKBOARD' + "`r`n" + 'prose mentioning ## ORDER-999 mid-line is not a header' + "`r`n" + $manifestMarker
+    $manifestBad    = '# AGENT_TASKBOARD' + "`r`n" + $manifestMarker + "`r`n" + ('## ORDER-999 ' + $EM + ' written into the manifest')
+    $manifestLegacy = '# AGENT_TASKBOARD' + "`r`n" + ('## ORDER-998 ' + $EM + ' pre-split monolith, no parts marker')
+
+    Test-Case -Name 'RULE 5 ATTACK ORDER header inside a split manifest is refused' -ExpectCode 1 -Params @{
+        StagedActiveContent   = $activeClean
+        ArchiveContent        = ''
+        LedgerContent         = $ledgerActive
+        StagedManifestContent = $manifestBad
+    } -MustContain @('BLOCK', 'ORDER-999', 'manifest itself')
+
+    Test-Case -Name 'RULE 5 SPECIFICITY manifest with marker and no header passes (mid-line mention ignored)' -ExpectCode 0 -Params @{
+        StagedActiveContent   = $activeClean
+        ArchiveContent        = ''
+        LedgerContent         = $ledgerActive
+        StagedManifestContent = $manifestClean
+    } -MustNotContain @('manifest itself')
+
+    Test-Case -Name 'RULE 5 SPECIFICITY pre-split single-file board (no parts marker) is not this rule' -ExpectCode 0 -Params @{
+        StagedActiveContent   = $activeClean
+        ArchiveContent        = ''
+        LedgerContent         = $ledgerActive
+        StagedManifestContent = $manifestLegacy
+    } -MustNotContain @('manifest itself')
+
+    Test-Case -Name 'RULE 5 ENGAGEMENT unarmed (no manifest supplied) leaves the existing verdict untouched' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActive
+    } -MustNotContain @('manifest itself')
+
     Write-Host ''
     if ($script:Fail -eq 0) {
         Write-Host ("PASS {0}/{1}" -f $script:Pass, $script:Total)
