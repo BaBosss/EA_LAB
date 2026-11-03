@@ -36,6 +36,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $validator = Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1'
 . $validator -RepoRoot $RepoRoot 6>$null   # dot-source for functions only (no Invoke-Main/exit)
+. (Join-Path $RepoRoot 'scripts\lib\taskboard_source.ps1')   # Get-TaskboardActivePartList (fix2 active-only)
 
 function Remove-TempScratchDirectory {
     param([string]$Path)
@@ -126,6 +127,33 @@ function Get-HookReferencedScripts {
     return $names.ToArray()
 }
 
+function Get-FactoryOsImportClosure {
+    <# The hook runs _triage/factory_os/check_attested_pin_staged.py. Its sibling modules
+       used to be a hardcoded list here, and it rotted the same way ORDER-270 describes for
+       the hook's scripts: check_s2a_attestation.py later imported candidate.py, so every
+       hook fixture died on ModuleNotFoundError instead of on what it tests. Derive the
+       closure instead: every `import X` / `from X import` (any indentation) whose X.py
+       is a sibling in _triage/factory_os, followed transitively. #>
+    param([string]$Entry)
+    $srcRoot = Join-Path $RepoRoot '_triage\factory_os'
+    $seen = New-Object System.Collections.Generic.List[string]
+    $queue = New-Object System.Collections.Generic.Queue[string]
+    $queue.Enqueue($Entry)
+    while ($queue.Count -gt 0) {
+        $name = $queue.Dequeue()
+        if ($seen.Contains($name)) { continue }
+        $path = Join-Path $srcRoot $name
+        if (-not (Test-Path -LiteralPath $path)) { throw "factory_os import closure: $name is missing at $path" }
+        $seen.Add($name) | Out-Null
+        $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+        foreach ($m in [regex]::Matches($text, '(?m)^\s*(?:import\s+(?<m>[A-Za-z_][A-Za-z0-9_]*)|from\s+(?<m>[A-Za-z_][A-Za-z0-9_]*)\s+import\b)')) {
+            $dep = $m.Groups['m'].Value + '.py'
+            if ((Test-Path -LiteralPath (Join-Path $srcRoot $dep)) -and -not $seen.Contains($dep)) { $queue.Enqueue($dep) }
+        }
+    }
+    return $seen.ToArray()
+}
+
 function Copy-HookFixtureDependencies {
     <# Bare/parent fixtures must carry the real non-repository hook inputs too.
        The hook fails closed when its attestation runtime or fast-tier pathspec
@@ -152,6 +180,12 @@ function Copy-HookFixtureDependencies {
         # WARNs on every deployment status and exits 1 under -Strict in the fixture.
         'scripts\lib\deployment_status.ps1',
         'scripts\lib\repo_paths.ps1',
+        # Logical active-board resolver (manifest + taskboards/active parts) dot-sourced by
+        # check_precommit_staged.ps1 and check_handoff_contract.ps1 since the 2026-08-22 split.
+        'scripts\lib\taskboard_source.ps1',
+        # The hook dot-sources this to provision the portable Python runtime copied below
+        # before check_attested_pin_staged.py; without it the hook fails closed.
+        'scripts\use_python.ps1',
         '_triage\factory_os\magic.py',
         '_triage\factory_os\scheduler.py',
         '_triage\factory_os\schemas.json',
@@ -183,7 +217,7 @@ function Copy-HookFixtureDependencies {
     }
     $factoryRoot = Join-Path $Dir '_triage\factory_os'
     New-Item -ItemType Directory -Force -Path $factoryRoot | Out-Null
-    foreach ($name in @('check_attested_pin_staged.py','check_s2a_attestation.py','check_s2a_migration.py','evidence.py','gen_design_contracts.py','registry.py')) {
+    foreach ($name in (Get-FactoryOsImportClosure -Entry 'check_attested_pin_staged.py')) {
         Copy-Item (Join-Path $RepoRoot "_triage\factory_os\$name") (Join-Path $factoryRoot $name) -Force
     }
     if ($CommitBareRuntime) {
@@ -199,6 +233,8 @@ function Copy-HookFixtureDependencies {
             'scripts\lib\magic_guard.ps1',
             'scripts\lib\deployment_status.ps1',
             'scripts\lib\repo_paths.ps1',
+            'scripts\lib\taskboard_source.ps1',
+            'scripts\use_python.ps1',
             '_triage\factory_os\magic.py',
             '_triage\factory_os\scheduler.py',
             '_triage\factory_os\schemas.json',
@@ -218,6 +254,24 @@ function Copy-HookFixtureDependencies {
             'scripts\mt4_optimize.ps1',
             'scripts\run_backtest.ps1'
         )
+        # The fast tier runs its suites from a STAGED SNAPSHOT (a worktree of the staged
+        # tree), so anything the fixture copied but left untracked is simply absent there:
+        # run_front_guard_evidence_tests.ps1 died on the missing interpreter, and in the
+        # real-binding fixture the snapshot carried the binding parent's OLD hook and
+        # checkers next to today's suite. Track everything the fixture placed that the real
+        # repository also tracks -- the interpreter minus its gitignored stdlib zip, the
+        # factory_os closure, and the hook/checker files copied in before this call -- so
+        # the snapshot is a coherent checkout rather than a partial one.
+        foreach ($name in @('python.exe','python312.dll','python312._pth','vcruntime140.dll','vcruntime140_1.dll','_hashlib.pyd')) {
+            $runtimePaths += "tools\python312\$name"
+        }
+        foreach ($name in (Get-FactoryOsImportClosure -Entry 'check_attested_pin_staged.py')) {
+            $runtimePaths += "_triage\factory_os\$name"
+        }
+        foreach ($rel in @('.githooks\pre-commit','scripts\check_precommit_staged.ps1','scripts\check_taskboard_archive.ps1',
+                           'scripts\check_experiment_events.ps1','scripts\experiment_event_log.ps1','scripts\lib\b1_guard.ps1')) {
+            if (Test-Path -LiteralPath (Join-Path $Dir $rel)) { $runtimePaths += $rel }
+        }
         Invoke-GitRaw -RepoRoot $Dir -Arguments ('add -- ' + (($runtimePaths | ForEach-Object { '"{0}"' -f ($_ -replace '\\','/') }) -join ' ')) | Out-Null
         $baseline = Invoke-GitRaw -RepoRoot $Dir -Arguments 'commit -q -m "temp front-guard runtime baseline"'
         if ($baseline.ExitCode -ne 0) { throw "front-guard runtime baseline commit failed: $($baseline.StdErr)" }
@@ -597,19 +651,37 @@ Add-Result -Name 'fix4-crlf-real-strict-end-to-end-passes' -Pass ($strictCrlf.Ex
 $repo4PreambleEol = New-RealWorkingTreeFixture -Tag 'fix4_preamble_eol_exact'
 $preambleEolPath = Join-Path $repo4PreambleEol 'ARCHIVE_TASKBOARD_2026-07A.md'
 $preambleEolBytes = [System.IO.File]::ReadAllBytes($preambleEolPath)
-$firstCrLf = -1
-for ($i = 0; $i -lt ($preambleEolBytes.Length - 1); $i++) {
-    if ($preambleEolBytes[$i] -eq 13 -and $preambleEolBytes[$i + 1] -eq 10) { $firstCrLf = $i; break }
-}
-if ($firstCrLf -lt 0) {
-    Add-Result -Name 'fix1-pre-h2-eol-byte-tamper-fails' -Pass $false -Detail 'fixture preamble had no CRLF to mutate'
+# The mutation must land INSIDE the pre-H2 region. This case used to take the first
+# CRLF anywhere in the file, assuming a CRLF checkout; the real archive blob is LF with
+# a few CRLF lines deep in block bodies, autocrlf leaves such a blob unconverted, and so
+# the "preamble" edit landed at byte ~1.85M inside a block (strict_exit=0, a false FAIL).
+# Now: locate the first EOL before the first H2 and flip it -- drop the CR of a CRLF,
+# or insert a CR before a bare LF. Either way exactly one EOL byte changes and the
+# canonical-LF text is identical, which is what this case exists to prove is caught.
+$preambleEolLength = (Get-BytesBeforeFirstH2 -Bytes $preambleEolBytes).Length
+$firstPreambleLf = [Array]::IndexOf($preambleEolBytes, [byte]10)
+if ($firstPreambleLf -lt 0 -or $firstPreambleLf -ge $preambleEolLength) {
+    Add-Result -Name 'fix1-pre-h2-eol-byte-tamper-fails' -Pass $false -Detail ("fixture pre-H2 region ({0} bytes) has no EOL to mutate" -f $preambleEolLength)
 } else {
-    $preambleEolMutated = New-Object 'byte[]' ($preambleEolBytes.Length - 1)
-    [Array]::Copy($preambleEolBytes, 0, $preambleEolMutated, 0, $firstCrLf)
-    [Array]::Copy($preambleEolBytes, $firstCrLf + 1, $preambleEolMutated, $firstCrLf, $preambleEolBytes.Length - $firstCrLf - 1)
+    $preambleEolWasCrLf = ($firstPreambleLf -gt 0) -and ($preambleEolBytes[$firstPreambleLf - 1] -eq 13)
+    if ($preambleEolWasCrLf) {
+        $preambleEolMutated = New-Object 'byte[]' ($preambleEolBytes.Length - 1)
+        [Array]::Copy($preambleEolBytes, 0, $preambleEolMutated, 0, $firstPreambleLf - 1)
+        [Array]::Copy($preambleEolBytes, $firstPreambleLf, $preambleEolMutated, $firstPreambleLf - 1, $preambleEolBytes.Length - $firstPreambleLf)
+    } else {
+        $preambleEolMutated = New-Object 'byte[]' ($preambleEolBytes.Length + 1)
+        [Array]::Copy($preambleEolBytes, 0, $preambleEolMutated, 0, $firstPreambleLf)
+        $preambleEolMutated[$firstPreambleLf] = 13
+        [Array]::Copy($preambleEolBytes, $firstPreambleLf, $preambleEolMutated, $firstPreambleLf + 1, $preambleEolBytes.Length - $firstPreambleLf)
+    }
+    # Guard the guard: the edit must stay pre-H2 and invisible after LF normalization.
+    $preambleEolSameText = ((Get-NormalizedTextFromBytes -Bytes $preambleEolMutated) -ceq (Get-NormalizedTextFromBytes -Bytes $preambleEolBytes))
+    $preambleEolStillPreH2 = ((Get-BytesBeforeFirstH2 -Bytes $preambleEolMutated).Length -eq ($preambleEolLength + $(if ($preambleEolWasCrLf) { -1 } else { 1 })))
     [System.IO.File]::WriteAllBytes($preambleEolPath, $preambleEolMutated)
     $strictPreambleEol = Invoke-PowerShellFile -Dir $repo4PreambleEol -ScriptRelPath 'scripts\check_taskboard_archive.ps1' -Arguments '-Strict'
-    Add-Result -Name 'fix1-pre-h2-eol-byte-tamper-fails' -Pass (($strictPreambleEol.ExitCode -eq 2) -and (($strictPreambleEol.StdOut + $strictPreambleEol.StdErr) -match 'byte-for-byte')) -Detail ("strict_exit={0}" -f $strictPreambleEol.ExitCode)
+    Add-Result -Name 'fix1-pre-h2-eol-byte-tamper-fails' `
+        -Pass ($preambleEolSameText -and $preambleEolStillPreH2 -and ($strictPreambleEol.ExitCode -eq 2) -and (($strictPreambleEol.StdOut + $strictPreambleEol.StdErr) -match 'byte-for-byte')) `
+        -Detail ("strict_exit={0} eol_offset={1} was_crlf={2} preh2_bytes={3} same_lf_text={4} still_pre_h2={5}" -f $strictPreambleEol.ExitCode, $firstPreambleLf, $preambleEolWasCrLf, $preambleEolLength, $preambleEolSameText, $preambleEolStillPreH2)
 }
 
 # ============================================================================
@@ -748,8 +820,29 @@ function New-TempHookRepo {
     return $dir
 }
 
+function Set-FixtureCanonicalBase {
+    <# The hook runs the REAL check_state.ps1 -Strict, whose canonicality section reads the
+       LOCAL ref refs/remotes/origin/master and never fetches. No fixture has an honest value
+       for it: a `git init` fixture has no such ref (REMOTE_UNAVAILABLE -> UNKNOWN -> exit 1),
+       and a --no-local clone of a linked worktree maps the SOURCE repository's local branches
+       to origin/*, so origin/master became D:\EA_LAB's diverged local master
+       (DIVERGED_FROM_CANONICAL, behind ~1500 -> WARN -> exit 1). Either way the commit under
+       test was refused for a ref that has nothing to do with ORDER-103.
+       A real lane commits on top of the canonical ref it was cut from. Record the fixture's
+       current HEAD -- the base its commit under test sits on -- as that ref, so check_state
+       sees AHEAD_CANONICAL exactly as it would in a lane. check_state itself is untouched.
+       Refuses (throws) if HEAD cannot be resolved or the ref cannot be written: a fixture that
+       silently kept the stale ref would reproduce the false FAIL instead of exposing it. #>
+    param([string]$Dir)
+    $head = (Invoke-GitRaw -RepoRoot $Dir -Arguments 'rev-parse --verify HEAD').StdOut.Trim()
+    if ($head -notmatch '^[0-9a-f]{40}$') { throw "fixture canonical base: cannot resolve HEAD in $Dir" }
+    $set = Invoke-GitRaw -RepoRoot $Dir -Arguments ('update-ref refs/remotes/origin/master {0}' -f $head)
+    if ($set.ExitCode -ne 0) { throw "fixture canonical base: update-ref failed in ${Dir}: $($set.StdErr)" }
+}
+
 function Enable-TempHook {
     param([string]$Dir)
+    Set-FixtureCanonicalBase -Dir $Dir
     Invoke-GitRaw -RepoRoot $Dir -Arguments 'config core.hooksPath .githooks' | Out-Null
 }
 
@@ -785,6 +878,18 @@ function Write-StagedArtifactsForHookRepo {
     Write-TextFileLfNoBom -Path (Join-Path $artifactRoot 'ARCHIVE_INDEX.md') -Text (Build-ArchiveIndexMarkdown -ManifestRows $candidateRows -ArchiveBlobSha $candidateArchive.Identity -ArchiveRawFileSha256 (Get-Sha256Hex -Bytes $candidateArchive.Bytes))
     Write-TextFileLfNoBom -Path (Join-Path $artifactRoot 'RECONCILE_EXCEPTIONS.md') -Text (Build-ExceptionsMarkdown -Report $candidateReport)
     Invoke-GitRaw -RepoRoot $Dir -Arguments 'add -- docs/memory_control/ARCHIVE_MANIFEST.csv docs/memory_control/ARCHIVE_INDEX.md docs/memory_control/RECONCILE_EXCEPTIONS.md' | Out-Null
+}
+
+function Write-StagedDigestForHookRepo {
+    <# Since D-F9 the hook refuses a commit that touches the boards unless TASKBOARD_DIGEST.md
+       is in the index and fresh against the boards that commit lands. Regenerate it with the
+       REAL generator from the fixture's own board files (already staged by the caller, so
+       working == index for them) and stage it, exactly as an operator must. #>
+    param([string]$Dir)
+    $gen = Invoke-PowerShellFile -Dir $Dir -ScriptRelPath (Join-Path $RepoRoot 'scripts\make_taskboard_digest.ps1') -Arguments ('-Root "{0}"' -f $Dir)
+    if ($gen.ExitCode -ne 0) { throw "fixture digest generation failed in ${Dir}: $($gen.StdOut + $gen.StdErr)" }
+    $add = Invoke-GitRaw -RepoRoot $Dir -Arguments 'add -- TASKBOARD_DIGEST.md'
+    if ($add.ExitCode -ne 0) { throw "fixture digest staging failed in ${Dir}: $($add.StdErr)" }
 }
 
 function New-RealHookFixture {
@@ -955,7 +1060,9 @@ if ($QiHookOnly) {
 
 # --- ordinary commit (touches no protected file) must PASS ---
 $hookRepoOrdinary = New-TempHookRepo -Tag 'fix2_ordinary'
-Write-CommitFile -Dir $hookRepoOrdinary -RelPath 'scripts\check_taskboard_archive.ps1' -Content ((Get-Content (Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1') -Raw)) -Message 'seed' | Out-Null
+# The runtime baseline (Copy-HookFixtureDependencies -CommitBareRuntime) already tracks
+# check_taskboard_archive.ps1, which this seed used to commit; seed an ordinary file.
+Write-CommitFile -Dir $hookRepoOrdinary -RelPath 'src\seed.txt' -Content "seed`n" -Message 'seed' | Out-Null
 $normalFile = Join-Path $hookRepoOrdinary 'src\some_code.txt'
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $normalFile) | Out-Null
 'hello world' | Set-Content -Path $normalFile -Encoding UTF8
@@ -1020,6 +1127,7 @@ Write-TextFileLfNoBom -Path (Join-Path $hookRepoValid 'docs\memory_control\ARCHI
 Write-TextFileLfNoBom -Path (Join-Path $hookRepoValid 'docs\memory_control\RECONCILE_EXCEPTIONS.md') -Text (Build-ExceptionsMarkdown -Report $validReport)
 
 Invoke-GitRaw -RepoRoot $hookRepoValid -Arguments 'add -- docs/memory_control/ARCHIVE_MANIFEST.csv docs/memory_control/ARCHIVE_INDEX.md docs/memory_control/RECONCILE_EXCEPTIONS.md' | Out-Null
+Write-StagedDigestForHookRepo -Dir $hookRepoValid
 Enable-TempHook -Dir $hookRepoValid
 $rValid = Invoke-GitRaw -RepoRoot $hookRepoValid -Arguments 'commit -q -m "valid protected commit: append B + refresh artifacts"'
 Add-Result -Name 'fix2-valid-protected-commit-passes' -Pass ($rValid.ExitCode -eq 0) -Detail ($rValid.StdOut + $rValid.StdErr)
@@ -1094,13 +1202,20 @@ Add-Result -Name 'fix2-artifact-eol-byte-change-blocks' `
     -Detail $artifactEolOutput
 
 $hookRepoActiveOnly = New-RealHookFixture -Tag 'fix2_active_only'
-$activeOnlyPath = Join-Path $hookRepoActiveOnly 'AGENT_TASKBOARD.md'
-$activeOnlyText = [System.IO.File]::ReadAllText($activeOnlyPath, [System.Text.Encoding]::UTF8)
 # ORDER-071 already exists in the committed archive. Reintroducing it on the
 # active board creates a cross-active-and-archive exception that post-commit
 # Strict would reject unless the hook evaluates the staged active snapshot.
+# Since the 2026-08-22 split the active board is the parts AGENT_TASKBOARD.md
+# declares, not the manifest: a block appended to the manifest is outside the
+# logical board and never reached the check, so this case only went red on an
+# unrelated front-guard failure. Tamper the LAST declared part instead.
+$activeOnlyManifest = [System.IO.File]::ReadAllText((Join-Path $hookRepoActiveOnly 'AGENT_TASKBOARD.md'), [System.Text.Encoding]::UTF8)
+$activeOnlyParts = @(Get-TaskboardActivePartList -ManifestText $activeOnlyManifest)
+$activeOnlyRel = $activeOnlyParts[$activeOnlyParts.Count - 1]
+$activeOnlyPath = Join-Path $hookRepoActiveOnly $activeOnlyRel
+$activeOnlyText = [System.IO.File]::ReadAllText($activeOnlyPath, [System.Text.Encoding]::UTF8)
 [System.IO.File]::WriteAllText($activeOnlyPath, ($activeOnlyText + "`n## ORDER-071 -- DUPLICATED-TAMPER -- ``OPEN```n"), (New-Object System.Text.UTF8Encoding($false)))
-Invoke-GitRaw -RepoRoot $hookRepoActiveOnly -Arguments 'add -- AGENT_TASKBOARD.md' | Out-Null
+Invoke-GitRaw -RepoRoot $hookRepoActiveOnly -Arguments ('add -- "{0}"' -f $activeOnlyRel) | Out-Null
 $rActiveOnly = Invoke-GitRaw -RepoRoot $hookRepoActiveOnly -Arguments 'commit -q -m "tamper active only"'
 $activeOnlyOutput = $rActiveOnly.StdOut + $rActiveOnly.StdErr
 Add-Result -Name 'fix2-active-only-change-blocks' `
@@ -1216,11 +1331,13 @@ foreach ($rel in @('ARCHIVE_TASKBOARD_2026-07A.md','docs/memory_control/ARCHIVE_
     [System.IO.File]::WriteAllBytes($dest, (Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $bindingSha -Path $rel))
 }
 
+Set-FixtureCanonicalBase -Dir $hookRepoBinding
 Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'config core.hooksPath .githooks' | Out-Null
 Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'add -- ARCHIVE_TASKBOARD_2026-07A.md docs/memory_control/ARCHIVE_MANIFEST.csv docs/memory_control/ARCHIVE_INDEX.md docs/memory_control/RECONCILE_EXCEPTIONS.md' | Out-Null
 # The binding archive blob is the real transaction, while the operator-facing
 # generated text must reflect the current exact-binding documentation.
 Write-StagedArtifactsForHookRepo -Dir $hookRepoBinding
+Write-StagedDigestForHookRepo -Dir $hookRepoBinding
 $rBindingCommit = Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments 'commit -m "real ORDER-103 binding candidate"'
 $bindingCommitOutput = $rBindingCommit.StdOut + $rBindingCommit.StdErr
 Add-Result -Name 'fix2-real-commit-of-binding-through-hook-passes' `

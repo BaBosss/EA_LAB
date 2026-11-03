@@ -51,8 +51,10 @@
             DONE          finished in this session, needs no future home
 
         A token RESOLVES when:
-            ORDER-x    '## ORDER-x' is a header in the staged-or-HEAD
-                       AGENT_TASKBOARD.md, or in HEAD:ARCHIVE_TASKBOARD_2026-07A.md
+            ORDER-x    '## ORDER-x' is a header in the staged-or-HEAD logical
+                       active board (the AGENT_TASKBOARD.md manifest plus its declared
+                       taskboards/active parts), or in the staged
+                       ARCHIVE_TASKBOARD_2026-07A.md
             BACKLOG-x  '| x |' opens a table row in the staged-or-HEAD
                        MASTER_BACKLOG.md
             DONE       always
@@ -85,7 +87,7 @@
     Test override. Hashtable of staged-path -> file text. Replaces 'git show :<path>'.
 
 .PARAMETER ActiveBoardContent
-    Test override. Replaces the staged-or-HEAD AGENT_TASKBOARD.md blob.
+    Test override. Replaces the staged-or-HEAD logical active board (manifest + parts).
 
 .PARAMETER ArchiveBoardContent
     Test override. Replaces the HEAD:ARCHIVE_TASKBOARD_2026-07A.md blob.
@@ -435,15 +437,37 @@ if ($needOrder) {
         $activeIds = Get-OrderHeaderIds -Text $ActiveBoardContent
         $archiveIds = Get-OrderHeaderIds -Text $ArchiveBoardContent
     } else {
-        # snapshot: index -- the board as this commit will contain it. A handoff routing an item
-        # to an order the SAME commit opens must resolve, or the guard forbids the one shape
-        # WORK_LIFECYCLE actually asks for.
-        $activeText = Get-GitBlobText -Spec (':{0}' -f $ActiveBoardPath)
-        # snapshot: HEAD -- reached only when the path has NO index entry at all (staged for
-        # deletion, or untracked). Not a vintage preference: it is "the board still exists in
-        # history, resolve against that rather than refuse", and it is stated so the fallback
-        # cannot be mistaken for the primary read.
-        if ($null -eq $activeText) { $activeText = Get-GitBlobText -Spec ('HEAD:{0}' -f $ActiveBoardPath) }
+        # THE LOGICAL BOARD, NOT THE MANIFEST (2026-11-03). Since the 2026-08-22 split
+        # (74b5c574) AGENT_TASKBOARD.md is a manifest and every '## ORDER-' header lives in
+        # taskboards/active/P0*.md. Reading the manifest alone resolved no active order at all,
+        # so a handoff routed to a live order passed only if that order was ALSO archived, and
+        # was refused otherwise. Resolve manifest + declared parts through the one shared
+        # resolver. A manifest whose declared part cannot be read is a TOOLING refusal, never
+        # a silent fall-back to fewer orders (memory: unreadable-input-must-refuse-not-skip).
+        $resolver = Join-Path $PSScriptRoot 'lib\taskboard_source.ps1'
+        if (-not (Test-Path -LiteralPath $resolver)) {
+            Write-Host ('{0} TOOLING: active-board resolver {1} is missing -- refusing to read the bare manifest as the board' -f $Tag, $resolver)
+            exit 2
+        }
+        . $resolver
+        $activeText = $null
+        try {
+            # snapshot: index -- the board as this commit will contain it. A handoff routing an
+            # item to an order the SAME commit opens must resolve, or the guard forbids the one
+            # shape WORK_LIFECYCLE actually asks for.
+            if ($null -ne (Get-GitBlobText -Spec (':{0}' -f $ActiveBoardPath))) {
+                $activeText = Get-TaskboardActiveLogicalText -RepoRoot $RepoRoot -Mode Staged
+            } elseif ($null -ne (Get-GitBlobText -Spec ('HEAD:{0}' -f $ActiveBoardPath))) {
+                # snapshot: HEAD -- reached only when the manifest has NO index entry at all
+                # (staged for deletion, or untracked). Not a vintage preference: it is "the
+                # board still exists in history, resolve against that rather than refuse", and
+                # it is stated so the fallback cannot be mistaken for the primary read.
+                $activeText = Get-TaskboardActiveLogicalText -RepoRoot $RepoRoot -Mode Committed -CommitSha 'HEAD'
+            }
+        } catch {
+            Write-Host ('{0} TOOLING: active board unreadable: {1}' -f $Tag, $_.Exception.Message)
+            exit 2
+        }
         # ORDER-674 owed half, 2026-07-31: THIS READ WAS `HEAD:` AND IT REFUSED VALID WORK.
         #
         # Decision log 2026-07-26 (WORK_LIFECYCLE): "REVIEWED* = archive it immediately, SAME

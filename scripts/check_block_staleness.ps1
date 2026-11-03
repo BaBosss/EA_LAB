@@ -43,12 +43,35 @@ $ErrorActionPreference = 'Stop'
 # itself cage-covered by scripts\_test\run_statusclass_tests.ps1 after the
 # ORDER-260 substring bug.)
 $validator = Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1'
+# Dot-sourcing binds the validator's OWN param block in this scope, and it declares a
+# [switch]$Strict of its own: our -Strict was reset to $false here, so -Strict never
+# exited 1 (found 2026-11-03 by the manifest-reader cage). Keep ours across the import.
+$strictRequested = $Strict.IsPresent
 . $validator -RepoRoot $RepoRoot 6>$null
+$Strict = [switch]$strictRequested
 
-$boards = @(
-    (Join-Path $RepoRoot 'AGENT_TASKBOARD.md'),
-    (Join-Path $RepoRoot 'ARCHIVE_TASKBOARD_2026-07A.md')
-)
+# Since the 2026-08-22 split (74b5c574) AGENT_TASKBOARD.md is a manifest and the active
+# ORDER blocks live in the parts it declares (taskboards/active/P0*.md). Scanning the
+# manifest alone saw zero active orders, so a closed block still waiting on the active
+# board was never linted. Scan the manifest, then every declared part in declared order,
+# then the archive -- each as its own file so a finding names the file it is really in.
+# The part list comes from the shared resolver; an unreadable manifest throws rather than
+# silently shrinking the scan (memory: unreadable-input-must-refuse-not-skip).
+. (Join-Path $RepoRoot 'scripts\lib\taskboard_source.ps1')
+$manifestPath = Join-Path $RepoRoot 'AGENT_TASKBOARD.md'
+$boards = New-Object System.Collections.Generic.List[string]
+$boards.Add($manifestPath)
+if (Test-Path -LiteralPath $manifestPath) {
+    $manifestText = [System.IO.File]::ReadAllText($manifestPath, [System.Text.Encoding]::UTF8)
+    if ($manifestText.IndexOf('<!-- TASKBOARD-ACTIVE-PARTS') -ge 0) {
+        foreach ($part in (Get-TaskboardActivePartList -ManifestText $manifestText)) {
+            $partPath = Join-Path $RepoRoot $part
+            if (-not (Test-Path -LiteralPath $partPath)) { throw "AGENT_TASKBOARD.md declares active part '$part' but it does not exist on disk" }
+            $boards.Add($partPath)
+        }
+    }
+}
+$boards.Add((Join-Path $RepoRoot 'ARCHIVE_TASKBOARD_2026-07A.md'))
 
 # Files that are themselves indexes of every verdict ever written will contain
 # these words constantly; citing one is not evidence of staleness.
@@ -57,6 +80,8 @@ $selfReferential = @(
     'EA_MASTER_INDEX.csv','PROJECT_STATE.md','PROJECT_HISTORY.md','MASTER_BACKLOG.md',
     'TASKBOARD_DIGEST.md','VISION.md','ROADMAP.md','CLAUDE.md','AGENTS.md'
 )
+# The active parts are boards too, so they are self-referential in the same way.
+foreach ($b in $boards) { $leaf = Split-Path $b -Leaf; if ($selfReferential -notcontains $leaf) { $selfReferential += $leaf } }
 
 # Thai tokens are built from code points on purpose: Windows PowerShell 5.1 reads
 # a .ps1 as ANSI unless it has a BOM, so literal Thai in this file would arrive
@@ -134,7 +159,8 @@ $scannedCount = 0
 
 foreach ($board in $boards) {
     if (-not (Test-Path -LiteralPath $board)) { continue }
-    $boardName = Split-Path $board -Leaf
+    # Repo-relative, so a finding in taskboards/active/P02.md is not reported as bare 'P02.md'.
+    $boardName = $board.Substring($RepoRoot.TrimEnd('\','/').Length).TrimStart('\','/') -replace '\\', '/'
     $lines = Get-Content -LiteralPath $board -Encoding UTF8
 
     $curHeader = $null; $curStart = 0; $buf = New-Object System.Collections.Generic.List[string]

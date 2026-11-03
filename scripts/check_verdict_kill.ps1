@@ -28,7 +28,10 @@ $ErrorActionPreference = 'SilentlyContinue'
 
 # verdict-bearing files worth scanning
 # snapshot: index -- `diff --cached` is HEAD vs the INDEX, i.e. the paths this commit carries.
-$targets = git diff --cached --name-only -- '_triage/*.md' 'EDGE_CATALOG.md' 'AGENT_TASKBOARD.md' 'EA_SCORECARD_AND_REGISTRY.md'
+# taskboards/active/*.md: since the 2026-08-22 split AGENT_TASKBOARD.md is only a manifest and
+# every active ORDER block (where a verdict is written) lives in those parts. Without them a
+# kill verdict added to the active board never reached this reminder.
+$targets = git diff --cached --name-only -- '_triage/*.md' 'EDGE_CATALOG.md' 'AGENT_TASKBOARD.md' 'taskboards/active/*.md' 'EA_SCORECARD_AND_REGISTRY.md'
 if (-not $targets) { exit 0 }
 
 # only the ADDED lines in this commit

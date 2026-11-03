@@ -47,16 +47,21 @@ if (-not $RepoRoot) {
 # imports functions.
 . (Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1') -RepoRoot $RepoRoot 6>$null
 
-$ACTIVE_REL  = 'AGENT_TASKBOARD.md'
 $ARCHIVE_REL = 'ARCHIVE_TASKBOARD_2026-07A.md'
 
-$stagedActive  = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ACTIVE_REL
+# The LOGICAL staged active board (manifest + declared taskboards/active parts), exactly
+# what check_precommit_staged.ps1 builds its candidate from since the 2026-08-22 split.
+# Reading the bare manifest saw no active orders, so every order that is both active and
+# archived dropped out of the exception scan: the regenerated RECONCILE_EXCEPTIONS.md
+# disagreed with the hook's candidate (and ORDER-095's Source-A binding row turned into a
+# false integrity failure).
+$stagedActiveBytes = Get-SourceBytes -RepoRoot $RepoRoot -SourceSpec 'ACTIVE:Staged'
 $stagedArchive = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ARCHIVE_REL
 
-Write-Host ("[regen] staged active  identity = {0}" -f $stagedActive.Identity)
+Write-Host ("[regen] staged logical active board sha256 = {0}" -f (Get-Sha256Hex -Bytes $stagedActiveBytes))
 Write-Host ("[regen] staged archive identity = {0}" -f $stagedArchive.Identity)
 
-$activeBlocks  = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedActive.Bytes)  -SourceTag 'current-active')
+$activeBlocks  = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedActiveBytes)  -SourceTag 'current-active')
 $archiveBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedArchive.Bytes) -SourceTag 'current-archive')
 
 $scan    = Invoke-ExceptionScan    -CurrentActiveBlocks $activeBlocks -CurrentArchiveBlocks $archiveBlocks

@@ -68,10 +68,21 @@
 
 .PARAMETER PreSplitSource / SplitActiveSource / SplitArchiveSource /
            CurrentActiveSource / CurrentArchiveSource
-    Source specs, each either "GIT:<ref>:<path>" (read via `git show`) or
-    "FILE:<absolute-path>" (read directly from disk). Defaults point at the
-    real repo's 4aebbc37 split commit and the real working-tree files. Negative
-    tests override these with small synthetic fixture files so the exact same
+    Source specs, each one of:
+      "GIT:<ref>:<path>"   read via `git show <ref>:<path>`
+      "GIT::<path>"        the staged/index blob (`git show :<path>`)
+      "FILE:<absolute-path>" read directly from disk
+      "ACTIVE:Working" | "ACTIVE:Staged" | "ACTIVE:Committed:<ref>"
+                           the LOGICAL active board: the AGENT_TASKBOARD.md manifest
+                           plus its declared taskboards/active parts, concatenated in
+                           order (scripts/lib/taskboard_source.ps1). Since the
+                           2026-08-22 split the manifest alone holds no ORDER blocks.
+    Defaults: PreSplit/SplitActive/SplitArchive point at the real 4aebbc37 split
+    commit. When not supplied, CurrentActiveSource is ACTIVE:Working under
+    -Generate and ACTIVE:Committed:HEAD under -Audit/-Strict; CurrentArchiveSource
+    is FILE:<repo>\ARCHIVE_TASKBOARD_2026-07A.md under -Generate and
+    GIT:HEAD:ARCHIVE_TASKBOARD_2026-07A.md under -Audit/-Strict. Negative tests
+    override these with small synthetic fixture files so the exact same
     parsing/scoring logic is exercised without touching real repo content.
 
 .PARAMETER SkipArtifacts
@@ -2543,7 +2554,9 @@ function Invoke-Main {
     $modeLabel = $Mode.ToUpper()
     $roTag = if ($isGenerate) { '' } else { ' (READ-ONLY -- never writes manifest/index/exceptions)' }
     Write-Host "=== check_taskboard_archive.ps1 [$modeLabel]$roTag ==="
-    Write-Host ('Pre-state hash  AGENT_TASKBOARD.md            = ' + $report.PreStateHashes.CurrentActiveFileSha256)
+    # The active hash is over the LOGICAL board (manifest + declared taskboards/active parts)
+    # whenever the default ACTIVE:* source is in use, so the label must not name one file.
+    Write-Host ('Pre-state hash  active board (logical)        = ' + $report.PreStateHashes.CurrentActiveFileSha256 + '  [' + $CurrentActiveSource + ']')
     Write-Host ('Pre-state hash  ARCHIVE_TASKBOARD_2026-07A.md = ' + $report.PreStateHashes.CurrentArchiveFileSha256)
     Write-Host ('Archive content identity (git blob sha)       = ' + $report.ArchiveBlobSha)
     if ($report.ChainIntegrity) {
