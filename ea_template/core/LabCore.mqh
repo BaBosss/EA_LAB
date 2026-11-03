@@ -68,6 +68,22 @@
 #ifdef LAB_ENTRY_25
    #include "entries/Entry_PersistentAdaptiveGrid.mqh"
 #endif
+// A10 C2 port: additive builds 23/26/27/28/29.
+#ifdef LAB_ENTRY_23
+   #include "entries/Entry_LUX03_OrderBlock.mqh"
+#endif
+#ifdef LAB_ENTRY_26
+   #include "entries/Entry_LUX02_BOSRetest.mqh"
+#endif
+#ifdef LAB_ENTRY_27
+   #include "entries/Entry_TrendRider.mqh"
+#endif
+#ifdef LAB_ENTRY_28
+   #include "entries/Entry_LUX01_LiqSweep.mqh"
+#endif
+#ifdef LAB_ENTRY_29
+   #include "entries/Entry_PendingBreakout.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -484,6 +500,21 @@ int OnInit()
 #ifdef LAB_ENTRY_22
    Entry_WickDisplacement_Init();
 #endif
+#ifdef LAB_ENTRY_23
+   Entry_LUX03_Init();
+#endif
+#ifdef LAB_ENTRY_26
+   Entry_LUX02_Init();
+#endif
+#ifdef LAB_ENTRY_27
+   TrendRider_Init();
+#endif
+#ifdef LAB_ENTRY_28
+   Entry_LUX01_Init();
+#endif
+#ifdef LAB_ENTRY_29
+   PendingBreakout_Init();
+#endif
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
@@ -550,6 +581,18 @@ void OnDeinit(const int reason)
 #endif
 #ifdef LAB_ENTRY_19
    Entry_AdaptiveTrendGrid_Deinit();
+#endif
+#ifdef LAB_ENTRY_23
+   Entry_LUX03_LogCounters();
+#endif
+#ifdef LAB_ENTRY_26
+   Entry_LUX02_LogCounters();
+#endif
+#ifdef LAB_ENTRY_27
+   TrendRider_Deinit();
+#endif
+#ifdef LAB_ENTRY_28
+   Entry_LUX01_LogCounters();
 #endif
    if(_MG_SelfGate) MG_Deinit();   // clear any MACROGATE_* GVs we set
    Regime_Deinit();
@@ -685,6 +728,14 @@ void OnTick()
    // the hard cage and safety exits before strategy work, then always returns
    // so shared Exit/Stack/Recovery/Hedge/Basket paths cannot also act.
    if(AdaptiveTrendGrid_OnTick()) return;
+#endif
+#ifdef LAB_ENTRY_27
+   // A10 C2 port: entry-owned pipeline (runs its own DD/halt cage first, then always returns).
+   if(TrendRider_OnTick()) return;
+#endif
+#ifdef LAB_ENTRY_29
+   // A10 C2 port: entry-owned pipeline (runs its own DD/halt cage first, then always returns).
+   if(PendingBreakout_OnTick()) return;
 #endif
    // (1) hard kill FIRST - before any cadence gate. ORDER-129 (Codex system review
    // SEV-1): the bar gate below used to early-return before the kill check, so with

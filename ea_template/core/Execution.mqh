@@ -1789,6 +1789,103 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
    return ok;
 }
 
+// A10 C2 port: intent-carrying order API for the entry-owned pipelines of builds 27 (TrendRider)
+// and 29 (PendingBreakout). ADDITIVE and BUILD-GATED: no other build compiles this block, so
+// Exec_Open/Exec_PlacePending and every existing caller are untouched. The local source routed
+// these through a regime permission layer; that layer is not ported (it changes every build),
+// and it is a no-op at default configuration, so `intent` is carried but not acted on here.
+#ifdef LAB_ENTRY_27
+   #define LAB_EXEC_INTENT_API
+#endif
+#ifdef LAB_ENTRY_29
+   #define LAB_EXEC_INTENT_API
+#endif
+#ifdef LAB_EXEC_INTENT_API
+enum ENUM_TRADE_INTENT
+{
+   INTENT_GRID_SEED = 0,       // first order of a basket
+   INTENT_GRID_ADD,            // adverse averaging / ladder add
+   INTENT_TREND_ENTRY,         // single-order trend / breakout entry
+   INTENT_PYRAMID_ADD,         // add to a winning position
+   INTENT_HEDGE_OPEN           // directional hedge leg
+};
+
+// Same guards and order as Exec_Open (news, macro, spread, macro lot multiplier, normalize,
+// dry-run), plus an explicit request price for callers that pass the quote they evaluated.
+bool Exec_OpenIntent(const ENUM_TRADE_INTENT intent, const int direction, double lot,
+                     const double sl, const double tp, const string comment, const double price = 0.0)
+{
+   if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;
+   if(!Exec_SpreadOK()) return false;
+   lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());
+   if(lot <= 0.0) return false;
+   g_exec_open_intents++;
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] open intent=%d dir=%d lot=%.2f sl=%.5f tp=%.5f %s", (int)intent, direction, lot, sl, tp, comment);
+      return true;
+   }
+   if(direction == 1) return g_trade.Buy(lot, _Symbol, price, sl, tp, comment);
+   if(direction == 2) return g_trade.Sell(lot, _Symbol, price, sl, tp, comment);
+   return false;
+}
+
+// Exec_PlacePending plus a TP and an optional expiry (ORDER_TIME_SPECIFIED when > 0). Same
+// guards, same server-retcode acceptance rule (ORDER-132b).
+bool Exec_PlacePendingIntent(const ENUM_TRADE_INTENT intent, const int direction,
+                             const bool isStop, double lot, double price, const double sl,
+                             const double tp, const datetime expiration, const string comment)
+{
+   if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;
+   if(!Exec_SpreadOK()) return false;
+   lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());
+   if(lot <= 0.0) return false;
+   price = NormalizeDouble(price, _Digits);
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] pending intent=%d dir=%d stop=%d lot=%.2f at %.5f sl=%.5f tp=%.5f %s",
+                  (int)intent, direction, (isStop ? 1 : 0), lot, price, sl, tp, comment);
+      return true;
+   }
+   ENUM_ORDER_TYPE_TIME typeTime = (expiration > 0 ? ORDER_TIME_SPECIFIED : ORDER_TIME_GTC);
+   bool ok = false;
+   if(direction == 1) ok = (isStop ? g_trade.BuyStop(lot, price, _Symbol, sl, tp, typeTime, expiration, comment)
+                                   : g_trade.BuyLimit(lot, price, _Symbol, sl, tp, typeTime, expiration, comment));
+   else               ok = (isStop ? g_trade.SellStop(lot, price, _Symbol, sl, tp, typeTime, expiration, comment)
+                                   : g_trade.SellLimit(lot, price, _Symbol, sl, tp, typeTime, expiration, comment));
+   if(ok)
+   {
+      uint rc = g_trade.ResultRetcode();
+      if(rc != TRADE_RETCODE_DONE && rc != TRADE_RETCODE_PLACED) ok = false;
+   }
+   if(ok) PrintFormat("[EXEC] pending placed intent=%d dir=%d stop=%d lot=%.2f at %.5f (%s)",
+                      (int)intent, direction, (isStop ? 1 : 0), lot, price, comment);
+   else   PrintFormat("[EXEC] pending FAILED intent=%d dir=%d at %.5f retcode=%d",
+                      (int)intent, direction, price, (int)g_trade.ResultRetcode());
+   return ok;
+}
+
+bool Exec_CancelOrderTicket(const ulong ticket)
+{
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] cancel pending ticket %I64u", ticket);
+      return true;
+   }
+   return g_trade.OrderDelete(ticket);
+}
+
+bool Exec_ClosePartialTicket(const ulong ticket, const double volume)
+{
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] partial-close ticket %I64u volume=%.4f", ticket, volume);
+      return true;
+   }
+   return g_trade.PositionClosePartial(ticket, volume);
+}
+#endif // LAB_EXEC_INTENT_API
+
 // ORDER-129: close-all now PROVES flatness instead of assuming it. Returns true only when,
 // after issuing every close/cancel, a broker-state re-scan finds zero own positions AND zero
 // own pendings. The hard-kill persists HALT only on a true return (reconciliation loop in

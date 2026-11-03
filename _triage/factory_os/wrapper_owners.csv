@@ -11,5 +11,10 @@ LAB_ENTRY_19,ea_template/Probe_19_AdaptiveTrendGrid.mq5
 LAB_ENTRY_20,ea_template/Boss_20_GoldTimeBomb.mq5
 LAB_ENTRY_21,ea_template/Boss_21_GridFibo.mq5
 LAB_ENTRY_22,ea_template/Boss_22_WickDisplacement.mq5
+LAB_ENTRY_23,ea_template/Boss_23_LUX03_OrderBlock.mq5
 LAB_ENTRY_24,ea_template/Boss_24_AdaptiveDonchianFlip.mq5
 LAB_ENTRY_25,ea_template/Boss_25_PersistentAdaptiveGrid.mq5
+LAB_ENTRY_26,ea_template/Boss_26_LUX02_BOSRetest.mq5
+LAB_ENTRY_27,ea_template/Boss_27_TrendRider.mq5
+LAB_ENTRY_28,ea_template/Boss_28_LUX01_LiqSweep.mq5
+LAB_ENTRY_29,ea_template/Boss_29_PendingBreakout.mq5

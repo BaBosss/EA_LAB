@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 273.
+Rows in source registry: 364.
 
 ## Override pairs
 
@@ -80,8 +80,14 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_16_RsiHigh` | build 16 only, direction 2 instance | _16_RsiPeriod | SELL-instance arms when last-closed-bar RSI is above this. |
 | `_16_RsiLow` | build 16 only, direction 1 instance | _16_RsiPeriod | BUY-instance arms when last-closed-bar RSI is below this. |
 | `_16_RsiPeriod` | build 16 only | _16_RsiLow; _16_RsiHigh | RSI period for the Kangaroo fade entry (own handle, chart TF). |
+| `_17_ConcurrencyMode` | build 17 Stage-0 only | per-structure Magic/persistence; hedging account required for overlap | Selects one active Wave-3 structure or independent overlapping same/opposite-direction structures. |
 | `_17_EntryFib` | build 17 only | _17_SLbufferATR(SL placement is independent, anchored on wave1, not this fib level) | Wave-4 retrace zone arm level, as % retrace of the full wave-3 length. |
+| `_17_FibLevel1` | build 17 Stage-0 and level count >=1 | ordered Fib vector | First and shallowest Wave3 retracement level. |
+| `_17_FibLevel2` | build 17 Stage-0 and level count >=2 | ordered Fib vector | Second Wave3 retracement level. |
+| `_17_FibLevel3` | build 17 Stage-0 and level count >=3 | ordered Fib vector | Third Wave3 retracement level. |
+| `_17_FibLevel4` | build 17 Stage-0 and level count >=4 | ordered Fib vector | Fourth and deepest default Wave3 retracement level. |
 | `_17_FractalDepth` | build 17 only | _17_MaxSwings | Confirmed-fractal bars required on each side of a pivot before it counts as a swing (repaint guard: newest usable pivot is always this many bars back). |
+| `_17_LadderLevelCount` | build 17 Stage-0 only | _17_FibLevel1..4 | Number of enabled frozen Fib ladder levels, currently capped at four owner-frozen values. |
 | `_17_MaxSwings` | build 17 only | _17_FractalDepth | Maximum confirmed pivots collected per evaluation call (needs >=4 for a valid 1-2-3 structure). |
 | `_17_Wave3MinMult` | build 17 only | implicit: wave1 length itself, derived from the swing data | Minimum multiple of \|wave1\| that wave3 must break beyond wave1's end for the 1-2-3 structure to confirm. |
 | `_18_Direction` | build 18 only | none - fixed-direction instance | Fixes this JumStoch instance to BUY-only or SELL-only. |
@@ -112,9 +118,86 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_21_DF03_TPPip` | build 21 only | source-native DF03 | Exact frozen DF03 TPPip binding; no optimization authority |
 | `_22_DisplacementBodyFraction` | build 22 only | _22_WickBodyRatio | Minimum confirmation-candle body divided by full range before the close beyond the rejection extreme can signal. |
 | `_22_WickBodyRatio` | build 22 only | _22_DisplacementBodyFraction | Minimum dominant rejection-wick length as a multiple of rejection-candle body. |
+| `_23_OB_HourFrom` | build 23 only | none direct | Session start hour |
+| `_23_OB_HourTo` | build 23 only | none direct | Session end hour |
+| `_23_OB_MaxZoneAge` | build 23 only | none direct | Max bars OB zone remains active |
+| `_23_OB_RequireDiscount` | build 23 only | none direct | Require discount/premium pricing |
+| `_23_OB_SwingDepth` | build 23 only | none direct | OB swing pivot depth |
+| `_23_OB_VolMult` | build 23 only | none direct | Volume spike multiplier vs SMA(20) |
 | `_24_BufferATR_High` | build 24 only in HIGH regime | _24_ATRPeriod; _24_DonchianBars | Strict Donchian breakout buffer in HIGH volatility. |
 | `_24_BufferATR_Normal` | build 24 only in NORMAL regime | _24_ATRPeriod; _24_DonchianBars | Strict Donchian breakout buffer in NORMAL volatility. |
 | `_24_DonchianBars` | build 24 only | _24_BufferATR_Normal; _24_BufferATR_High | Prior closed-bar channel length; the decision bar is excluded. |
+| `_26_HourFrom` | build 26 only | none direct | Session start hour (UTC) |
+| `_26_HourTo` | build 26 only | none direct | Session end hour (UTC) |
+| `_26_InvalATR` | build 26 only | none direct | Invalidation beyond level (ATR mult) |
+| `_26_MaxPullbackBars` | build 26 only | none direct | Max bars allowed from BOS to confirmation |
+| `_26_RetestBufferATR` | build 26 only | none direct | Retest touch tolerance (ATR mult) |
+| `_26_SwingDepth` | build 26 only | none direct | Swing pivot radius bars (k = depth + 1) |
+| `_27_AdxMin` | build 27 only | none direct | Trend ADX floor (Plateau Center) |
+| `_27_AdxPeriod` | build 27 only | none direct | ADX Period |
+| `_27_AtrPeriod` | build 27 only | none direct | ATR Period |
+| `_27_BaselineVariance` | build 27 only | none direct | Baseline variance for inverse-vol lot scaling |
+| `_27_ChAtrMult` | build 27 only | none direct | Chandelier ATR trail mult (Plateau Center) |
+| `_27_ChHighBars` | build 27 only | none direct | Chandelier lookback bars (Plateau Center) |
+| `_27_EmaFast` | build 27 only | none direct | Trend fast EMA |
+| `_27_EmaPull` | build 27 only | none direct | Pullback reference EMA |
+| `_27_EmaSlow` | build 27 only | none direct | Trend slow EMA |
+| `_27_EnableVolFilter` | build 27 only | none direct | Enable Signed Volatility Gate (default false) |
+| `_27_EndGmt` | build 27 only | none direct | Session end GMT hour |
+| `_27_LondonNYOverlapOnly` | build 27 only | none direct | Trade strictly in London/NY peak liquidity (default false) |
+| `_27_MaxOrders` | build 27 only | none direct | Max open trend orders (1 = single, >1 = pyramiding) |
+| `_27_ScaleInAtr` | build 27 only | none direct | Scale-in profit distance in ATR from last order |
+| `_27_SepAtrMult` | build 27 only | none direct | EMA separation in ATR (Plateau Center) |
+| `_27_ServerGmtOffset` | build 27 only | none direct | Server GMT offset (Exness = +3) |
+| `_27_SlAtrMult` | build 27 only | none direct | Stop Loss in ATR |
+| `_27_StartGmt` | build 27 only | none direct | Session start GMT hour |
+| `_28_AsianHourFrom` | build 28 only | none direct | Asian session start hour |
+| `_28_AsianHourTo` | build 28 only | none direct | Asian session end hour |
+| `_28_MaxSweepBars` | build 28 only | none direct | Max bars between sweep and CHoCH |
+| `_28_MinFvgPips` | build 28 only | none direct | Minimum FVG size in pips |
+| `_28_TradeHourFrom` | build 28 only | none direct | Trading window start hour |
+| `_28_TradeHourTo` | build 28 only | none direct | Trading window end hour |
+| `_29_AtrSlMult` | build 29 only | none direct | ATR multiplier for SL |
+| `_29_AtrStepMult` | build 29 only | none direct | ATR multiplier for grid step |
+| `_29_AtrTpMult` | build 29 only | none direct | ATR multiplier for TP |
+| `_29_AutoRegime` | build 29 only | none direct | Auto Volatility Regime Switch (Breakout vs Pullback) |
+| `_29_BeLockPts` | build 29 only | none direct | Break-even lock profit points above entry |
+| `_29_BeTriggerPts` | build 29 only | none direct | Break-even trigger profit points (for ExitMode=1) |
+| `_29_BoxType` | build 29 only | none direct | Box trigger: 0=Donchian, 1=Standard Deviation, 2=Keltner ATR |
+| `_29_BufferPoints` | build 29 only | none direct | Buffer points beyond High/Low |
+| `_29_ChandelierMult` | build 29 only | none direct | Chandelier ATR trailing stop multiplier |
+| `_29_ExitMode` | build 29 only | none direct | 0=Fixed SL/TP, 1=Break-even Lock, 2=Chandelier ATR Trail, 3=Staged TP |
+| `_29_ExpireMinutes` | build 29 only | none direct | Pending order expiration (minutes, 0=GTC) |
+| `_29_FilterEmaPeriod` | build 29 only | none direct | Trend filter EMA period |
+| `_29_HedgeLegs` | build 29 only | none direct | Number of counter-hedge legs |
+| `_29_HedgeMode` | build 29 only | none direct | 0=None(OCO), 1=Pullback Martingale, 2=Asymmetric Counter-Hedge, 3=Delta Neutral |
+| `_29_HedgeStartLot` | build 29 only | none direct | Asymmetric counter-hedge initial lot |
+| `_29_HedgeStepPts` | build 29 only | none direct | Distance points between counter-hedge orders |
+| `_29_HourFrom` | build 29 only | none direct | Trading session hour from (0-24) |
+| `_29_HourTo` | build 29 only | none direct | Trading session hour to (0-24, 0-24 = 24h) |
+| `_29_LadderLegs` | build 29 only | none direct | Number of pending stop orders per side |
+| `_29_LookbackBars` | build 29 only | none direct | Donchian/Range lookback bars |
+| `_29_LotMode` | build 29 only | none direct | 0=Fixed lot, 1=Linear step-up, 2=Inverted pyramid |
+| `_29_LotSize` | build 29 only | none direct | Fixed lot size per pending leg |
+| `_29_MaxPullbackSteps` | build 29 only | none direct | Max pullback recovery steps (1-3) |
+| `_29_PartialClosePct` | build 29 only | none direct | Percentage of volume to close at partial TP (e.g. 50%) |
+| `_29_PartialTpPts` | build 29 only | none direct | Points for partial take-profit close (0=disabled) |
+| `_29_PullbackMult` | build 29 only | none direct | Lot multiplier per pullback step |
+| `_29_PullbackSlPts` | build 29 only | none direct | Basket hard stop loss points |
+| `_29_PullbackStepPts` | build 29 only | none direct | Points between pullback recovery entries |
+| `_29_PullbackTpPts` | build 29 only | none direct | Basket profit target points above avg entry |
+| `_29_RecoveryMode` | build 29 only | none direct | 0=Pure Breakout Ladder, 1=Pullback Martingale |
+| `_29_RefreshOnNewBar` | build 29 only | none direct | Refresh pendings to new range on new bar while flat |
+| `_29_RegimeAtrThreshold` | build 29 only | none direct | ATR ratio threshold for momentum breakout switch |
+| `_29_SdMult` | build 29 only | none direct | Standard deviation / Keltner multiplier |
+| `_29_SlPoints` | build 29 only | none direct | Stop Loss distance (points, 500=5.00 XAU) |
+| `_29_SpacingMode` | build 29 only | none direct | 0=Fixed points, 1=ATR dynamic, 2=Widening grid |
+| `_29_StepPoints` | build 29 only | none direct | Distance between ladder legs (points, 500=5.00 XAU) |
+| `_29_TpPoints` | build 29 only | none direct | Take Profit distance (points, 2000=20.00 XAU) |
+| `_29_TrailPoints` | build 29 only | none direct | Trailing Stop points (0=disabled) |
+| `_29_TrendFilter` | build 29 only | none direct | 0=Both sides, 1=Filter by Trend EMA (only trade with trend) |
+| `_29_UseATR` | build 29 only | none direct | Dynamic ATR scaling for step, SL, TP |
+| `_29_UseOCO` | build 29 only | none direct | One-Cancels-Other (cancel opposite pendings on fill) |
 | `TradeDir` | builds 11/12/13/15 only (checked explicitly in those 4 Entry_Evaluate() functions); builds 14/16/18 use their own fixed-direction input instead and never read this; build17 is bidirectional by design and never reads this | per-entry: none direct, but functionally overlaps with _14_Direction/_16_Direction/_18_Direction on builds that ignore it | Restricts a symmetric entry signal to long-only, short-only, or both; has zero effect on builds 14/16/17/18. |
 | `TrendFilter` | builds 11/12/13 only; no effect on 14/15/16/17/18 | _71_ATRMA+_71_ATRRatio(71); _72_SlopeBar(72) | Adds a confirming filter (ATR-expansion or MA-slope) before the entry signal is allowed to fire; only wired into 3 of the 8 entry modules. |
 
@@ -256,9 +339,15 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_16_OverlapMinUsd` | build 16 only, AND have >= _16_OverlapMinOrders | _16_OverlapMinOrders | Minimum combined net-$ of the newest+oldest position pair required to trigger an overlap pair-close. |
 | `_16_SlAtrMult` | build 16 only | _16_MaxSlPips(hard ceiling) | Per-order broker SL distance as a multiple of Risk-ATR (~$90 at gold-1800-era ATR per the inline comment). |
 | `_16_TpSingleAtrMult` | build 16 only, AND exactly 1 order open on the side | none direct | Managed (not broker) TP distance for a lone open order, as a multiple of Risk-ATR (~80 gold pips at ATR~$2.3). |
+| `_17_BasketATR_TF` | build 17 Stage-0 basket ATR identity | fixed period 14; allowed H1/H4/D1 | Selects BasketATR source timeframe; value and closed-bar timestamp freeze at first successful fill. |
+| `_17_BasketMoneyBase` | build 17 Stage-0 basket money target | first-fill balance/equity snapshots; _2_BasketTP_BalPct | Chooses the frozen balance or equity snapshot captured at first successful fill as basket money-target base. |
+| `_17_BasketTargetMode` | build 17 Stage-0 and _17_LadderExitMode=BASKET | _17_BasketMoneyBase/_2_BasketTP_BalPct or frozen BasketATR/_2_BasketTP_ATRmult | Selects frozen first-fill balance/equity-percent money target or frozen first-fill BasketATR target. |
 | `_17_DivergTrail` | build 17 only, AND ExitMode==EXIT_TRAIL (only call site is inside 'if(ExitMode==EXIT_TRAIL) Wave5_DivergenceTightenHook();') | _23_TrailStep(tighten distance is a fraction of this); ExitMode | Tightens the trail on RSI divergence once price reaches the wave5 target zone; inert unless ExitMode is set to trailing. |
+| `_17_LadderExitMode` | build 17 Stage-0 only | per-leg target selectors or basket target selectors | Selects per-leg broker targets or one per-structure-Magic basket target. |
+| `_17_PerLegTargetMode` | build 17 Stage-0 and _17_LadderExitMode=PER_LEG | _17_StructTargetMode; _22_TP_ATRmult; frozen RiskATR | Selects actual-fill Wave1-length structural target or actual-fill ATR target. |
 | `_17_RSI_Period` | build 17 only, AND _17_DivergTrail=true AND ExitMode==EXIT_TRAIL | _17_DivergTrail | RSI period used only for the divergence check (own handle, independent of the shared/BB/16 RSI handles). |
 | `_17_SLbufferATR` | build 17 only | _17_UseStructLevels(must be true for this SL to actually be applied) | Buffer beyond the wave-1 top/bottom (in Risk-ATR multiples) added to the structural SL to absorb spread/wick. |
+| `_17_StructTargetMode` | build 17 Stage-0 structural per-leg target | first actual fill; Wave1Length | Freezes one first-successful-actual-fill target for the structure or computes each leg target from its own actual fill. |
 | `_17_UseStructLevels` | build 17 only | g_wave5_sl_price/g_wave5_tp_price/g_wave5_entry_ref (published by Entry_Wave5.mqh); structural SL remains active independently; structural TP overrides only EXIT_FIXED_TP/EXIT_STRUCTURAL_TARGET, while EXIT_ATR_TP/EXIT_TRAIL/EXIT_RUN_TREND keep generic/dynamic ownership | When true, ExitManager uses the published structural SL anchor; the published TP anchor overrides only fixed/structural-target modes, so generic ATR TP remains owned by ExitMode. |
 | `_2_BasketTP_ATRmult` | this value >0 | _2_BasketTP_Money(the input it supersedes) | When >0, the basket TP target scales with current Risk-ATR and total open lots instead of a fixed number - portable across instruments with different price/tick-value scales. |
 | `_2_BasketTP_BalPct` | this value >0. HIGHEST precedence of the three basket-TP inputs: _2_BasketTP_BalPct > _2_BasketTP_ATRmult > _2_BasketTP_Money (ExitManager.mqh:506) | _2_BasketTP_ATRmult and _2_BasketTP_Money(both OVERRIDDEN when this is >0); _2_PartialPct1/_2_PartialPct2(partial-close stages measure against the resolved target) | Closes the whole basket once floating profit reaches this % of current balance. Portable across cent/USD accounts (a bare 25 means $25 on USD and $0.25 on cent) and auto-scales as the account grows. |
@@ -342,6 +431,8 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_16_BaseLotMode` | build 16 only - Kangaroo owns the entry-16 lot law and LabCore short-circuits before MM_FirstLot, so the chassis FirstLotMode never applies here | _16_BaseLot(mode 0); _43_LotPerAnchor + _43_BalanceAnchor(mode 1, shared with chassis FirstLotMode=43); _16_LadderMult and _16_MaxLotPerOrder(applied AFTER this); RC_MaxLot(final clamp) | Chooses the entry-16 BASE order size: 0 = flat _16_BaseLot (default, unchanged), 1 = balance-scaled via the mode-43 anchor pair so the base order tracks account size. The ladder and the cage still apply on top either way. |
 | `_16_LadderMult` | build 16 only, AND have>=4 | _16_BaseLot; _16_MaxLotPerOrder | >1.0 enables a capped ladder: order N = current max open lot x this multiplier; the first 4 orders on a side are always _16_BaseLot. |
 | `_16_MaxLotPerOrder` | build 16 only, AND _16_LadderMult>1.0 | _16_LadderMult; RC_MaxLot(clamps after this) | Per-order lot ceiling for the ladder (original 'Max_Lot_Martingale'); RC_MaxLot still clamps after this. |
+| `_17_RiskAllocation` | build 17 Stage-0 only | _42_RiskPct is total per-structure budget; _17_LadderLevelCount | Allocates frozen setup risk equally or by normalized linear depth i/sum(1..N); weights are risk money, never lot multipliers. |
+| `_17_RiskATRContext` | build 17 Stage-0 only | chart H1 maps H1/H4; chart H4 maps H4/D1; fixed period 14 | Selects the frozen primary or secondary RiskATR context mapping independently of other ATR consumers. |
 | `_20_Freeze_lot` | build 20 only, on every source-owned order attempt | none direct; broker free margin, one-lot margin, volume step/min/max complete the source formula | Value term in (value/100)*free_margin/margin_required_for_1_lot before nearest-step and broker min/max normalization; it is not a literal fixed lot. |
 | `_24_FixedLot` | build 24 only | RC_MaxLot; broker volume min/max/step | Fixed research order volume before broker normalization and shared hard cap. |
 | `_4_DdAdaptiveOn` | always checked; no-op (multiplier stays 1.0) when false | _4_DdTier1Pct/_4_DdTier1Mult; _4_DdTier2Pct/_4_DdTier2Mult; _4_DdHardCapMult | Enables a DD-tiered first-lot multiplier applied only to a NEW basket's level-0 order (Zeus GridLog _05_DdAdaptive port). |
@@ -351,7 +442,7 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_4_DdTier2Mult` | _4_DdAdaptiveOn=true, AND DD >= _4_DdTier2Pct | _4_DdTier2Pct; _4_DdHardCapMult | Level-0 lot multiplier applied at the second, deeper DD tier. |
 | `_4_DdTier2Pct` | _4_DdAdaptiveOn=true | _4_DdTier2Mult | Second, deeper DD% threshold at which _4_DdTier2Mult applies instead of tier1. |
 | `_41_FixedLot` | FirstLotMode==FIRSTLOT_FIXED(41) ONLY. It stopped being the cross-mode fallback in MM-SAFETY-001 (2026-07-24): modes 42/43 that cannot size now skip the order instead of borrowing this value | FirstLotMode; _4_DdAdaptive*(multiplier applied after); RC_MaxLot(final clamp) | Fixed first-order lot size. Must be > 0 when mode 41 is selected - MM_ConfigValid fails the attach otherwise. |
-| `_42_RiskPct` | FirstLotMode==FIRSTLOT_RISK(42). The SLMode pairing is checked ONCE at OnInit (SLMode 30 NONE / 32 MONEY yield no distance -> INIT_FAILED); at runtime a tick that cannot produce a distance skips the order | FirstLotMode; SLMode(must be 31/33/34/35/36, or build17 _17_UseStructLevels); _4_DdAdaptive*(multiplier applied after); RC_MaxLot(final clamp) | First-order risk % of balance, converted to a lot size via the current SL distance. This is the only mode that is genuinely 'risk X% per order' - and only when the order really carries that SL. |
+| `_42_RiskPct` | FirstLotMode==FIRSTLOT_RISK(42) for legacy callers; build17 Stage-0 always interprets this as total_setup_risk_pct per Wave-3 structure regardless of level count | FirstLotMode/SLMode for legacy; B17 initial-balance snapshot, _17_RiskAllocation and buffered raw-Wave1 price risk; RC_MaxLot final clamp | Legacy first-order risk percent; for B17 Stage-0 this is the frozen total per-structure setup-risk budget divided across enabled Fib levels. |
 | `_43_BalanceAnchor` | FirstLotMode==FIRSTLOT_BALANCE(43) only - inert under 41/42, and inert on build 16 (Kangaroo lot law) | _43_LotPerAnchor(the pair is meaningless alone); FirstLotMode; RC_MaxLot(final clamp) | Denominator of the balance-scaled first lot. ACCOUNT-SPECIFIC: a cent account showing a $1000 deposit as 100000 needs anchor=100000. The RATIO is portable, this number is NOT - one .set cannot serve USD and cent accounts without changing it (see the Account Profile table in EA_CORE_AND_TEMPLATE_GUIDE.md). |
 | `_43_LotPerAnchor` | FirstLotMode==FIRSTLOT_BALANCE(43) only - inert under 41/42, and inert on build 16 (Kangaroo lot law) | _43_BalanceAnchor(the pair is meaningless alone); FirstLotMode; _4_DdAdaptive*(multiplier applied after); RC_MaxLot(final clamp); LotProg 5x + RecoveryMode 8x both compound off the result | Numerator of the balance-scaled first lot: lot = _43_LotPerAnchor x (balance / _43_BalanceAnchor). Doubling it doubles every first order at the same balance. |
 | `_51_ProgFactor` | LotProg is PROG_LINEAR(51) or PROG_LOG(54) | LotProg | Growth coefficient shared by the linear and log lot-progression modes. |
@@ -461,6 +552,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 273 (must equal the source registry's 273 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 364 (must equal the source registry's 364 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 11.

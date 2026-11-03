@@ -23,7 +23,17 @@
 #ifndef LAB_ENTRY_22
 #ifndef LAB_ENTRY_24
 #ifndef LAB_ENTRY_25
+#ifndef LAB_ENTRY_23
+#ifndef LAB_ENTRY_26
+#ifndef LAB_ENTRY_27
+#ifndef LAB_ENTRY_28
+#ifndef LAB_ENTRY_29
 #define LAB_ENTRY_11          // fallback build
+#endif
+#endif
+#endif
+#endif
+#endif
 #endif
 #endif
 #endif
@@ -456,6 +466,77 @@ const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
 #ifdef LAB_ENTRY_25
 const ENUM_STACK_MODE StackMode = STACK_SINGLE; // HIDDEN_INACTIVE: dedicated physical cycle owner
 const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
+#endif
+// A10 C2 port: stack selectors for builds 23, 26, 27, 28, 29 (single order per signal or entry-owned pipeline).
+#ifdef LAB_ENTRY_23
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 23 LUX-03 Volume Order Block: single order per signal, no grid)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+#ifdef LAB_ENTRY_26
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 26 LUX-02 BOS Retest: single order per signal, no grid)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+#ifdef LAB_ENTRY_27
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 27 TrendRider: single order per trend pullback)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+#ifdef LAB_ENTRY_28
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 28 LUX-01 Session Sweep: single order per signal, no grid)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+#ifdef LAB_ENTRY_29
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 29 owns pending stop ladder)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
 #endif
 #ifndef LAB_CONST__9_StepUseATR
 input bool   _9_StepUseATR  = true;   // [P50210] Step Use ATR | with P50211
@@ -2318,6 +2399,527 @@ input int _25_OpenCooldownSec = 1; // [P12510] Open Cooldown Seconds
 #endif
 #ifdef LAB_CONST__25_OpenCooldownSec
 const int _25_OpenCooldownSec = LAB_CONSTVAL__25_OpenCooldownSec;
+#endif
+#endif
+
+// A10 C2 port: build 23 LUX03_OrderBlock (see wrapper header for provenance)
+#ifdef LAB_ENTRY_23
+input group "=== Entry 23: LuxAlgo Volume Order Block Retest ==="
+#ifndef LAB_CONST__23_OB_SwingDepth
+input int    _23_OB_SwingDepth     = 5;     // [P12300] 23 OB swing pivot depth
+#endif
+#ifdef LAB_CONST__23_OB_SwingDepth
+const int    _23_OB_SwingDepth     = LAB_CONSTVAL__23_OB_SwingDepth;
+#endif
+
+#ifndef LAB_CONST__23_OB_VolMult
+input double _23_OB_VolMult        = 1.5;   // [P12301] 23 Volume spike multiplier vs SMA(20)
+#endif
+#ifdef LAB_CONST__23_OB_VolMult
+const double _23_OB_VolMult        = LAB_CONSTVAL__23_OB_VolMult;
+#endif
+
+#ifndef LAB_CONST__23_OB_MaxZoneAge
+input int    _23_OB_MaxZoneAge     = 40;    // [P12302] 23 Max bars OB zone remains active
+#endif
+#ifdef LAB_CONST__23_OB_MaxZoneAge
+const int    _23_OB_MaxZoneAge     = LAB_CONSTVAL__23_OB_MaxZoneAge;
+#endif
+
+#ifndef LAB_CONST__23_OB_RequireDiscount
+input bool   _23_OB_RequireDiscount= true;  // [P12303] 23 Require discount/premium pricing
+#endif
+#ifdef LAB_CONST__23_OB_RequireDiscount
+const bool   _23_OB_RequireDiscount= LAB_CONSTVAL__23_OB_RequireDiscount;
+#endif
+
+#ifndef LAB_CONST__23_OB_HourFrom
+input int    _23_OB_HourFrom       = 7;     // [P12304] 23 Session start hour
+#endif
+#ifdef LAB_CONST__23_OB_HourFrom
+const int    _23_OB_HourFrom       = LAB_CONSTVAL__23_OB_HourFrom;
+#endif
+
+#ifndef LAB_CONST__23_OB_HourTo
+input int    _23_OB_HourTo         = 19;    // [P12305] 23 Session end hour
+#endif
+#ifdef LAB_CONST__23_OB_HourTo
+const int    _23_OB_HourTo         = LAB_CONSTVAL__23_OB_HourTo;
+#endif
+#endif
+
+// A10 C2 port: build 26 LUX02_BOSRetest (see wrapper header for provenance)
+#ifdef LAB_ENTRY_26
+input group "=== Entry 26: LuxAlgo Valid BOS Pullback Retest ==="
+#ifndef LAB_CONST__26_SwingDepth
+input int    _26_SwingDepth      = 5;       // [P12600] 26 Swing pivot radius bars (k = depth + 1)
+#endif
+#ifdef LAB_CONST__26_SwingDepth
+const int    _26_SwingDepth      = LAB_CONSTVAL__26_SwingDepth;
+#endif
+
+#ifndef LAB_CONST__26_MaxPullbackBars
+input int    _26_MaxPullbackBars = 25;      // [P12601] 26 Max bars allowed from BOS to confirmation
+#endif
+#ifdef LAB_CONST__26_MaxPullbackBars
+const int    _26_MaxPullbackBars = LAB_CONSTVAL__26_MaxPullbackBars;
+#endif
+
+#ifndef LAB_CONST__26_RetestBufferATR
+input double _26_RetestBufferATR = 0.3;     // [P12602] 26 Retest touch tolerance (ATR mult)
+#endif
+#ifdef LAB_CONST__26_RetestBufferATR
+const double _26_RetestBufferATR = LAB_CONSTVAL__26_RetestBufferATR;
+#endif
+
+#ifndef LAB_CONST__26_InvalATR
+input double _26_InvalATR        = 1.5;     // [P12603] 26 Invalidation beyond level (ATR mult)
+#endif
+#ifdef LAB_CONST__26_InvalATR
+const double _26_InvalATR        = LAB_CONSTVAL__26_InvalATR;
+#endif
+
+#ifndef LAB_CONST__26_HourFrom
+input int    _26_HourFrom        = 7;       // [P12604] 26 Session start hour (UTC)
+#endif
+#ifdef LAB_CONST__26_HourFrom
+const int    _26_HourFrom        = LAB_CONSTVAL__26_HourFrom;
+#endif
+
+#ifndef LAB_CONST__26_HourTo
+input int    _26_HourTo          = 20;      // [P12605] 26 Session end hour (UTC)
+#endif
+#ifdef LAB_CONST__26_HourTo
+const int    _26_HourTo          = LAB_CONSTVAL__26_HourTo;
+#endif
+#endif
+
+// A10 C2 port: build 27 TrendRider (see wrapper header for provenance)
+#ifdef LAB_ENTRY_27
+// Quant Ladder & Second Brain Enhancements
+#ifndef _27_EnableVolFilter
+input group "=== 21 Quant Ladder: Session Liquidity & Volatility Shield ==="
+#ifndef LAB_CONST__27_EnableVolFilter
+input bool   _27_EnableVolFilter       = false; // [P12700] 27 Enable Signed Volatility Gate (default false)
+#endif
+#ifdef LAB_CONST__27_EnableVolFilter
+const bool _27_EnableVolFilter = LAB_CONSTVAL__27_EnableVolFilter;
+#endif
+#ifndef LAB_CONST__27_LondonNYOverlapOnly
+input bool   _27_LondonNYOverlapOnly   = false; // [P12701] 27 Trade strictly in London/NY peak liquidity (default false)
+#endif
+#ifdef LAB_CONST__27_LondonNYOverlapOnly
+const bool _27_LondonNYOverlapOnly = LAB_CONSTVAL__27_LondonNYOverlapOnly;
+#endif
+#ifndef LAB_CONST__27_BaselineVariance
+input double _27_BaselineVariance      = 0.0001;// [P12702] 27 Baseline variance for inverse-vol lot scaling
+#endif
+#ifdef LAB_CONST__27_BaselineVariance
+const double _27_BaselineVariance = LAB_CONSTVAL__27_BaselineVariance;
+#endif
+#endif
+
+input group "=== Entry 27: TrendRider H4 Pullback-Continuation ==="
+#ifndef LAB_CONST__27_EmaFast
+input int    _27_EmaFast         = 50;      // [P12703] 27 Trend fast EMA
+#endif
+#ifdef LAB_CONST__27_EmaFast
+const int    _27_EmaFast         = LAB_CONSTVAL__27_EmaFast;
+#endif
+
+#ifndef LAB_CONST__27_EmaSlow
+input int    _27_EmaSlow         = 200;     // [P12704] 27 Trend slow EMA
+#endif
+#ifdef LAB_CONST__27_EmaSlow
+const int    _27_EmaSlow         = LAB_CONSTVAL__27_EmaSlow;
+#endif
+
+#ifndef LAB_CONST__27_EmaPull
+input int    _27_EmaPull         = 21;      // [P12705] 27 Pullback reference EMA
+#endif
+#ifdef LAB_CONST__27_EmaPull
+const int    _27_EmaPull         = LAB_CONSTVAL__27_EmaPull;
+#endif
+
+#ifndef LAB_CONST__27_AdxPeriod
+input int    _27_AdxPeriod       = 14;      // [P12706] 27 ADX Period
+#endif
+#ifdef LAB_CONST__27_AdxPeriod
+const int    _27_AdxPeriod       = LAB_CONSTVAL__27_AdxPeriod;
+#endif
+
+#ifndef LAB_CONST__27_AtrPeriod
+input int    _27_AtrPeriod       = 14;      // [P12707] 27 ATR Period
+#endif
+#ifdef LAB_CONST__27_AtrPeriod
+const int    _27_AtrPeriod       = LAB_CONSTVAL__27_AtrPeriod;
+#endif
+
+#ifndef LAB_CONST__27_AdxMin
+input double _27_AdxMin          = 15.0;    // [P12708] 27 Trend ADX floor (Plateau Center)
+#endif
+#ifdef LAB_CONST__27_AdxMin
+const double _27_AdxMin          = LAB_CONSTVAL__27_AdxMin;
+#endif
+
+#ifndef LAB_CONST__27_SepAtrMult
+input double _27_SepAtrMult      = 0.3;     // [P12709] 27 EMA separation in ATR (Plateau Center)
+#endif
+#ifdef LAB_CONST__27_SepAtrMult
+const double _27_SepAtrMult      = LAB_CONSTVAL__27_SepAtrMult;
+#endif
+
+#ifndef LAB_CONST__27_SlAtrMult
+input double _27_SlAtrMult       = 2.0;     // [P12710] 27 Stop Loss in ATR
+#endif
+#ifdef LAB_CONST__27_SlAtrMult
+const double _27_SlAtrMult       = LAB_CONSTVAL__27_SlAtrMult;
+#endif
+
+#ifndef LAB_CONST__27_ChHighBars
+input int    _27_ChHighBars      = 12;      // [P12711] 27 Chandelier lookback bars (Plateau Center)
+#endif
+#ifdef LAB_CONST__27_ChHighBars
+const int    _27_ChHighBars      = LAB_CONSTVAL__27_ChHighBars;
+#endif
+
+#ifndef LAB_CONST__27_ChAtrMult
+input double _27_ChAtrMult       = 3.0;     // [P12712] 27 Chandelier ATR trail mult (Plateau Center)
+#endif
+#ifdef LAB_CONST__27_ChAtrMult
+const double _27_ChAtrMult       = LAB_CONSTVAL__27_ChAtrMult;
+#endif
+
+#ifndef LAB_CONST__27_StartGmt
+input int    _27_StartGmt        = 7;       // [P12713] 27 Session start GMT hour
+#endif
+#ifdef LAB_CONST__27_StartGmt
+const int    _27_StartGmt        = LAB_CONSTVAL__27_StartGmt;
+#endif
+
+#ifndef LAB_CONST__27_EndGmt
+input int    _27_EndGmt          = 20;      // [P12714] 27 Session end GMT hour
+#endif
+#ifdef LAB_CONST__27_EndGmt
+const int    _27_EndGmt          = LAB_CONSTVAL__27_EndGmt;
+#endif
+
+#ifndef LAB_CONST__27_ServerGmtOffset
+input int    _27_ServerGmtOffset = 3;       // [P12715] 27 Server GMT offset (Exness = +3)
+#endif
+#ifdef LAB_CONST__27_ServerGmtOffset
+const int    _27_ServerGmtOffset = LAB_CONSTVAL__27_ServerGmtOffset;
+#endif
+
+#ifndef LAB_CONST__27_MaxOrders
+input int    _27_MaxOrders       = 1;       // [P12716] 27 Max open trend orders (1 = single, >1 = pyramiding)
+#endif
+#ifdef LAB_CONST__27_MaxOrders
+const int    _27_MaxOrders       = LAB_CONSTVAL__27_MaxOrders;
+#endif
+
+#ifndef LAB_CONST__27_ScaleInAtr
+input double _27_ScaleInAtr      = 2.0;     // [P12717] 27 Scale-in profit distance in ATR from last order
+#endif
+#ifdef LAB_CONST__27_ScaleInAtr
+const double _27_ScaleInAtr      = LAB_CONSTVAL__27_ScaleInAtr;
+#endif
+#endif
+
+// A10 C2 port: build 28 LUX01_LiqSweep (see wrapper header for provenance)
+#ifdef LAB_ENTRY_28
+input group "=== Entry 28: LuxAlgo Session Liquidity Sweep ==="
+#ifndef LAB_CONST__28_AsianHourFrom
+input int    _28_AsianHourFrom   = 0;       // [P12800] 28 Asian session start hour
+#endif
+#ifdef LAB_CONST__28_AsianHourFrom
+const int    _28_AsianHourFrom   = LAB_CONSTVAL__28_AsianHourFrom;
+#endif
+
+#ifndef LAB_CONST__28_AsianHourTo
+input int    _28_AsianHourTo     = 7;       // [P12801] 28 Asian session end hour
+#endif
+#ifdef LAB_CONST__28_AsianHourTo
+const int    _28_AsianHourTo     = LAB_CONSTVAL__28_AsianHourTo;
+#endif
+
+#ifndef LAB_CONST__28_TradeHourFrom
+input int    _28_TradeHourFrom   = 7;       // [P12802] 28 Trading window start hour
+#endif
+#ifdef LAB_CONST__28_TradeHourFrom
+const int    _28_TradeHourFrom   = LAB_CONSTVAL__28_TradeHourFrom;
+#endif
+
+#ifndef LAB_CONST__28_TradeHourTo
+input int    _28_TradeHourTo     = 16;      // [P12803] 28 Trading window end hour
+#endif
+#ifdef LAB_CONST__28_TradeHourTo
+const int    _28_TradeHourTo     = LAB_CONSTVAL__28_TradeHourTo;
+#endif
+
+#ifndef LAB_CONST__28_MaxSweepBars
+input int    _28_MaxSweepBars    = 12;      // [P12804] 28 Max bars between sweep and CHoCH
+#endif
+#ifdef LAB_CONST__28_MaxSweepBars
+const int    _28_MaxSweepBars    = LAB_CONSTVAL__28_MaxSweepBars;
+#endif
+
+#ifndef LAB_CONST__28_MinFvgPips
+input double _28_MinFvgPips      = 3.0;     // [P12805] 28 Minimum FVG size in pips
+#endif
+#ifdef LAB_CONST__28_MinFvgPips
+const double _28_MinFvgPips      = LAB_CONSTVAL__28_MinFvgPips;
+#endif
+#endif
+
+// A10 C2 port: build 29 PendingBreakout (see wrapper header for provenance)
+#ifdef LAB_ENTRY_29
+input group "=== Entry 29: Pending Stop Breakout Ladder ==="
+#ifndef LAB_CONST__29_LookbackBars
+input int    _29_LookbackBars   = 30;      // [P12900] Donchian/Range lookback bars
+#endif
+#ifdef LAB_CONST__29_LookbackBars
+const int _29_LookbackBars = LAB_CONSTVAL__29_LookbackBars;
+#endif
+#ifndef LAB_CONST__29_BufferPoints
+input double _29_BufferPoints   = 50.0;    // [P12901] Buffer points beyond High/Low
+#endif
+#ifdef LAB_CONST__29_BufferPoints
+const double _29_BufferPoints = LAB_CONSTVAL__29_BufferPoints;
+#endif
+#ifndef LAB_CONST__29_LadderLegs
+input int    _29_LadderLegs     = 5;       // [P12902] Number of pending stop orders per side
+#endif
+#ifdef LAB_CONST__29_LadderLegs
+const int _29_LadderLegs = LAB_CONSTVAL__29_LadderLegs;
+#endif
+#ifndef LAB_CONST__29_StepPoints
+input double _29_StepPoints     = 500.0;   // [P12903] Distance between ladder legs (points, 500=5.00 XAU)
+#endif
+#ifdef LAB_CONST__29_StepPoints
+const double _29_StepPoints = LAB_CONSTVAL__29_StepPoints;
+#endif
+#ifndef LAB_CONST__29_SlPoints
+input double _29_SlPoints       = 500.0;   // [P12904] Stop Loss distance (points, 500=5.00 XAU)
+#endif
+#ifdef LAB_CONST__29_SlPoints
+const double _29_SlPoints = LAB_CONSTVAL__29_SlPoints;
+#endif
+#ifndef LAB_CONST__29_TpPoints
+input double _29_TpPoints       = 2000.0;  // [P12905] Take Profit distance (points, 2000=20.00 XAU)
+#endif
+#ifdef LAB_CONST__29_TpPoints
+const double _29_TpPoints = LAB_CONSTVAL__29_TpPoints;
+#endif
+#ifndef LAB_CONST__29_TrailPoints
+input double _29_TrailPoints    = 0.0;     // [P12906] Trailing Stop points (0=disabled)
+#endif
+#ifdef LAB_CONST__29_TrailPoints
+const double _29_TrailPoints = LAB_CONSTVAL__29_TrailPoints;
+#endif
+#ifndef LAB_CONST__29_UseOCO
+input bool   _29_UseOCO         = true;    // [P12907] One-Cancels-Other (cancel opposite pendings on fill)
+#endif
+#ifdef LAB_CONST__29_UseOCO
+const bool _29_UseOCO = LAB_CONSTVAL__29_UseOCO;
+#endif
+#ifndef LAB_CONST__29_RefreshOnNewBar
+input bool   _29_RefreshOnNewBar = true;   // [P12908] Refresh pendings to new range on new bar while flat
+#endif
+#ifdef LAB_CONST__29_RefreshOnNewBar
+const bool _29_RefreshOnNewBar = LAB_CONSTVAL__29_RefreshOnNewBar;
+#endif
+#ifndef LAB_CONST__29_LotSize
+input double _29_LotSize        = 0.01;    // [P12909] Fixed lot size per pending leg
+#endif
+#ifdef LAB_CONST__29_LotSize
+const double _29_LotSize = LAB_CONSTVAL__29_LotSize;
+#endif
+#ifndef LAB_CONST__29_ExpireMinutes
+input int    _29_ExpireMinutes  = 60;      // [P12910] Pending order expiration (minutes, 0=GTC)
+#endif
+#ifdef LAB_CONST__29_ExpireMinutes
+const int _29_ExpireMinutes = LAB_CONSTVAL__29_ExpireMinutes;
+#endif
+#ifndef LAB_CONST__29_HourFrom
+input int    _29_HourFrom       = 0;       // [P12911] Trading session hour from (0-24)
+#endif
+#ifdef LAB_CONST__29_HourFrom
+const int _29_HourFrom = LAB_CONSTVAL__29_HourFrom;
+#endif
+#ifndef LAB_CONST__29_HourTo
+input int    _29_HourTo         = 24;      // [P12912] Trading session hour to (0-24, 0-24 = 24h)
+#endif
+#ifdef LAB_CONST__29_HourTo
+const int _29_HourTo = LAB_CONSTVAL__29_HourTo;
+#endif
+#ifndef LAB_CONST__29_UseATR
+input bool   _29_UseATR         = false;   // [P12913] Dynamic ATR scaling for step, SL, TP
+#endif
+#ifdef LAB_CONST__29_UseATR
+const bool _29_UseATR = LAB_CONSTVAL__29_UseATR;
+#endif
+#ifndef LAB_CONST__29_AtrStepMult
+input double _29_AtrStepMult    = 1.0;     // [P12914] ATR multiplier for grid step
+#endif
+#ifdef LAB_CONST__29_AtrStepMult
+const double _29_AtrStepMult = LAB_CONSTVAL__29_AtrStepMult;
+#endif
+#ifndef LAB_CONST__29_AtrSlMult
+input double _29_AtrSlMult      = 1.0;     // [P12915] ATR multiplier for SL
+#endif
+#ifdef LAB_CONST__29_AtrSlMult
+const double _29_AtrSlMult = LAB_CONSTVAL__29_AtrSlMult;
+#endif
+#ifndef LAB_CONST__29_AtrTpMult
+input double _29_AtrTpMult      = 3.0;     // [P12916] ATR multiplier for TP
+#endif
+#ifdef LAB_CONST__29_AtrTpMult
+const double _29_AtrTpMult = LAB_CONSTVAL__29_AtrTpMult;
+#endif
+#ifndef LAB_CONST__29_RecoveryMode
+input int    _29_RecoveryMode   = 0;       // [P12917] 0=Pure Breakout Ladder, 1=Pullback Martingale
+#endif
+#ifdef LAB_CONST__29_RecoveryMode
+const int _29_RecoveryMode = LAB_CONSTVAL__29_RecoveryMode;
+#endif
+#ifndef LAB_CONST__29_MaxPullbackSteps
+input int    _29_MaxPullbackSteps = 3;     // [P12918] Max pullback recovery steps (1-3)
+#endif
+#ifdef LAB_CONST__29_MaxPullbackSteps
+const int _29_MaxPullbackSteps = LAB_CONSTVAL__29_MaxPullbackSteps;
+#endif
+#ifndef LAB_CONST__29_PullbackMult
+input double _29_PullbackMult   = 1.5;     // [P12919] Lot multiplier per pullback step
+#endif
+#ifdef LAB_CONST__29_PullbackMult
+const double _29_PullbackMult = LAB_CONSTVAL__29_PullbackMult;
+#endif
+#ifndef LAB_CONST__29_PullbackStepPts
+input double _29_PullbackStepPts = 500.0;  // [P12920] Points between pullback recovery entries
+#endif
+#ifdef LAB_CONST__29_PullbackStepPts
+const double _29_PullbackStepPts = LAB_CONSTVAL__29_PullbackStepPts;
+#endif
+#ifndef LAB_CONST__29_PullbackTpPts
+input double _29_PullbackTpPts  = 200.0;   // [P12921] Basket profit target points above avg entry
+#endif
+#ifdef LAB_CONST__29_PullbackTpPts
+const double _29_PullbackTpPts = LAB_CONSTVAL__29_PullbackTpPts;
+#endif
+#ifndef LAB_CONST__29_PullbackSlPts
+input double _29_PullbackSlPts  = 2000.0;  // [P12922] Basket hard stop loss points
+#endif
+#ifdef LAB_CONST__29_PullbackSlPts
+const double _29_PullbackSlPts = LAB_CONSTVAL__29_PullbackSlPts;
+#endif
+#ifndef LAB_CONST__29_BoxType
+input int    _29_BoxType        = 0;       // [P12923] Box trigger: 0=Donchian, 1=Standard Deviation, 2=Keltner ATR
+#endif
+#ifdef LAB_CONST__29_BoxType
+const int _29_BoxType = LAB_CONSTVAL__29_BoxType;
+#endif
+#ifndef LAB_CONST__29_SdMult
+input double _29_SdMult         = 2.0;     // [P12924] Standard deviation / Keltner multiplier
+#endif
+#ifdef LAB_CONST__29_SdMult
+const double _29_SdMult = LAB_CONSTVAL__29_SdMult;
+#endif
+#ifndef LAB_CONST__29_TrendFilter
+input int    _29_TrendFilter    = 0;       // [P12925] 0=Both sides, 1=Filter by Trend EMA (only trade with trend)
+#endif
+#ifdef LAB_CONST__29_TrendFilter
+const int _29_TrendFilter = LAB_CONSTVAL__29_TrendFilter;
+#endif
+#ifndef LAB_CONST__29_FilterEmaPeriod
+input int    _29_FilterEmaPeriod = 200;    // [P12926] Trend filter EMA period
+#endif
+#ifdef LAB_CONST__29_FilterEmaPeriod
+const int _29_FilterEmaPeriod = LAB_CONSTVAL__29_FilterEmaPeriod;
+#endif
+#ifndef LAB_CONST__29_LotMode
+input int    _29_LotMode        = 0;       // [P12927] 0=Fixed lot, 1=Linear step-up, 2=Inverted pyramid
+#endif
+#ifdef LAB_CONST__29_LotMode
+const int _29_LotMode = LAB_CONSTVAL__29_LotMode;
+#endif
+#ifndef LAB_CONST__29_SpacingMode
+input int    _29_SpacingMode    = 0;       // [P12928] 0=Fixed points, 1=ATR dynamic, 2=Widening grid
+#endif
+#ifdef LAB_CONST__29_SpacingMode
+const int _29_SpacingMode = LAB_CONSTVAL__29_SpacingMode;
+#endif
+#ifndef LAB_CONST__29_HedgeMode
+input int    _29_HedgeMode      = 0;       // [P12929] 0=None(OCO), 1=Pullback Martingale, 2=Asymmetric Counter-Hedge, 3=Delta Neutral
+#endif
+#ifdef LAB_CONST__29_HedgeMode
+const int _29_HedgeMode = LAB_CONSTVAL__29_HedgeMode;
+#endif
+#ifndef LAB_CONST__29_HedgeStartLot
+input double _29_HedgeStartLot  = 0.01;    // [P12930] Asymmetric counter-hedge initial lot
+#endif
+#ifdef LAB_CONST__29_HedgeStartLot
+const double _29_HedgeStartLot = LAB_CONSTVAL__29_HedgeStartLot;
+#endif
+#ifndef LAB_CONST__29_HedgeStepPts
+input double _29_HedgeStepPts   = 400.0;   // [P12931] Distance points between counter-hedge orders
+#endif
+#ifdef LAB_CONST__29_HedgeStepPts
+const double _29_HedgeStepPts = LAB_CONSTVAL__29_HedgeStepPts;
+#endif
+#ifndef LAB_CONST__29_HedgeLegs
+input int    _29_HedgeLegs      = 3;       // [P12932] Number of counter-hedge legs
+#endif
+#ifdef LAB_CONST__29_HedgeLegs
+const int _29_HedgeLegs = LAB_CONSTVAL__29_HedgeLegs;
+#endif
+#ifndef LAB_CONST__29_ExitMode
+input int    _29_ExitMode       = 0;       // [P12933] 0=Fixed SL/TP, 1=Break-even Lock, 2=Chandelier ATR Trail, 3=Staged TP
+#endif
+#ifdef LAB_CONST__29_ExitMode
+const int _29_ExitMode = LAB_CONSTVAL__29_ExitMode;
+#endif
+#ifndef LAB_CONST__29_BeTriggerPts
+input double _29_BeTriggerPts   = 500.0;   // [P12934] Break-even trigger profit points (for ExitMode=1)
+#endif
+#ifdef LAB_CONST__29_BeTriggerPts
+const double _29_BeTriggerPts = LAB_CONSTVAL__29_BeTriggerPts;
+#endif
+#ifndef LAB_CONST__29_BeLockPts
+input double _29_BeLockPts      = 50.0;    // [P12935] Break-even lock profit points above entry
+#endif
+#ifdef LAB_CONST__29_BeLockPts
+const double _29_BeLockPts = LAB_CONSTVAL__29_BeLockPts;
+#endif
+#ifndef LAB_CONST__29_AutoRegime
+input bool   _29_AutoRegime     = false;   // [P12936] Auto Volatility Regime Switch (Breakout vs Pullback)
+#endif
+#ifdef LAB_CONST__29_AutoRegime
+const bool _29_AutoRegime = LAB_CONSTVAL__29_AutoRegime;
+#endif
+#ifndef LAB_CONST__29_RegimeAtrThreshold
+input double _29_RegimeAtrThreshold = 1.3; // [P12937] ATR ratio threshold for momentum breakout switch
+#endif
+#ifdef LAB_CONST__29_RegimeAtrThreshold
+const double _29_RegimeAtrThreshold = LAB_CONSTVAL__29_RegimeAtrThreshold;
+#endif
+#ifndef LAB_CONST__29_PartialTpPts
+input double _29_PartialTpPts   = 0.0;     // [P12938] Points for partial take-profit close (0=disabled)
+#endif
+#ifdef LAB_CONST__29_PartialTpPts
+const double _29_PartialTpPts = LAB_CONSTVAL__29_PartialTpPts;
+#endif
+#ifndef LAB_CONST__29_PartialClosePct
+input double _29_PartialClosePct = 50.0;   // [P12939] Percentage of volume to close at partial TP (e.g. 50%)
+#endif
+#ifdef LAB_CONST__29_PartialClosePct
+const double _29_PartialClosePct = LAB_CONSTVAL__29_PartialClosePct;
+#endif
+#ifndef LAB_CONST__29_ChandelierMult
+input double _29_ChandelierMult = 3.0;     // [P12940] Chandelier ATR trailing stop multiplier
+#endif
+#ifdef LAB_CONST__29_ChandelierMult
+const double _29_ChandelierMult = LAB_CONSTVAL__29_ChandelierMult;
 #endif
 #endif
 

@@ -58,3 +58,8 @@
 {"allocated_at_commit":"1d4743fbe9696f44e2b922e27167acbe06125b8d","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":999094,"scope":"GLOBAL","status":"ASSIGNED"}
 {"allocated_at_commit":"1d4743fbe9696f44e2b922e27167acbe06125b8d","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":20240001,"scope":"GLOBAL","status":"ASSIGNED"}
 {"allocated_at_commit":"1d4743fbe9696f44e2b922e27167acbe06125b8d","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":99000512,"scope":"GLOBAL","status":"ASSIGNED"}
+{"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992301,"scope":"GLOBAL","status":"RESERVED"}
+{"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992601,"scope":"GLOBAL","status":"RESERVED"}
+{"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992701,"scope":"GLOBAL","status":"RESERVED"}
+{"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992801,"scope":"GLOBAL","status":"RESERVED"}
+{"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992901,"scope":"GLOBAL","status":"RESERVED"}
