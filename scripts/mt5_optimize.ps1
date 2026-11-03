@@ -511,15 +511,28 @@ if ((Test-Path -LiteralPath $destXml) -and -not $Force) {
   Write-Output "ABORT: destination optimizer report appeared during run ($destXml) and -Force is not set."
   exit 2
 }
-Move-Item -LiteralPath $srcXml -Destination $destXml -Force
-# Bind the published bytes to the verified ones: a writer that replaced the source between
-# verification and the move would otherwise be published under the earlier hash.
-$destBytes = [IO.File]::ReadAllBytes($destXml)
-$destHash = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($destBytes)).Replace("-", "").ToLowerInvariant()
-if ($destHash -ne $xmlCheck.sha256) {
+# Stage, re-verify, then publish: the bytes are moved to a staging name beside the destination and
+# hashed there; only bytes equal to the verified ones are renamed onto the consumer path. A writer that
+# replaced the source after verification, or bytes that cannot be read back, never reach $destXml.
+$staged = "$destXml.staging-" + [guid]::NewGuid().ToString('N')
+$stagedHash = $null
+try {
+  Move-Item -LiteralPath $srcXml -Destination $staged -ErrorAction Stop
+  $stagedBytes = [IO.File]::ReadAllBytes($staged)
+  $stagedHash = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($stagedBytes)).Replace("-", "").ToLowerInvariant()
+} catch {
+  $stagedHash = "UNREADABLE ($($_.Exception.Message))"
+}
+if ($stagedHash -ne $xmlCheck.sha256) {
   $unverified = "$destXml.unverified-" + (Get-Date -Format 'yyyyMMdd_HHmmss')
-  Move-Item -LiteralPath $destXml -Destination $unverified -Force
-  Write-Output "INVALID XML: published bytes (sha256=$destHash) differ from the verified bytes (sha256=$($xmlCheck.sha256)); set aside as $unverified"
+  if (Test-Path -LiteralPath $staged) { Move-Item -LiteralPath $staged -Destination $unverified -Force -ErrorAction SilentlyContinue }
+  Write-Output "INVALID XML: staged bytes (sha256=$stagedHash) differ from the verified bytes (sha256=$($xmlCheck.sha256)); not published (set aside as $unverified when present)"
+  exit 4
+}
+try {
+  Move-Item -LiteralPath $staged -Destination $destXml -Force:$Force -ErrorAction Stop
+} catch {
+  Write-Output "ABORT: could not publish verified XML from $staged to $destXml ($($_.Exception.Message)); the verified copy stays at $staged"
   exit 4
 }
 Write-Output "OK OPTIMIZER XML: $destXml (sha256=$($xmlCheck.sha256), rows=$($xmlCheck.rows))"
