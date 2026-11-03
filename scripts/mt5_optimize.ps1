@@ -220,6 +220,15 @@ function Test-Mt5OptimizeXmlArtifact {
   }
 }
 
+# The report name becomes a file stem in DataDir, optimizations\ and ini\; anything that could leave
+# those folders (separators, '..', drive or stream colons, other invalid file-name characters) is
+# refused before any path is built. Historical names use commas and similar, so this is a denylist.
+if ([string]::IsNullOrWhiteSpace($ReportName) -or $ReportName.IndexOfAny([IO.Path]::GetInvalidFileNameChars()) -ge 0 -or
+    $ReportName.Contains('..') -or $ReportName -ne $ReportName.Trim() -or $ReportName.EndsWith('.')) {
+  Write-Output "ABORT: -ReportName '$ReportName' must be a plain file stem (no path separators, ':', '..' or invalid file-name characters)."
+  exit 2
+}
+
 # -MockProcessRunner is a test hook: it replaces terminal64 and skips the running-terminal guard, so it
 # is honoured only when every path the run mutates sits under the system temp directory.
 if ($null -ne $MockProcessRunner) {
@@ -503,6 +512,16 @@ if ((Test-Path -LiteralPath $destXml) -and -not $Force) {
   exit 2
 }
 Move-Item -LiteralPath $srcXml -Destination $destXml -Force
+# Bind the published bytes to the verified ones: a writer that replaced the source between
+# verification and the move would otherwise be published under the earlier hash.
+$destBytes = [IO.File]::ReadAllBytes($destXml)
+$destHash = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($destBytes)).Replace("-", "").ToLowerInvariant()
+if ($destHash -ne $xmlCheck.sha256) {
+  $unverified = "$destXml.unverified-" + (Get-Date -Format 'yyyyMMdd_HHmmss')
+  Move-Item -LiteralPath $destXml -Destination $unverified -Force
+  Write-Output "INVALID XML: published bytes (sha256=$destHash) differ from the verified bytes (sha256=$($xmlCheck.sha256)); set aside as $unverified"
+  exit 4
+}
 Write-Output "OK OPTIMIZER XML: $destXml (sha256=$($xmlCheck.sha256), rows=$($xmlCheck.rows))"
 . (Join-Path $PSScriptRoot 'lib\optimize_next_step.ps1')
 Write-Output (Get-OptimizeNextStepMessage -DestXml $destXml -HypothesisRevision $HypothesisRevision)

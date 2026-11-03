@@ -275,6 +275,16 @@ try {
     Assert-Case "C12.a mock runner with a non-temp -AutoDir is refused (exit 2)" ($codeC12 -eq 2 -and ($outC12 -join " ") -match "MockProcessRunner is a test hook") "exit=$codeC12 out=$($outC12 -join ' ')"
     Assert-Case "C12.b the non-temp -AutoDir was never created" (-not (Test-Path -LiteralPath $notTempAuto))
 
+    # --- C13: a -ReportName that could leave the report folders is refused before any path is built ---
+    foreach ($badName in @('..\..\escape_c13', 'sub\c13', 'C:c13', 'c13:stream')) {
+        $outC13 = & powershell -NoProfile -ExecutionPolicy Bypass -Command "
+            & '$optScript' -Expert 'TestPkg\SyntheticOptEA' -SetFile '$validSet' -Symbol 'XAUUSD' -Period 'H1' -FromDate '2023.01.01' -ToDate '2025.01.01' -TimeoutSec 5 -Terminal '$env:SystemRoot\System32\hostname.exe' -CapabilityFile '$capFile' -AllowLegacyIdentity -ReportName '$badName' -DataDir '$dataDir' -AutoDir '$autoDir' -DecisionLogPath '$decisionLog'
+            exit `$LASTEXITCODE
+        " 2>&1
+        $codeC13 = $LASTEXITCODE
+        Assert-Case "C13 -ReportName '$badName' refused (exit 2)" ($codeC13 -eq 2 -and ($outC13 -join " ") -match "must be a plain file stem") "exit=$codeC13 out=$($outC13 -join ' ')"
+    }
+
     # --- C9: Static source checks on scripts\mt5_optimize.ps1 ---
     $srcText = Get-Content -LiteralPath $optScript -Raw
     Assert-Case "C9.a mt5_optimize.ps1 uses -WindowStyle Hidden" ($srcText -match "-WindowStyle\s+Hidden")
