@@ -408,7 +408,7 @@
 | ORDER-1411 | 2026-08-05 | DONE | [optimize] The two WATCH cells from tonight's screen, neither ever optimized |  | ACTIVE:7338 |
 | ORDER-1420 | 2026-08-06 | CLOSED | [host search] The `Boss_14` chassis cannot trade both directions at all, so the shorts qu… |  | ACTIVE:410 |
 | ORDER-1460 | 2026-08-06 | DONE 2026-08-06 | [🔴 tooling/integrity] The ORDER-105 negative suite has been ABORTING at case 15 since 20… |  | ACTIVE:95 |
-| ORDER-1461 | 2026-08-06 | OPEN | [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path… | it had shipped on 1 of the 3 tester entry points, and the one it missed was the OPTIMIZER. Now shared in scri… | ACTIVE:192 |
+| ORDER-1461 | 2026-08-06 | CLOSED 2026-11-04 | [🔴 tooling/integrity] The stale-binary detector is correct, and nothing on the run path… | no re-run of ORDER-430/ORDER-1420 (both already conclude nothing qualifies). _OLD/_OLD2 binaries not deleted… | ACTIVE:192 |
 | ORDER-1462 | 2026-08-16 | DONE 2026-08-16 | [factory/S2a] 👤 The s2a attestation gate was RED at the pre-owner-confirmation snapshot;… |  | ACTIVE:1 |
 | ORDER-1500 | 2026-08-17 | DONE / REVIEWED | [🔴 factory/S13] The run-journal store is validated by nothing, and three committed rows… |  | ARCHIVE:12801 |
 | ORDER-1530 | 2026-08-07 | DONE + REVIEWED | [governance/docs] Migrate active governance to the owner-ratified ChatGPT-led multi-agent… |  | ARCHIVE:8687 |

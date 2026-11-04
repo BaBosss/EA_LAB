@@ -240,12 +240,12 @@ row at the bottom, with date and who decided. `OPEN` = not yet set; nothing may 
 | R11 | Smoke | All 10 symbols on defaults; full optimize only where smoke PF ≥ 1.0. | 5.1 |
 | R12 | Search | Model 1, full grid, coarse → fine per parameter. No fixed lever limit; set by the hypothesis. | 5.3, 5.4, 5.6, 7a #6 |
 | R13 | Freeze before qualifying | Trial runs are development-only. Before any qualifying run, freeze per EA: ranges, score formula, plateau rule, tie-breaks. | 7c #6 |
-| R14 | Plateau rule | Per EA, decided with the owner, frozen under R13. | 5.7 |
-| R15 | Score formula | `OPEN` — set after trial runs, then frozen under R13. Includes the escalation penalties of R18. | 5.8 |
+| R14 | Plateau rule | Per EA, decided with the owner, frozen under R13. **Default (v2):** choose the frozen center by the **neighbour-smoothed** score: the mean score over the pass and every pass within one grid step on every axis. | 5.7, R15 trial 2 |
+| R15 | Score formula | **F5 (v2):** score = recovery factor × R19 confidence multiplier (A 1.0 · B 0.75 · C 0.5 · D 0). A pass with equity DD > 12 % is excluded. Escalation class adds the R18 penalties; their weights stay `OPEN` until the in-EA basket log exists. Chosen by the rule trial 1 pre-registered: no variant qualified, so the fallback applied (`R15_SCORE_TRIAL_2_DEV.md`). | 5.8, trials 1–2 |
 | R16 | Model 4 | Frozen finalist must pass Model 4 MAIN + BWD before CANDIDATE. | 5.3, 7c #1 (owner 2026-11-04) |
 | R17 | DD limits | Equity DD (open positions included) ≤ 12 % per EA at selection; ≤ 30 % per portfolio including correlation (DEMO admission code at 30 % since `22761365`; the live sizing bar in `docs/JUDGE_DAY_RUNBOOK.md` stays 25 % until the owner decides it). Demo kill eqDD > 12 % unchanged. | 7a follow-up, Q10 |
 | R18 | Escalation floating loss | Worst basket depth + holding time reported and penalised. Source = timestamped equity + basket log from inside the EA (core); locked EAs = price replay of their deals; no observations ⇒ no score. Positions open at test end closed at bid/ask + costs. | Q10, 7c #3 |
-| R19 | Trade count | Sets evidence confidence, separate from quality grade (`EA_REPORT_SCHEMA.md` §9). **Accepted by owner 2026-11-04:** closed trades per window A ≥100 · B 50–99 · C 20–49 · D <20; the EA takes its worst MAIN/BWD window; grade A needs confidence ≥B, grade B needs ≥C; a variant trading >50% fewer than its parent prints both counts. The VERDICT GATE ≥100-trade floor stays in force until an owner-ratified amendment lands. | 7a report |
+| R19 | Trade count | Sets evidence confidence, separate from quality grade (`EA_REPORT_SCHEMA.md` §9). **Accepted by owner 2026-11-04:** closed trades per window A ≥100 · B 50–99 · C 20–49 · D <20; the EA takes its worst MAIN/BWD window; grade A needs confidence ≥B, grade B needs ≥C; a variant trading >50% fewer than its parent prints both counts. The VERDICT GATE carries this since 2026-11-04 (evidence-confidence row in `CLAUDE.md`, replacing the fixed ≥100 floor). | 7a report |
 | R20 | Extra lever round | One diagnosis-driven round allowed: written reason, approved by any reviewer who is not the author. | Q2, 7a #8 |
 | R21 | Checker | `optimize_guard.ps1` stays the preflight. Acceptance = a separate receipt bound to report / build / set / window / recipe version. `-WarnOnly` or unresolved inputs never produce acceptance. Every refusal is recorded in `factory/optimize_decisions.jsonl`. | 7a #11, 7c #7 |
 | R22 | Guard evidence | Method A (trade-list counterfactual) = screening only. Qualifying evidence = method B (in-tester OFF / ON / PLACEBO, pre-registered timeline + selection rule) with fire counts, including stale/missing-feed cases. A guard that fired 0 times = `UNTESTED`. Guards are EA inputs, `OFF` by default. | 7c #9, VERDICT GATE guard row |
@@ -253,7 +253,7 @@ row at the bottom, with date and who decided. `OPEN` = not yet set; nothing may 
 | R24 | Locked EAs | Keep their binary; R7–R23 apply; score computed externally from the MT5 report (and R18 via price replay). | Q1 |
 | R25 | Where | Lane worktree from `origin/master` at a pinned SHA; never `D:\EA_LAB`. Local-only EAs enter only via the A10 tick sheet. | 7b |
 
-**Open items before build:** R15 (dev trial 1 done, see `R15_SCORE_TRIAL_1_DEV.md`; trial 2 pending) · VERDICT GATE amendment for R19 (thresholds accepted 2026-11-04; the text awaits owner OK). Done: `DEMO_BUDGET_PCT` 25 → 30 for DEMO (`22761365`); the live sizing bar in `docs/JUDGE_DAY_RUNBOOK.md` stays 25% until the owner decides it.
+**Open items before build:** R18 escalation penalty weights (need the in-EA equity/basket log, a core edit). Done: R15 + R14 default frozen (v2) · VERDICT GATE R19 amendment · `DEMO_BUDGET_PCT` 25 → 30 for DEMO (`22761365`); the live sizing bar in `docs/JUDGE_DAY_RUNBOOK.md` stays 25% until the owner decides it.
 Proposals for R4 and R19: `D:\EA_LAB_RESET\_raw\open_rules_proposal.md`. Recipe and receipt spec for R12–R21: `RECIPE_AND_RECEIPT_SPEC_DRAFT.md`.
 
 **Governance note:** the single-Seat model was retired on 2026-11-04 (`d4db8d0a`, `AGENTS.md` §1.0). Build lanes integrate under the §1.0 integration rule.
@@ -261,6 +261,7 @@ Proposals for R4 and R19: `D:\EA_LAB_RESET\_raw\open_rules_proposal.md`. Recipe 
 | Version | Date | Change | Decided by |
 |---|---|---|---|
 | v1 | 2026-11-04 | First consolidated table after GPT-6.1-Sol review; R16 Model 4 moved before CANDIDATE. | Owner |
+| v2 | 2026-11-04 | R15 frozen = F5; R14 default = neighbour-smoothed center; R19 carried into the VERDICT GATE. | Owner ("ok ทำเลย") |
 
 ## 8. Constraints carried over
 
