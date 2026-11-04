@@ -13,7 +13,7 @@ Safety defaults (non-negotiable, each one has a CAGE test proving it below):
     wrong/not PSD, and this script REFUSES to emit a number rather than guess):
         max_i(DD95_i) <= portfolio_DD_est <= sum_i(DD95_i)
 
-Budget: DEMO accounts = 25% of equity (fixed project number, see
+Budget: DEMO accounts = 30% of equity (fixed project number, see
 docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 -- do not invent a different number
 here). REAL_CENT accounts: computed and reported ONLY, tagged "user decision
 needed" -- this script never assigns a DD budget to real-money accounts.
@@ -62,7 +62,7 @@ BACKTEST_CORR_MAP = ROOT / "portfolio" / "backtest_corr_reports.csv"
 OUT_MD = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.md"
 OUT_JSON = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.json"
 
-DEMO_BUDGET_PCT = 25.0  # fixed project number -- docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3
+DEMO_BUDGET_PCT = 30.0  # fixed project number -- docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 (owner 2026-11-03: 25 -> 30)
 MIN_SHARED_MONTHS = 4   # same threshold _mt5_auto/corr_monthly.py uses before trusting a pearson r
 # ORDER-170 SEV-1 #4: this MUST default to None (fail closed), not to a placeholder.
 # The real value is (broker_min_lot / locked_set_lot) and is not derivable from any
@@ -2585,9 +2585,34 @@ CAGE_TESTS = [
 ]
 
 
+# The cage fixtures above were written against a 25% DEMO budget (ORDER-170 rounds
+# 1-10). Their geometry (e.g. 10+10+10 = 30 "over budget") encodes the admission LOGIC,
+# not the project number, so they run under this fixture budget. The production number
+# is pinned separately by _cage_production_demo_budget, which runs unpatched.
+CAGE_FIXTURE_DEMO_BUDGET_PCT = 25.0
+OWNER_DEMO_BUDGET_PCT = 30.0  # owner 2026-11-03 (template+optimize standard R17)
+
+
+def _cage_production_demo_budget():
+    """The shipped DEMO budget is the owner's number, and the account-type lookup
+    returns it (not a fixture value left behind by the patched cages)."""
+    assert DEMO_BUDGET_PCT == OWNER_DEMO_BUDGET_PCT, f"DEMO_BUDGET_PCT={DEMO_BUDGET_PCT!r}"
+    pct, _note = budget_pct_for_account_type("DEMO")
+    assert pct == OWNER_DEMO_BUDGET_PCT, f"DEMO lookup returned {pct!r}"
+    pct_rc, _ = budget_pct_for_account_type("REAL_CENT")
+    assert pct_rc is None, f"REAL_CENT must never get a budget: {pct_rc!r}"
+    report = build_report([_mk_row("111", "C", "PENDING_ATTACH")], {"C": OWNER_DEMO_BUDGET_PCT + 5e-10}, {})
+    assert report["accounts"][0]["budget_pct"] == OWNER_DEMO_BUDGET_PCT
+    assert report["accounts"][0]["over_budget"] is True
+    assert report["admission_demo"][0]["status"] != "ADMIT_FULL"
+
+
 def run_selftest():
+    global DEMO_BUDGET_PCT
     ok = True
+    production_budget = DEMO_BUDGET_PCT
     for name, fn in CAGE_TESTS:
+        DEMO_BUDGET_PCT = CAGE_FIXTURE_DEMO_BUDGET_PCT
         try:
             fn()
             print(f"PASS  {name}")
@@ -2597,6 +2622,14 @@ def run_selftest():
         except Exception as e:  # noqa: BLE001 -- self-test must report, not crash the runner
             print(f"FAIL  {name}  -- unexpected {type(e).__name__}: {e}")
             ok = False
+        finally:
+            DEMO_BUDGET_PCT = production_budget
+    try:
+        _cage_production_demo_budget()
+        print("PASS  production_demo_budget")
+    except Exception as e:  # noqa: BLE001
+        print(f"FAIL  production_demo_budget  -- {type(e).__name__}: {e}")
+        ok = False
     print("ALL PASS" if ok else "SOME FAILED")
     return ok
 

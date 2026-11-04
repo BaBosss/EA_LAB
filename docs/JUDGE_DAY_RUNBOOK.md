@@ -62,7 +62,7 @@ powershell -File scripts/control_room_snapshot.ps1
 1. Pool = ตัว PROMOTE ทั้งหมด (live 9 + demo 7 ที่ครบเวลา) → รัน `corr_monthly.py` บน deals จริง
 2. เลือก **2–3 ตัว corr ≤0.40** ผ่าน skill `portfolio-selector` — corr 0.40–0.60 = ใช้ได้แต่ลด lot
    (กฎ user: correlation → reduce-lot-not-cut) · ห้ามเลือกกลไก×symbol ซ้ำ
-3. Sizing: กลับจาก 0.25x demo → เป้า risk จริงด้วยเกณฑ์ **MC worst-DD ที่ scale จริง ≤ 25%** ต่อพอร์ต ·
+3. Sizing: กลับจาก 0.25x demo → เป้า risk จริงด้วยเกณฑ์ **MC worst-DD ที่ scale จริง ≤ 30%** ต่อพอร์ต (owner 2026-11-03: 25% → 30%, รวม correlation) ·
    EA ธงสันเขา (EURJPY/CADJPY) size 0.5x ของ slot ตัวเอง
 4. Deploy live micro ทันทีตาม user decision (ROADMAP Phase 3): `live-deployment-controller` →
    `vps-deploy-ops` → **เช็ค GV persist บน live chart ครั้งแรก** (hard-kill restore — MERGE-05B จดไว้) →
