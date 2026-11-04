@@ -259,7 +259,7 @@
 | ORDER-230 | 2026-07-26 | REVIEWED | [🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD |  | ARCHIVE:9444 |
 | ORDER-231 | 2026-07-27 | DONE + REVIEWED | [demo · funnel gap] 992001 TsMom_XAU: ACTIVE อยู่แต่ไม่เคยมี Monte Carlo |  | ARCHIVE:8116 |
 | ORDER-232 |  | DONE | [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด |  | ARCHIVE:13735 |
-| ORDER-233 |  | OPEN | [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% |  | ACTIVE:8143 |
+| ORDER-233 | 2026-07-27 | CLOSED 2026-11-04 | [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% |  | ACTIVE:8143 |
 | ORDER-234 |  | OPEN | [🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ |  | ACTIVE:8183 |
 | ORDER-235 | 2026-07-28 | REVIEWED | [policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้ — ต้องเคาะ ไม่ใช่เลื่อนไปเรื่อยๆ |  | ARCHIVE:9478 |
 | ORDER-236 | 2026-08-11 | REVIEWED | [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ |  | ARCHIVE:10931 |
