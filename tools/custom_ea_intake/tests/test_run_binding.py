@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -154,13 +155,13 @@ class RunBindingTest(unittest.TestCase):
         self.dump()
         with self.assertRaisesRegex(ValueError, "symlink or junction"):
             binder.bind_manifest(self.input, self.root / "j.json")
-        # Python < 3.12 has no os.path.isjunction: the fallback must still refuse (fail closed, not skip the check).
-        with mock.patch.object(os.path, "isjunction", None):
-            with self.assertRaisesRegex(ValueError, "symlink or junction"):
-                binder.bind_manifest(self.input, self.root / "j2.json")
-        # ...and the fallback must not refuse an ordinary directory.
-        with mock.patch.object(os.path, "isjunction", None):
-            self.assertFalse(binder.is_link_or_junction(real / "x.bin"))
+        self.assertFalse(binder.is_link_or_junction(real / "x.bin"))
+
+    def test_module_refuses_to_load_before_python_312(self):
+        fresh = importlib.util.module_from_spec(spec)
+        with mock.patch.object(sys, "version_info", (3, 11, 9, "final", 0)):
+            with self.assertRaisesRegex(RuntimeError, "Python 3.12"):
+                spec.loader.exec_module(fresh)
 
     def test_replacing_output_fails(self):
         binder.bind_manifest(self.input, self.root / "one.json")

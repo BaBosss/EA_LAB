@@ -15,6 +15,11 @@ from pathlib import Path
 import re
 import sys
 
+# Junction detection (os.path.isjunction) exists from Python 3.12. Refuse to run on anything older rather than
+# silently skipping the junction check or guessing with a path comparison that falsely refuses legitimate paths.
+if sys.version_info < (3, 12):
+    raise RuntimeError("run_binding requires Python 3.12 or newer (junction detection); refusing to run")
+
 # Default 2026H1 holdout (CLAUDE.md VERDICT GATE). A run window overlapping it is refused: this tool cannot
 # tell whether the Owner authorised it, and a spent holdout is burned. Windows wholly before or after it pass.
 # Re-pin both dates here when the holdout is re-declared.
@@ -52,12 +57,7 @@ def parse_day(label: str, value: str) -> datetime.date:
 def is_link_or_junction(path: Path) -> bool:
     if path.is_symlink():
         return True
-    isjunction = getattr(os.path, "isjunction", None)
-    if isjunction is not None:
-        return bool(isjunction(path))
-    # Python < 3.12 has no junction API. Fail closed instead of silently skipping the check: a junction resolves to
-    # a different real path, so any difference is refused (this can also refuse an 8.3 short-name path, by design).
-    return os.path.normcase(os.path.realpath(path)) != os.path.normcase(os.path.abspath(path))
+    return os.path.isjunction(path)
 
 
 def check_artifact(kind: str, value: object) -> dict:
