@@ -72,7 +72,8 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 | V5 | `extra_round` is either `null` or `{reason, lever, approved_by, approved_utc}` with `approved_by ≠ frozen_by` (R20). At most one. |
 | V6 | Each `symbol_preset_ref` resolves and pins digits, point, tick value and contract size (R8). |
 | V7 | `stages` contains `MODEL4` before any stage that would issue CANDIDATE (R16). |
-| V8 | `score.dd_cap_equity_pct` ≤ 12.0 (R17). A recipe may tighten the cap, never loosen it. |
+| V8 | `score.dd_cap_equity_pct` is a finite number in (0, 12.0] (R17). A recipe may tighten the cap, never loosen it; NaN, ∞ or text refuse. |
+| V9 | Every SAFETY or SIZING binding without a `locked_value` has an entry in the recipe's `fixed_inputs` (R13 freeze). A4 checks the run's set against it. No canonical SAFETY binding carries a value today, so the recipe is where those values are frozen. |
 
 ## 3. `AcceptanceReceipt` (one JSONL row per accepted stage result)
 

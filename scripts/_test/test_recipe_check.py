@@ -150,6 +150,9 @@ def main():
         ('V4 non-escalation class without derivation', lambda r: r.update(class_derivation=''), 'V4'),
         ('V6 preset ref without hash', lambda r: r['symbol_preset_refs'][0].pop('raw_sha256'), 'V6'),
         ('V7 MODEL4 windows MAIN+HOLDOUT (no BWD)', lambda r: r['stages'][4].update(windows=['MAIN', 'HOLDOUT']), 'V7'),
+        ('V8 NaN DD cap', lambda r: r['score'].update(dd_cap_equity_pct='NaN'), 'V8'),
+        ('V8 infinite DD cap', lambda r: r['score'].update(dd_cap_equity_pct=float('inf')), 'V8'),
+        ('V2 nested null in plateau_rule', lambda r: r['plateau_rule'].update(decided_with_owner=None), 'V2'),
     ]
     for name, mut, prefix in cases:
         r = copy.deepcopy(good)
@@ -207,6 +210,13 @@ def main():
         fh.write('ExitMode=22\n_99_Len=14\n_99_Safety=250\n')
     r = run(root, rp, 'SMOKE', 'MAIN', set_path=safety_set, write=False)
     check('A4 SAFETY value changed without a sweep', any('_99_Safety=250' in x for x in r['refusals']), r['refusals'])
+    unb_set = os.path.join(root, 'unbound.set')
+    with open(unb_set, 'w') as fh:
+        fh.write('ExitMode=22\n_99_Len=14\n_99_Safety=25\nUnbound=1||0||1||2||Y\n')
+    r = run(root, rp, 'SMOKE', 'MAIN', set_path=unb_set, write=False)
+    check('A4 unbound swept input in a single run', any('Unbound is swept' in x for x in r['refusals']), r['refusals'])
+    r = run(root, rp, 'SMOKE', 'MAIN', report=rep(equity_drawdown_relative_pct=float('nan')), write=False)
+    check('A6/A9 NaN equity DD refuses', r['result'] == 'REFUSE' and has(r['refusals'], 'A9 equity drawdown'), r['refusals'])
     short_set = os.path.join(root, 'short.set')
     with open(short_set, 'w') as fh:
         fh.write('ExitMode=22\n_99_Len=14\n')
@@ -257,6 +267,39 @@ def main():
     except Exception as exc:  # noqa: BLE001
         check('refusal row parses under optimize_log record_version 1', False, exc)
     shutil.rmtree(r4)
+
+    # SAFETY without a bound value: the recipe must freeze it, and the set must match
+    sroot = make_root()
+    bp = os.path.join(sroot, 'factory', 'parameter_bindings.jsonl')
+    rows = rc.read_jsonl(bp)
+    for b in rows:
+        if b['parameter'] == '_99_Safety':
+            b['locked_value'] = None
+    jl(bp, rows)
+    srec = base_recipe(sroot)
+    out = rc.validate_recipe(srec, sroot)
+    check('V9 SAFETY without bound value needs fixed_inputs', has(out, 'V9 SAFETY input _99_Safety'), out)
+    srec['fixed_inputs'] = {'_99_Safety': '25'}
+    check('V9 fixed_inputs satisfies the SAFETY freeze', rc.validate_recipe(srec, sroot) == [], rc.validate_recipe(srec, sroot))
+    srp = write_recipe(sroot, srec)
+    with open(os.path.join(sroot, 'run.set'), 'w') as fh:
+        fh.write('ExitMode=22\n_99_Len=14\n_99_Safety=250\n')
+    r = run(sroot, srp, 'SMOKE', 'MAIN', write=False)
+    check('A4 SAFETY value differs from the recipe freeze', any('_99_Safety=250' in x for x in r['refusals']), r['refusals'])
+    shutil.rmtree(sroot)
+
+    # --write: an unwritable receipts store must not lose the decision-log refusal
+    wroot = make_root()
+    wrp = write_recipe(wroot, base_recipe(wroot))
+    os.makedirs(os.path.join(wroot, rc.RECEIPTS_REL))
+    with open(os.path.join(wroot, 'factory', 'optimize_decisions.jsonl'), 'w') as fh:
+        fh.write('')
+    rc_code = rc.main(['--root', wroot, 'accept', '--recipe', wrp, '--stage', 'SMOKE', '--window', 'MAIN',
+                       '--report', os.path.join(wroot, 'missing.htm'), '--set', os.path.join(wroot, 'run.set'),
+                       '--binary', os.path.join(wroot, 'ea.ex5'), '--lane', 'MT5-TEST', '--write'])
+    dec_rows = rc.read_jsonl(os.path.join(wroot, 'factory', 'optimize_decisions.jsonl'))
+    check('--write keeps the decision-log refusal when the receipt store fails', rc_code == 2 and len(dec_rows) == 1 and dec_rows[0]['result'] == 'REFUSE', (rc_code, dec_rows))
+    shutil.rmtree(wroot)
 
     # A9 an unreadable receipts store still yields a REFUSE receipt (never an exception)
     r5 = make_root()

@@ -19,6 +19,7 @@ refusal, never a skip (A9).
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -79,6 +80,19 @@ def read_jsonl(path, allow_missing=False):
     return rows
 
 
+def finite(x):
+    """float(x) if x is a finite number, else None (NaN / inf / text never pass a numeric gate)."""
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) else None
+
+
+# Roles whose value must be frozen in the recipe when the binding fixes none (R13).
+FROZEN_VALUE_ROLES = ('SAFETY', 'SIZING')
+
+
 def confidence(trades):
     """R19 evidence-confidence letter for one window."""
     if trades is None:
@@ -89,10 +103,12 @@ def confidence(trades):
 
 def score_f5(recovery_factor, eq_dd_pct, trades, dd_cap):
     """R15 = F5: recovery factor x confidence multiplier; excluded (None) above the DD cap."""
-    if recovery_factor is None or eq_dd_pct is None or trades is None:
+    rf, dd, cap = finite(recovery_factor), finite(eq_dd_pct), finite(dd_cap)
+    if rf is None or dd is None or cap is None or trades is None:
         return None
-    if float(eq_dd_pct) > float(dd_cap):
+    if not dd <= cap:
         return None
+    recovery_factor = rf
     return float(recovery_factor) * CONF_MULT[confidence(trades)]
 
 
@@ -202,8 +218,16 @@ def validate_recipe(recipe, root):
     if score.get('formula_sha256') != SCORE_FORMULA_SHA256:
         ref.append('V2 score.formula_sha256 does not pin the frozen R15 formula text')
     plateau = recipe.get('plateau_rule') or {}
-    if not plateau.get('id') or not plateau.get('text'):
-        ref.append('V2 plateau_rule id/text is null')
+    if not plateau.get('id') or not plateau.get('text') or any(v in (None, '') for v in plateau.values()):
+        ref.append('V2 plateau_rule has a null or empty field')
+    fixed = recipe.get('fixed_inputs')
+    if fixed is not None and not isinstance(fixed, dict):
+        ref.append('V2 fixed_inputs must be an object')
+        fixed = {}
+    fixed = fixed or {}
+    for b in bindings:
+        if b.get('role') in FROZEN_VALUE_ROLES and b.get('locked_value') is None and fixed.get(b.get('parameter')) in (None, ''):
+            ref.append('V9 %s input %s has no bound value and no fixed_inputs entry' % (b.get('role'), b.get('parameter')))
     tb = recipe.get('tie_breaks')
     if not isinstance(tb, list) or not tb or not all(isinstance(x, str) and x.strip() for x in tb):
         ref.append('V2 tie_breaks must be a non-empty list of non-empty strings')
@@ -298,8 +322,8 @@ def validate_recipe(recipe, root):
         ref.append('V7 stages out of order: %s' % known)
 
     # V8 DD cap never looser than 12 %
-    cap = score.get('dd_cap_equity_pct')
-    if cap is None or float(cap) > DD_CAP_MAX:
+    cap = finite(score.get('dd_cap_equity_pct'))
+    if cap is None or cap <= 0 or cap > DD_CAP_MAX:
         ref.append('V8 score.dd_cap_equity_pct=%r must be <= %.1f' % (cap, DD_CAP_MAX))
     return ref
 
@@ -436,10 +460,10 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
                               'worst_basket_depth': None, 'worst_basket_hold_s': None,
                               'score': score_f5(rep.get('recovery_factor'), dd, trades, cap)}
         receipt['evidence_confidence'] = confidence(trades)
-        if dd is None:
-            refusals.append('A9 report has no equity drawdown')
-        elif float(dd) > float(cap):
-            refusals.append('A6 equity DD %.2f%% > cap %.2f%%' % (float(dd), float(cap)))
+        if finite(dd) is None or finite(cap) is None:
+            refusals.append('A9 equity drawdown %r or cap %r is not a finite number' % (dd, cap))
+        elif not finite(dd) <= finite(cap):
+            refusals.append('A6 equity DD %.2f%% > cap %.2f%%' % (finite(dd), finite(cap)))
         # A7 escalation needs the in-EA basket log (R18) -- never estimated from deals
         if recipe.get('class') == 'escalation':
             refusals.append('A7 escalation: worst-basket depth/hold not available (no in-EA basket log yet, R18)')
@@ -450,19 +474,30 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
         rev, binds = load_bindings(recipe, root)
         if not binds:
             refusals.append('A4 no ParameterBinding rows for %s' % rev)
+        bound = {b.get('parameter'): b for b in binds}
+        for p, (val, swept) in sv.items():
+            if swept and (stage_name not in OPTIMIZE_STAGES or (bound.get(p) or {}).get('role') != 'TUNABLE'):
+                refusals.append('A4 %s is swept in a %s run' % (p, stage_name))
+        fixed = recipe.get('fixed_inputs') if isinstance(recipe.get('fixed_inputs'), dict) else {}
         for b in binds:
             p = b.get('parameter')
             if p not in sv:
                 if b.get('surface') != 'HIDDEN':
                     refusals.append('A5 set omits bound input %s (not a full .set)' % p)
                 continue
-            val, swept = sv[p]
-            if swept and (stage_name not in OPTIMIZE_STAGES or b.get('role') != 'TUNABLE'):
-                refusals.append('A4 %s is swept in a %s run' % (p, stage_name))
-            # Every non-TUNABLE input (LOCKED, SAFETY, ...) must sit at its bound value; a single-test
-            # stage has no preflight (A3 is optimize-only), so this is its parameter guarantee.
-            if b.get('role') != 'TUNABLE' and b.get('locked_value') is not None and val != str(b['locked_value']):
-                refusals.append('A4 %s=%s but its %s binding fixes it at %s' % (p, val, b.get('role'), b['locked_value']))
+            val, _swept = sv[p]
+            # Every non-TUNABLE input must sit at its fixed value: the binding's locked_value, else (for
+            # SAFETY/SIZING) the recipe's frozen fixed_inputs. A single-test stage has no preflight (A3 is
+            # optimize-only), so this is its parameter guarantee.
+            role = b.get('role')
+            want = b.get('locked_value')
+            if want is None and role in FROZEN_VALUE_ROLES:
+                want = fixed.get(p)
+                if want in (None, ''):
+                    refusals.append('A4 %s input %s has no fixed value to check against' % (role, p))
+                    continue
+            if role != 'TUNABLE' and want is not None and val != str(want):
+                refusals.append('A4 %s=%s but its %s value is fixed at %s' % (p, val, role, want))
     except Unreadable as exc:
         refusals.append('A9 ' + str(exc))
 
@@ -551,9 +586,19 @@ def main(argv=None):
                  args.root, args.lane, ini_path=args.ini)
     print(json.dumps(rec, indent=1, sort_keys=True))
     if args.write:
-        append_jsonl(os.path.join(args.root, RECEIPTS_REL), rec)
+        # Both records are attempted independently, so one unwritable store cannot lose the other.
+        failed = []
+        targets = [(RECEIPTS_REL, rec)]
         if rec['result'] == 'REFUSE':
-            append_jsonl(os.path.join(args.root, DECISIONS_REL), refusal_decision_row(rec))
+            targets.insert(0, (DECISIONS_REL, refusal_decision_row(rec)))
+        for rel, row in targets:
+            try:
+                append_jsonl(os.path.join(args.root, rel), row)
+            except OSError as exc:
+                failed.append('%s: %s' % (rel, exc))
+        if failed:
+            print('WRITE FAILED (record not durable): ' + '; '.join(failed), file=sys.stderr)
+            return 2
     return 0 if rec['result'] == 'ACCEPT' else 1
 
 
