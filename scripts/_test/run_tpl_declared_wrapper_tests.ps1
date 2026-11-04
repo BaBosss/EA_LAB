@@ -7,6 +7,10 @@ if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..'
 
 $sourceCommit = '94f20ad4191b066253daaf101f28b0078f2a6805'
 $controlCommit = 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac'
+# The fixtures below replay historical trees whose on-disk baseline is Build 6090. They run the gate
+# scripts exactly as frozen at the last Build-6090 commit; the current (Build 6230) scripts would refuse
+# those trees at the selector build check before reaching the wrapper-hash logic under test.
+$frozenGateCommit = '4c90895709550cf784b016cb3fb2ec9094b00f8a'
 $paths = @(
     'ea_template/Boss_15_ST03.mq5',
     'ea_template/core/Execution.mqh',
@@ -33,6 +37,13 @@ $precommitRepo = Join-Path $fixture 'precommit-repo'
 $precommitEvidence = Join-Path $fixture 'precommit-evidence'
 $pass = 0
 $testStatus = 1
+
+function Copy-FrozenGateScript([string]$Rel, [string]$Destination) {
+    $frozen = Invoke-EvidenceGitBytes -RepoRoot $RepoRoot -Arguments ('show "{0}:{1}"' -f $frozenGateCommit, $Rel)
+    if ($frozen.ExitCode -ne 0) { throw "frozen gate script unavailable: $Rel @ $frozenGateCommit" }
+    New-Item -ItemType Directory -Force (Split-Path $Destination -Parent) | Out-Null
+    [IO.File]::WriteAllBytes($Destination, [byte[]]$frozen.Bytes)
+}
 
 function Invoke-EncodedHarness([string]$Command) {
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Command))
@@ -89,8 +100,8 @@ try {
     & git -C $harness config core.longpaths true
     & git -C $harness config core.autocrlf false
     & git -C $harness checkout --quiet $sourceCommit
-    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\tpl_regression.ps1') -Destination (Join-Path $harness 'scripts\tpl_regression.ps1') -Force
-    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\lib\tpl_baseline.ps1') -Destination (Join-Path $harness 'scripts\lib\tpl_baseline.ps1') -Force
+    Copy-FrozenGateScript 'scripts/tpl_regression.ps1' (Join-Path $harness 'scripts\tpl_regression.ps1')
+    Copy-FrozenGateScript 'scripts/lib/tpl_baseline.ps1' (Join-Path $harness 'scripts\lib\tpl_baseline.ps1')
     & git -C $harness config user.name 'TPL wrapper cage'
     & git -C $harness config user.email 'tpl-wrapper@example.invalid'
     & git -C $harness add -- scripts/tpl_regression.ps1 scripts/lib/tpl_baseline.ps1
@@ -102,7 +113,18 @@ try {
     $legacyCommand = "`$env:GIT_CONFIG_COUNT='1';`$env:GIT_CONFIG_KEY_0='core.excludesfile';`$env:GIT_CONFIG_VALUE_0='" + $emptyExclude.Replace("'","''") + "';& '" + (Join-Path $harness 'scripts\tpl_regression.ps1').Replace("'","''") + "' -ValidateOnly"
     $legacy = Invoke-EncodedHarness $legacyCommand
     if ($legacy.ExitCode -eq 0 -or $legacy.Output -notmatch 'source hash mismatch') { throw 'FAIL: default mode no longer byte-pins the wrapper baseline' }
-    $pass++; Write-Host '[PASS] default mode still rejects the 94f wrapper'
+    $pass++; Write-Host '[PASS] default mode still rejects the 94f wrapper (frozen Build-6090 gate)'
+
+    # SPECIFICITY for the Build 6230 retarget: the CURRENT gate must refuse this Build-6090 tree, and
+    # for the build reason (not a wrapper-hash reason), so the literal cannot be silently reverted.
+    $currentGate = Join-Path $fixture 'current-gate-on-6090-data'
+    & git -C $harness worktree add --quiet --detach $currentGate $sourceCommit
+    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\tpl_regression.ps1') -Destination (Join-Path $currentGate 'scripts\tpl_regression.ps1') -Force
+    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\lib\tpl_baseline.ps1') -Destination (Join-Path $currentGate 'scripts\lib\tpl_baseline.ps1') -Force
+    $currentCmd = "`$env:GIT_CONFIG_COUNT='1';`$env:GIT_CONFIG_KEY_0='core.excludesfile';`$env:GIT_CONFIG_VALUE_0='" + $emptyExclude.Replace("'","''") + "';& '" + (Join-Path $currentGate 'scripts\tpl_regression.ps1').Replace("'","''") + "' -ValidateOnly"
+    $currentRun = Invoke-EncodedHarness $currentCmd
+    if ($currentRun.ExitCode -eq 0 -or $currentRun.Output -notmatch 'active selector build is 6090, expected 6230') { throw "FAIL: current gate did not refuse Build-6090 data for the build reason: $($currentRun.Output)" }
+    $pass++; Write-Host '[PASS] current Build 6230 gate refuses Build-6090 baseline data for the build reason'
 
     Expect-Pass 'declared mode admits exact 94f/b586 through SourceRoot' { Invoke-Harness $source }
     Expect-Refusal 'wrong control is rejected' { Invoke-Harness $source $sourceCommit } 'expected wrapper identity|single immediate parent'
@@ -137,8 +159,8 @@ try {
 
     $legacyControl = Join-Path $fixture 'legacy-control'
     & git -C $harness worktree add --quiet --detach $legacyControl $controlCommit
-    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\tpl_regression.ps1') -Destination (Join-Path $legacyControl 'scripts\tpl_regression.ps1') -Force
-    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\lib\tpl_baseline.ps1') -Destination (Join-Path $legacyControl 'scripts\lib\tpl_baseline.ps1') -Force
+    Copy-FrozenGateScript 'scripts/tpl_regression.ps1' (Join-Path $legacyControl 'scripts\tpl_regression.ps1')
+    Copy-FrozenGateScript 'scripts/lib/tpl_baseline.ps1' (Join-Path $legacyControl 'scripts\lib\tpl_baseline.ps1')
     $legacySuiteCommand = "`$env:GIT_CONFIG_COUNT='1';`$env:GIT_CONFIG_KEY_0='core.excludesfile';`$env:GIT_CONFIG_VALUE_0='" + $emptyExclude.Replace("'","''") + "';& '" +
         (Join-Path $legacyControl 'scripts\_test\run_tpl_baseline_negative_tests.ps1').Replace("'","''") + "' -RepoRoot '" + $legacyControl.Replace("'","''") + "'"
     $legacySuite = Invoke-EncodedHarness $legacySuiteCommand
@@ -172,7 +194,8 @@ try {
     foreach ($path in $repairPaths) {
         $target = Join-Path $precommitRepo ($path -replace '/','\')
         New-Item -ItemType Directory -Force (Split-Path $target -Parent) | Out-Null
-        Copy-Item -LiteralPath (Join-Path $RepoRoot ($path -replace '/','\')) -Destination $target -Force
+        if ($path -in @('scripts/tpl_regression.ps1','scripts/lib/tpl_baseline.ps1')) { Copy-FrozenGateScript $path $target }
+        else { Copy-Item -LiteralPath (Join-Path $RepoRoot ($path -replace '/','\')) -Destination $target -Force }
     }
     $baseIndex = Join-Path $fixture 'precommit-base.index'
     $env:GIT_INDEX_FILE = $baseIndex
@@ -206,7 +229,7 @@ try {
     $stalePath = Join-Path $precommitRepo 'scripts\tpl_regression.ps1'
     [IO.File]::AppendAllText($stalePath,"`r`n# stale-after-write-tree")
     Expect-Refusal 'precommit rejects changed working bytes after write-tree' { Invoke-PrecommitHarness $precommitTree $baseIndex } 'working tree differs|working source bytes differ'
-    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\tpl_regression.ps1') -Destination $stalePath -Force
+    Copy-FrozenGateScript 'scripts/tpl_regression.ps1' $stalePath
 
     $extraPath = Join-Path $precommitRepo 'scripts\UNDECLARED_PRECOMMIT_EXTRA.ps1'
     [IO.File]::WriteAllText($extraPath,'# undeclared source')
