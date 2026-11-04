@@ -149,7 +149,7 @@ Seat rotation also follows `AGENTS.md:11`:
 If the state is unknown, the agent stays `ROLE_UNVERIFIED_READ_ONLY`.
 
 ### A2. Workspaces
-- `origin/master` is the only integration line, and only the Seat integrates.
+- `origin/master` is the only integration line, and only the Seat integrates. (Superseded 2026-11-04: no single Seat; any agent integrates under `AGENTS.md` §1.0.)
 - **Target state:** every writer works in a registered worktree cut from origin.
 - **The cutover waits until the worktree compatibility pilot (A10 step 6) passes.**
   - Until then the primary checkout keeps its current role and stays the only status publisher.
