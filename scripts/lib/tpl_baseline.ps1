@@ -170,14 +170,14 @@ function Get-TplActiveBaseline {
     $selector = Get-TplJson $ActiveSelectorPath 'active baseline selector'
     Assert-TplRequired $selector @('schema','active_manifest','active_build','historical_manifest') 'selector'
     if ($selector.schema -ne 'tpl_regression_selector/1') { throw "REFUSE: unsupported selector schema '$($selector.schema)'" }
-    if ([int]$selector.active_build -ne 6090) { throw "REFUSE: active selector build is $($selector.active_build), expected 6090" }
+    if ([int]$selector.active_build -ne 6230) { throw "REFUSE: active selector build is $($selector.active_build), expected 6230" }
 
     $manifestPath = Resolve-TplRepoPath $Root ([string]$selector.active_manifest) 'selector.active_manifest'
     $manifest = Get-TplJson $manifestPath 'active baseline manifest'
     Assert-TplRequired $manifest @('schema','status','baseline_kind','metrics_file','metrics_sha256','expected_mt5_build','terminal_executable','tester_data_directory','portable','baseline_source_commit','baseline_source_clean','accepted_runtime_lineage_tip','tester_contract','cases','generation_utc','report_freshness_evidence') 'manifest'
     if ($manifest.schema -ne 'tpl_regression_baseline/2') { throw "REFUSE: unsupported baseline manifest schema '$($manifest.schema)'" }
     if ($manifest.status -ne 'ACTIVE_COMPARABLE' -or $manifest.baseline_kind -ne 'VERSIONED') { throw "REFUSE: active manifest status is not ACTIVE_COMPARABLE/VERSIONED" }
-    if ([int]$manifest.expected_mt5_build -ne 6090) { throw "REFUSE: expected MT5 build is $($manifest.expected_mt5_build), not 6090" }
+    if ([int]$manifest.expected_mt5_build -ne 6230) { throw "REFUSE: expected MT5 build is $($manifest.expected_mt5_build), not 6230" }
     if (-not [bool]$manifest.baseline_source_clean) { throw 'REFUSE: baseline source was not clean' }
 
     $cases = @($manifest.cases)
@@ -236,7 +236,7 @@ function Get-TplActiveBaseline {
         if ($actualSurface.State -ne 'FULL' -or $case.set_surface.state -ne 'FULL' -or [int]$case.set_surface.declared -ne [int]$case.set_surface.assignments -or [int]$actualSurface.Declared -ne [int]$actualSurface.Assignments -or $case.set_surface.build_tag -ne $ea.Tag -or $actualSurface.BuildTag -ne $ea.Tag) { throw "REFUSE: $($ea.Name) set is not a declared full surface" }
         $reportPath = Resolve-TplRepoPath $Root ([string]$case.report_path) "$($ea.Name).report_path"
         if ((Get-TplSha256 $reportPath) -ne ([string]$case.report_sha256).ToLowerInvariant()) { throw "REFUSE: $($ea.Name) report integrity mismatch" }
-        if ([int]$case.report_build -ne 6090 -or -not [bool]$case.report_fresh) { throw "REFUSE: $($ea.Name) report is not a fresh Build 6090 report" }
+        if ([int]$case.report_build -ne 6230 -or -not [bool]$case.report_fresh) { throw "REFUSE: $($ea.Name) report is not a fresh Build 6230 report" }
         if ($case.symbol -ne $contract.symbol -or $case.timeframe -ne $contract.timeframe -or $case.date_from -ne $contract.date_from -or $case.date_to -ne $contract.date_to -or [int]$case.model -ne [int]$contract.model -or [int]$case.deposit -ne [int]$contract.deposit -or $case.currency -ne $contract.currency -or [int]$case.leverage -ne [int]$contract.leverage) { throw "REFUSE: $($ea.Name) tester contract mismatch" }
         $m = $case.metrics
         foreach ($field in $metricFields | Where-Object { $_ -ne 'ea' }) { Assert-TplRequired $m @($field) "$($ea.Name).metrics" }
@@ -703,6 +703,6 @@ function Assert-TplCurrentReport {
     if ($RunnerExit -ne 0) { throw "REFUSE: $($Case.ea) runner did not produce a comparable report (exit $RunnerExit)" }
     if (-not (Test-Path -LiteralPath $ReportPath -PathType Leaf)) { throw "REFUSE: $($Case.ea) stale/missing report" }
     if ((Get-Item -LiteralPath $ReportPath).LastWriteTime -lt $RunStart) { throw "REFUSE: $($Case.ea) stale report" }
-    if ([int]$Report.report_build -ne 6090) { throw "NONCOMPARABLE: $($Case.ea) report Build $($Report.report_build), expected 6090" }
+    if ([int]$Report.report_build -ne 6230) { throw "NONCOMPARABLE: $($Case.ea) report Build $($Report.report_build), expected 6230" }
     if ($Report.symbol -ne $Case.symbol -or $Report.period -ne $Case.timeframe -or $Report.from_date -ne $Case.date_from -or $Report.to_date -ne $Case.date_to -or [int]$Report.model -ne [int]$Case.model -or [int]$Report.initial_deposit -ne [int]$Case.deposit -or $Report.currency -ne $Case.currency -or $Report.leverage -ne ('1:' + [string]$Case.leverage)) { throw "REFUSE: $($Case.ea) tester contract mismatch" }
 }

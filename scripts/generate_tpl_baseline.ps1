@@ -1,5 +1,5 @@
 <#
-Generate one explicit Build-6090 TPL baseline from the caller's clean source tree.
+Generate one explicit Build-6230 TPL baseline from the caller's clean source tree.
 
 This command is intentionally separate from tpl_regression.ps1.  It writes only
 versioned metrics/manifest/report evidence when -ConfirmBaseline is supplied and
@@ -126,7 +126,7 @@ foreach ($ea in ($setMap.Keys | Sort-Object)) {
     $reportPath = Join-Path $ReportRoot ('reports\' + $reportName + '.htm')
     if (-not (Test-ReportIsFresh -Htm $reportPath -RunStart $runStart -RunnerExit $exit -Label $ea -Quiet)) { throw "$ea report is missing, stale, or not from a comparable runner exit" }
     $parsed = (& $py $parser $reportPath --json | ConvertFrom-Json)
-    if ([int]$parsed.report_build -ne 6090) { throw "$ea report Build $($parsed.report_build), expected 6090" }
+    if ([int]$parsed.report_build -ne 6230) { throw "$ea report Build $($parsed.report_build), expected 6230" }
     if ($parsed.symbol -ne 'XAUUSD' -or $parsed.period -ne 'H1' -or $parsed.from_date -ne '2024.01.01' -or $parsed.to_date -ne '2024.07.01' -or [int]$parsed.initial_deposit -ne 10000 -or $parsed.currency -ne 'USD' -or $parsed.leverage -ne '1:100') { throw "$ea report contract mismatch" }
     $metric = [ordered]@{ ea=$ea; net=('{0:F2}' -f [double]$parsed.net_profit); pf=('{0:F2}' -f [double]$parsed.profit_factor); trades=('{0:0}' -f [double]$parsed.total_trades); eqdd=('{0:F2}({1:F2}%)' -f [double]$parsed.equity_drawdown_maximal_abs, [double]$parsed.equity_drawdown_maximal_pct) }
     $metricRows += [pscustomobject]$metric
@@ -142,11 +142,11 @@ foreach ($ea in ($setMap.Keys | Sort-Object)) {
         build_receipt=$buildReceipt; build_receipt_kind='baseline_compile'; compiled_artifact_path=$artifactPath; compiled_artifact_sha256=$artifactHash
         declared_set_path=('ea_template/sets/regression/' + $setMap[$ea]); declared_set_sha256=(Get-FileHash -LiteralPath $setPath -Algorithm SHA256).Hash.ToLowerInvariant()
         set_surface=[ordered]@{ state=$surface.State; build_tag=$setTag; declared=$declared; assignments=[int]$surface.Assignments; effective_config_hash=$configHash }
-        report_path=('ea_template/regression_reports/build6090/' + $reportName + '.htm'); report_sha256=(Get-FileHash -LiteralPath $archivedReport -Algorithm SHA256).Hash.ToLowerInvariant(); report_build=6090; report_fresh=$true
+        report_path=('ea_template/regression_reports/build6090/' + $reportName + '.htm'); report_sha256=(Get-FileHash -LiteralPath $archivedReport -Algorithm SHA256).Hash.ToLowerInvariant(); report_build=6230; report_fresh=$true
         symbol='XAUUSD'; timeframe='H1'; date_from='2024.01.01'; date_to='2024.07.01'; model=1; deposit=10000; currency='USD'; leverage=100
         history_quality=[string]$parsed.history_quality; bars=[int]$parsed.bars; ticks=[int]$parsed.ticks; metrics=$metric
     }
-    Write-Host "$ea Build6090 net=$($metric.net) pf=$($metric.pf) trades=$($metric.trades) eqdd=$($metric.eqdd)" -ForegroundColor Green
+    Write-Host "$ea Build6230 net=$($metric.net) pf=$($metric.pf) trades=$($metric.trades) eqdd=$($metric.eqdd)" -ForegroundColor Green
 }
 
 if (-not $ConfirmBaseline) { Write-Host 'DRY RUN: baseline artifacts not written; rerun with -ConfirmBaseline'; exit 1 }
@@ -155,7 +155,7 @@ $metricRows | Export-Csv -LiteralPath $metricsPath -NoTypeInformation -Encoding 
 $terminalHash = (Get-FileHash -LiteralPath $Terminal -Algorithm SHA256).Hash.ToLowerInvariant()
 $manifest = [ordered]@{
     schema='tpl_regression_baseline/2'; status='ACTIVE_COMPARABLE'; baseline_kind='VERSIONED'; metrics_file='ea_template/regression_baseline_build6090.csv'; metrics_sha256=(Get-FileHash -LiteralPath $metricsPath -Algorithm SHA256).Hash.ToLowerInvariant()
-    expected_mt5_build=6090; terminal_executable=$Terminal; terminal_executable_sha256=$terminalHash; tester_data_directory=$DataDir; portable=$false
+    expected_mt5_build=6230; terminal_executable=$Terminal; terminal_executable_sha256=$terminalHash; tester_data_directory=$DataDir; portable=$false
     baseline_source_commit=$SourceCommit; baseline_source_clean=$true; accepted_runtime_lineage_tip=$acceptedTip
     tester_contract=[ordered]@{ symbol='XAUUSD'; timeframe='H1'; date_from='2024.01.01'; date_to='2024.07.01'; model=1; deposit=10000; currency='USD'; leverage=100 }
     generation_utc=(Get-Date).ToUniversalTime().ToString('o'); report_freshness_evidence=[ordered]@{ all_fresh=$true; runner_exit_codes=@{ baseline='0 per EA' }; generated_from=$SourceCommit }
@@ -167,6 +167,6 @@ $json = $manifest | ConvertTo-Json -Depth 12
 $historicalPath = Join-Path $RepoRoot 'ea_template\regression_baseline.csv'
 $historicalManifest = [ordered]@{ schema='tpl_regression_baseline/1'; status='HISTORICAL'; comparability='NONCOMPARABLE_TO_BUILD_6090'; metrics_file='ea_template/regression_baseline.csv'; metrics_sha256=(Get-FileHash -LiteralPath $historicalPath -Algorithm SHA256).Hash.ToLowerInvariant(); expected_historical_build=5836 }
 [IO.File]::WriteAllText((Join-Path $RepoRoot 'ea_template\regression_baseline_build5836.manifest.json'), ($historicalManifest | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding($false)))
-$selector = [ordered]@{ schema='tpl_regression_selector/1'; active_manifest='ea_template/regression_baseline_build6090.manifest.json'; active_build=6090; historical_manifest='ea_template/regression_baseline_build5836.manifest.json' }
+$selector = [ordered]@{ schema='tpl_regression_selector/1'; active_manifest='ea_template/regression_baseline_build6090.manifest.json'; active_build=6230; historical_manifest='ea_template/regression_baseline_build5836.manifest.json' }
 [IO.File]::WriteAllText((Join-Path $RepoRoot 'ea_template\regression_baseline.active.json'), ($selector | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding($false)))
-Write-Host 'BUILD-6090 BASELINE WRITTEN' -ForegroundColor Green
+Write-Host 'BUILD-6230 BASELINE WRITTEN' -ForegroundColor Green

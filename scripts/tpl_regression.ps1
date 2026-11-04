@@ -1,7 +1,7 @@
 <#
 tpl_regression.ps1 - versioned, fail-closed Boss V2 regression cage.
 
-The active selector names a Build-6090 provenance manifest.  The historical
+The active selector names a Build-6230 provenance manifest.  The historical
 ea_template\regression_baseline.csv is retained as Build-5836 evidence only and
 is never loaded as a comparator.
 #>
@@ -140,7 +140,7 @@ function Invoke-TplRegressionCase([object]$Case, [string]$SetPath, [string]$RunL
     $json = & $py $parser $reportPath --json
     if ($LASTEXITCODE -ne 0) { throw "REFUSE: $($Case.ea) report parse failed" }
     $report = $json | ConvertFrom-Json
-    if ([int]$report.report_build -ne 6090) { throw "NONCOMPARABLE: $($Case.ea) report Build $($report.report_build), expected 6090" }
+    if ([int]$report.report_build -ne 6230) { throw "NONCOMPARABLE: $($Case.ea) report Build $($report.report_build), expected 6230" }
     if ($report.symbol -ne $Symbol -or $report.period -ne $Period -or $report.from_date -ne $FromDate -or $report.to_date -ne $ToDate -or [int]$report.initial_deposit -ne 10000 -or $report.currency -ne 'USD' -or $report.leverage -ne '1:100') { throw "REFUSE: $($Case.ea) tester contract mismatch" }
     return [pscustomobject]@{
         ea = [string]$Case.ea
@@ -232,7 +232,7 @@ try {
             $earlyAllowed = $legacyAllowed
         } elseif ($PrecommitProfile -ceq 'B17_FINALCLOSURE') {
             if ($ControlCommit -cne 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac') {
-                throw 'REFUSE: B17 precommit profile requires the frozen Build-6090-compatible control'
+                throw 'REFUSE: B17 precommit profile requires the frozen Build-6230-compatible control'
             }
             $expectedBehavioral = $b17Behavioral
             $earlyAllowed = $b17Allowed
@@ -373,7 +373,7 @@ try {
     Write-Host ("[IDENTITY] harness={0} harness_tree={1} source_root={2} source={3} control={4}" -f ([string]$harnessCommit).Trim(),([string]$harnessTree).Trim(),$root,$sourceCommit,$controlCommit) -ForegroundColor Cyan
     $contract = $baseline.Manifest.tester_contract
     if ($Symbol -ne $contract.symbol -or $Period -ne $contract.timeframe -or $FromDate -ne $contract.date_from -or $ToDate -ne $contract.date_to -or $Model -ne [int]$contract.model) {
-        throw 'REFUSE: requested tester contract does not match the active Build-6090 baseline'
+        throw 'REFUSE: requested tester contract does not match the active Build-6230 baseline'
     }
     if ($ValidateOnly) {
         if ($PrecommitExactTree) {
@@ -390,7 +390,7 @@ try {
         } elseif ($AdjacentControlRef -or $useDeclaredDelta) {
             Write-Host "=== ADJACENT CONTROL STRUCTURALLY READY; RUNTIME CONTROL+CURRENT RUN REQUIRED (control $controlCommit, source $sourceCommit) ===" -ForegroundColor Yellow
         } else {
-            Write-Host "=== BASELINE CONTRACT CLEAN (Build 6090, source $sourceCommit) ===" -ForegroundColor Green
+            Write-Host "=== BASELINE CONTRACT CLEAN (Build 6230, source $sourceCommit) ===" -ForegroundColor Green
         }
         exit 0
     }
@@ -409,7 +409,7 @@ try {
     $cases = @($baseline.Manifest.cases | Sort-Object ea)
     if ($PrecommitExactTree -and $PrecommitProfile -ceq 'B17_FINALCLOSURE') {
         $cases = @($cases | Where-Object { $_.ea -cne 'Boss_17_Wave5' })
-        if ($cases.Count -ne 7) { throw "REFUSE: B17 precommit profile requires exactly seven unaffected Build-6090 cases, observed $($cases.Count)" }
+        if ($cases.Count -ne 7) { throw "REFUSE: B17 precommit profile requires exactly seven unaffected Build-6230 cases, observed $($cases.Count)" }
     }
     $sets = @{}
     foreach ($case in $cases) {
@@ -426,10 +426,10 @@ try {
             $actual = Invoke-TplRegressionCase -Case $case -SetPath $sets[$case.ea] -RunLabel ''
             $expected = @($baseline.Metrics | Where-Object ea -eq $case.ea)[0]
             if (-not (Assert-TplMetricMatch -Expected $expected -Actual $actual -ExpectedLabel 'baseline' -ActualLabel 'now')) { $fail++ }
-            else { Write-Host "[OK] $($case.ea) matches Build-6090 baseline" -ForegroundColor Green }
+            else { Write-Host "[OK] $($case.ea) matches Build-6230 baseline" -ForegroundColor Green }
         }
         if ($fail -gt 0) { throw "REGRESSION: $fail exact metric mismatch(es)" }
-        Write-Host "=== REGRESSION CLEAN ($($cases.Count)/$($cases.Count), Build 6090, lane $Terminal, source $sourceCommit) ===" -ForegroundColor Green
+        Write-Host "=== REGRESSION CLEAN ($($cases.Count)/$($cases.Count), Build 6230, lane $Terminal, source $sourceCommit) ===" -ForegroundColor Green
     } else {
         $tmpParent = 'C:\ea_lab_tmp'
         $controlWorktree = Join-Path $tmpParent ('tpl_adjacent_control_' + [guid]::NewGuid().ToString('N'))
@@ -462,11 +462,11 @@ try {
                     changed_paths=@($precommitContract.ChangedPaths); harness_identity_kind='SOURCE_TREE_FILE_SET'
                     harness_source_tree=$SourceTree; harness_invocation_head=([string]$harnessCommit).Trim(); harness_invocation_tree=([string]$harnessTree).Trim()
                     harness_files=$harnessFiles; extractor_script=$precommitExtractorScript; extractor_sha256=$precommitExtractorSha256
-                    validate_only=$false; cases=$cases.Count; terminal=$Terminal; data_dir=$DataDir; build=6090
+                    validate_only=$false; cases=$cases.Count; terminal=$Terminal; data_dir=$DataDir; build=6230
                     timestamp_utc=(Get-Date).ToUniversalTime().ToString('o')
                 })
             }
-            Write-Host "=== ADJACENT REGRESSION CLEAN ($($cases.Count)/$($cases.Count), Build 6090, lane $Terminal, control $controlCommit, source $sourceCommit) ===" -ForegroundColor Green
+            Write-Host "=== ADJACENT REGRESSION CLEAN ($($cases.Count)/$($cases.Count), Build 6230, lane $Terminal, control $controlCommit, source $sourceCommit) ===" -ForegroundColor Green
         } finally {
             if ($controlWorktree -and (Test-Path -LiteralPath $controlWorktree)) {
                 Write-Host "[PRESERVED] detached control worktree: $controlWorktree" -ForegroundColor Yellow
