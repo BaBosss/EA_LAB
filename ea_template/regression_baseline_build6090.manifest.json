@@ -3,13 +3,13 @@
     "status":  "ACTIVE_COMPARABLE",
     "baseline_kind":  "VERSIONED",
     "metrics_file":  "ea_template/regression_baseline_build6090.csv",
-    "metrics_sha256":  "4edc42d76a8f601cde70ae25a6f90d8701d2f530b8cc90d65e77303543fcec59",
-    "expected_mt5_build":  6090,
+    "metrics_sha256":  "814b2864ccae1ee445a6bd823b8258b08c5c1cf289ccfe8e7c0212bf282f46c7",
+    "expected_mt5_build":  6230,
     "terminal_executable":  "D:\\Meta 5\\terminal64.exe",
-    "terminal_executable_sha256":  "20dfefd944ae482781ac1e83a736a976ecf0315661e54b5771e327f1ffb2b35c",
+    "terminal_executable_sha256":  "f163b8069e3f34f5cb4556e02e06ba69b65816d6990e7dc360b01a9501616072",
     "tester_data_directory":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355",
     "portable":  false,
-    "baseline_source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
+    "baseline_source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
     "baseline_source_clean":  true,
     "accepted_runtime_lineage_tip":  "72314865fd38a68beb3decd633bd11a5ba7020ec",
     "tester_contract":  {
@@ -22,24 +22,24 @@
                             "currency":  "USD",
                             "leverage":  100
                         },
-    "generation_utc":  "2026-08-28T07:31:22.6657009Z",
+    "generation_utc":  "2026-11-04T00:11:56.5939606Z",
     "report_freshness_evidence":  {
                                       "all_fresh":  true,
                                       "runner_exit_codes":  {
                                                                 "baseline":  "0 per EA"
                                                             },
-                                      "generated_from":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f"
+                                      "generated_from":  "1826e1dc80413272bfdf33be7073ddae52f0ba92"
                                   },
     "cases":  [
                   {
                       "ea":  "Boss_11_GridTrend",
                       "source_path":  "ea_template/Boss_11_GridTrend.mq5",
                       "source_sha256":  "59c51ad12ecc0450c19bffa373f836a95c0c3fe6808a2029fcc946f28c29f672",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-c37ca295d8c045fa92631d9745441944",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-8e1d6bbbdf0c45b7a75b4ab1d07fbb07",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_11_GridTrend.ex5",
-                      "compiled_artifact_sha256":  "2386a4a5b88677f0733a2a6ab4622485d4b9454f221bd0bb5e5516adf968562c",
+                      "compiled_artifact_sha256":  "a1481c74d82cdc72e15a68544a001526eb25b66e521affcf8bf4525042be58e6",
                       "declared_set_path":  "ea_template/sets/regression/Boss_11_GridTrend_defaults.set",
                       "declared_set_sha256":  "5a0cdd3186e924234d4491bdf854966553214ebaaf03ca6793beaedd42ea8efa",
                       "set_surface":  {
@@ -50,8 +50,8 @@
                                           "effective_config_hash":  "e092c814807e755d41a90c7ca4bf9dd06abc98f8145070db60f2749099848b2a"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_11_GridTrend.htm",
-                      "report_sha256":  "f9637ef2712cdfd3ad4aff58a5660a1eb455dd8780b90b46f118bc0c06b491b1",
-                      "report_build":  6090,
+                      "report_sha256":  "fb818df12ab03e1c6b228b675b559e155bf2d768a249c489b9f1f051dd1acdb6",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -66,21 +66,21 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_11_GridTrend",
-                                      "net":  "-345.02",
+                                      "net":  "-342.97",
                                       "pf":  "0.89",
                                       "trades":  "480",
-                                      "eqdd":  "632.93(6.16%)"
+                                      "eqdd":  "632.58(6.16%)"
                                   }
                   },
                   {
                       "ea":  "Boss_12_Breakout",
                       "source_path":  "ea_template/Boss_12_Breakout.mq5",
                       "source_sha256":  "b455e2b36b679ccd5bb17d31ccae29261c9587e83e24775fdc76b63c6de4d349",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-752521a334a54d279dbeb9e62e5985ae",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-0db012be3c6d4aa5b91aa9e1b04d8613",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_12_Breakout.ex5",
-                      "compiled_artifact_sha256":  "7bbfccdb825f9ed08607f62cc3faefb1d9197444aa4acd318cb8bfe011cd0a99",
+                      "compiled_artifact_sha256":  "4c31f2d9fc55622b9a721f8b2493e8658cc612b2860f00d95e068b232c9fdc49",
                       "declared_set_path":  "ea_template/sets/regression/Boss_12_Breakout_defaults.set",
                       "declared_set_sha256":  "62ffa4e95a08a483617046694309a8082c1d07bece39a778704f67cb389626c1",
                       "set_surface":  {
@@ -91,8 +91,8 @@
                                           "effective_config_hash":  "b68379e8009416101aedc2b0a2dfca1141ac912a4c8be139e5ec14dd7070ac3b"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_12_Breakout.htm",
-                      "report_sha256":  "4ec87e5e3edea59cb0d8248b13b73ed6da3d7ee6d0768db67e22fd58315a042d",
-                      "report_build":  6090,
+                      "report_sha256":  "deef338993a3dac0f05b2300be7d553342f4a7d823f3ba1dfd97892ebc68e8f6",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -107,21 +107,21 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_12_Breakout",
-                                      "net":  "-146.45",
+                                      "net":  "-145.96",
                                       "pf":  "0.87",
                                       "trades":  "164",
-                                      "eqdd":  "255.77(2.55%)"
+                                      "eqdd":  "255.92(2.55%)"
                                   }
                   },
                   {
                       "ea":  "Boss_13_MeanRev",
                       "source_path":  "ea_template/Boss_13_MeanRev.mq5",
                       "source_sha256":  "733c4e395c3f0e32d3fe960742cba9d6fb98280ad740d369931328a31ae797ee",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-2e29c09bcb4e4705beb4785bb9fcc475",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-a4bd7e06d1da4283bd934c0d5f39565f",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_13_MeanRev.ex5",
-                      "compiled_artifact_sha256":  "527b5752eecfe2aa5537693193d306f263f46018fcc6f03ece70e119c6575285",
+                      "compiled_artifact_sha256":  "d2dee812a58563ca1c84e9fbd91c94529786f6bb5f0e59b7dfb11f5a9e4beddf",
                       "declared_set_path":  "ea_template/sets/regression/Boss_13_MeanRev_defaults.set",
                       "declared_set_sha256":  "65f3d4287effd5cf821bac6fff5f123eb17430608f32e9bfa5853216d053d9a6",
                       "set_surface":  {
@@ -132,8 +132,8 @@
                                           "effective_config_hash":  "3ae41cf329ff437f719cad16984aa8516d325f8b78ab6528dd319df734321afa"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_13_MeanRev.htm",
-                      "report_sha256":  "d88a08134a425ea27a90c287e8883361d29ea723b2412a180808b0c7fe0bed71",
-                      "report_build":  6090,
+                      "report_sha256":  "1c62f604b3f14e4c3dea6d3f43141b3a457c8ac568f5d2e4cd1aeb2c8fce8f28",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -148,21 +148,21 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_13_MeanRev",
-                                      "net":  "16.75",
+                                      "net":  "16.64",
                                       "pf":  "1.01",
                                       "trades":  "209",
-                                      "eqdd":  "302.76(3.00%)"
+                                      "eqdd":  "303.70(3.01%)"
                                   }
                   },
                   {
                       "ea":  "Boss_14_GridLog",
                       "source_path":  "ea_template/Boss_14_GridLog.mq5",
                       "source_sha256":  "69eec0c51b7df5190a3fe0364d11a13629bc16372fcda93513a2882af9076c28",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-25226eb3aea34275ab91c8e5fb819ca0",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-4c346693bb884d83b868bbbf9893f338",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_14_GridLog.ex5",
-                      "compiled_artifact_sha256":  "1f796e0e3753088985091ff146948ce4f27c80e1a8075417f0b11b6c9c19b1fb",
+                      "compiled_artifact_sha256":  "7da2a1e549c4945f2bece6d92f8d2d230fc0768422d49169c0ae1a71e562a5ba",
                       "declared_set_path":  "ea_template/sets/regression/Boss_14_GridLog_regression_full.set",
                       "declared_set_sha256":  "5df8745d29d0138003de8c05f11ce13c16f806b1795dabec55efd4a2cd26a766",
                       "set_surface":  {
@@ -173,8 +173,8 @@
                                           "effective_config_hash":  "5e6b3f33aba4a6430e0ee4de292676b8cac657d628a1a4ca50de8d44d1f5f0ce"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_14_GridLog.htm",
-                      "report_sha256":  "ace2efd7846335866ea680e01cab8a109780203ae88c3cb171aa84fb497b876a",
-                      "report_build":  6090,
+                      "report_sha256":  "0c97586e746d63204ca0c080464a60538dcb807c6f4f793e8785662400a5e8e5",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -189,8 +189,8 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_14_GridLog",
-                                      "net":  "588.59",
-                                      "pf":  "16.52",
+                                      "net":  "589.13",
+                                      "pf":  "16.61",
                                       "trades":  "84",
                                       "eqdd":  "153.50(1.50%)"
                                   }
@@ -198,12 +198,12 @@
                   {
                       "ea":  "Boss_15_ST03",
                       "source_path":  "ea_template/Boss_15_ST03.mq5",
-                      "source_sha256":  "e235105deac8c975093a920b34b84565d2d6e355fa64a7802b05dd6592c1d88f",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-f439eeb541fa4332a97082387677f600",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_sha256":  "d1821126fcc3a69605627086cf319336c0101c7f287cce90cc47c8fb7a1a6975",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-029fd5b397d6412cac9f420ab900e366",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_15_ST03.ex5",
-                      "compiled_artifact_sha256":  "ca60e2f82fb8fa388cb4ed57f853eb66ecb9088e315e623bb1b5c529e281fc58",
+                      "compiled_artifact_sha256":  "35d09eaed08d78afa1cb6eb7a08c6a4b57c255b6d7372d77bb097c1f7ac2d51d",
                       "declared_set_path":  "ea_template/sets/regression/Boss_15_ST03_defaults.set",
                       "declared_set_sha256":  "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
                       "set_surface":  {
@@ -214,8 +214,8 @@
                                           "effective_config_hash":  "d3d548b77d96037fbee8a483bd25206f2d323600f2e00cf8ad012c7f566c2456"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_15_ST03.htm",
-                      "report_sha256":  "26f5045ba1db1e9d4dba138e139ef54118a09cec7bb1a12a07b9568bafb10096",
-                      "report_build":  6090,
+                      "report_sha256":  "6621121224c77202071a866726a79d05ceca957513dbcc5415db22965dba569f",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -230,21 +230,21 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_15_ST03",
-                                      "net":  "-134.42",
+                                      "net":  "-134.14",
                                       "pf":  "0.86",
                                       "trades":  "136",
-                                      "eqdd":  "289.52(2.89%)"
+                                      "eqdd":  "289.55(2.89%)"
                                   }
                   },
                   {
                       "ea":  "Boss_16_KangarooGrid",
                       "source_path":  "ea_template/Boss_16_KangarooGrid.mq5",
                       "source_sha256":  "e22f64302ea443c5bec14c22fbb4787002f1c88742b9ca30d416040affe4e8d3",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-adc0f87df228406e9323c27f72e24448",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-1abd5cf4bf4c4831ba1e6b74aac9c345",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_16_KangarooGrid.ex5",
-                      "compiled_artifact_sha256":  "e9d029e34a13e1589738dd9f6b6eadfe3e8f13d6875e1c3012a1db0c4a15faf0",
+                      "compiled_artifact_sha256":  "cd332d121445be8039b7d5f5a7d13e40e0169cfa7f1f7fdd01cd9f137cae5186",
                       "declared_set_path":  "ea_template/sets/regression/Boss_16_KangarooGrid_regression_full.set",
                       "declared_set_sha256":  "b9cd05f2b728c48e1095fb0ea113486e78ee264ad9d2464b46bc9b889a56f9c9",
                       "set_surface":  {
@@ -255,8 +255,8 @@
                                           "effective_config_hash":  "c9b7158ce1ca302419a7de037a030a8d891975270bf1fc0cacfa4f878c0fcaf6"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_16_KangarooGrid.htm",
-                      "report_sha256":  "99e3dd5e5a3c223bf348e4df1f4a2f36981f5b69249f25ef459d2bca95690d09",
-                      "report_build":  6090,
+                      "report_sha256":  "48f9bfc39a4ff52c940ee12a02b62187a4e97382fd8a69076c05bd7861ec4345",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -271,33 +271,33 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_16_KangarooGrid",
-                                      "net":  "511.16",
-                                      "pf":  "3.47",
+                                      "net":  "510.01",
+                                      "pf":  "3.45",
                                       "trades":  "73",
-                                      "eqdd":  "427.06(4.13%)"
+                                      "eqdd":  "424.64(4.11%)"
                                   }
                   },
                   {
                       "ea":  "Boss_17_Wave5",
                       "source_path":  "ea_template/Boss_17_Wave5.mq5",
                       "source_sha256":  "38c6f100c67ab8689220315c17f770fdfe9f762a182a0f8ea79f5bd3f6b886e6",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-98b8478287a7403db78fb416604b5c62",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-4aed0799cf3a452bb0a9f1e6f6b9cc27",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_17_Wave5.ex5",
-                      "compiled_artifact_sha256":  "cd06dd0de8cef55868d90d5df3d280bf207b013d1eeac01962b8c3fe5aa44836",
+                      "compiled_artifact_sha256":  "f9ce5fe8d797033c6005c0935fce3ed5a9703b7e592d80c98a3adc66893cdd7d",
                       "declared_set_path":  "ea_template/sets/regression/Boss_17_Wave5_defaults.set",
-                      "declared_set_sha256":  "9b1fa9e962a3260f6ef9f41312385dad1ae2958f20abd14263c048e04b47eef2",
+                      "declared_set_sha256":  "1e93d72180e812f57d82c600f533cfcee00e0e4819da279220f1f784257f9bfa",
                       "set_surface":  {
                                           "state":  "FULL",
                                           "build_tag":  "LAB_ENTRY_17",
-                                          "declared":  159,
-                                          "assignments":  159,
-                                          "effective_config_hash":  "8b818bb2668f5bdabd7f5caa6a876ff51e2dc733172b9a55b22d210a9cfb3365"
+                                          "declared":  173,
+                                          "assignments":  173,
+                                          "effective_config_hash":  "b0d5e7713f092564162310b07f9bb157685157cf981b65e9dc9ed20bcf172d6d"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_17_Wave5.htm",
-                      "report_sha256":  "f1034090afc42e8386d46f84d613199734301eecf74d78874e24778a97ef29c0",
-                      "report_build":  6090,
+                      "report_sha256":  "e348601d4e18bee8918dd40e1d1aa68f403d9695e04912fec2ab298f9070e424",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -312,21 +312,21 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_17_Wave5",
-                                      "net":  "-84.05",
-                                      "pf":  "0.47",
-                                      "trades":  "26",
-                                      "eqdd":  "100.91(1.01%)"
+                                      "net":  "-883.84",
+                                      "pf":  "0.41",
+                                      "trades":  "15",
+                                      "eqdd":  "2079.26(19.43%)"
                                   }
                   },
                   {
                       "ea":  "Boss_18_JumStoch",
                       "source_path":  "ea_template/Boss_18_JumStoch.mq5",
                       "source_sha256":  "0307d5b133a2dc6fba8f894c9dd4ad40341e9e6ec16efbf5f3652655cb10b997",
-                      "source_commit":  "5cbd27c71af4c8b668c3fd017bce96ab9b45396f",
-                      "build_receipt":  "br-b5a597978a7e4d0ca51e99ee1db1a13d",
-                      "build_receipt_kind":  "migration_compile",
+                      "source_commit":  "1826e1dc80413272bfdf33be7073ddae52f0ba92",
+                      "build_receipt":  "br-e167400cc04f4291ad4460f95c9505ce",
+                      "build_receipt_kind":  "baseline_compile",
                       "compiled_artifact_path":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_18_JumStoch.ex5",
-                      "compiled_artifact_sha256":  "1a3bf544c375370474654e9cd7de11ceffb6ff1f7412f13afb4fb476630bf780",
+                      "compiled_artifact_sha256":  "cd5ea1274d677b830620fcb4fcd562e13d41a6979a66217446754acebb3818b2",
                       "declared_set_path":  "ea_template/sets/regression/Boss_18_JumStoch_defaults.set",
                       "declared_set_sha256":  "67973adaf57211858f8bb615c4a73864adc03fd31e6ad0d16f6a044a8882a1c1",
                       "set_surface":  {
@@ -337,8 +337,8 @@
                                           "effective_config_hash":  "d134013271d5b41c03186b1cf12ab4cb0b20cf890e02469151d3cd8a8d9d91dd"
                                       },
                       "report_path":  "ea_template/regression_reports/build6090/TPLBASE6090_Boss_18_JumStoch.htm",
-                      "report_sha256":  "c24cac933e116803eef807b5f2e832f2df7f478da3667b6cffc9e8b70017f863",
-                      "report_build":  6090,
+                      "report_sha256":  "f3a1cea676c3d115f34272d1ab6f098d821c13b3eb3848e0953c370affb7a26d",
+                      "report_build":  6230,
                       "report_fresh":  true,
                       "symbol":  "XAUUSD",
                       "timeframe":  "H1",
@@ -353,10 +353,10 @@
                       "ticks":  702163,
                       "metrics":  {
                                       "ea":  "Boss_18_JumStoch",
-                                      "net":  "446.91",
+                                      "net":  "454.03",
                                       "pf":  "1.26",
                                       "trades":  "298",
-                                      "eqdd":  "198.86(1.91%)"
+                                      "eqdd":  "198.80(1.91%)"
                                   }
                   }
               ]
