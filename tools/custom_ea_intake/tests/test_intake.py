@@ -90,6 +90,18 @@ class CatalogTest(unittest.TestCase):
         self.assertEqual(rows[0]["binding"], "UNRESOLVED_NO_EFFECTIVE_CONFIG")
         self.assertNotIn("NO_EXPORT", (out / "PRESET_PARAMETERS.csv").read_text(encoding="utf-8-sig"))
 
+    def test_common_credential_style_keys_are_never_exported(self):
+        (self.root / "05_Optimization_and_Presets" / "cred.set").write_text(
+            "Passwd=hunter2\nLogin=12345678\nPwd=zzz\nServer=Broker-Live\nInpToken=abc\n"
+            "InvestorPassword=q\nTelegramChatId=99\nLots=0.1||0.1||0.1||1.0||N\n", encoding="utf-8")
+        out = self.tmp / "report"
+        result = intake.scan(self.root, out, self.index, self.projects)
+        text = (out / "PRESET_PARAMETERS.csv").read_text(encoding="utf-8-sig")
+        for leaked in ("hunter2", "LOGINVALUE", "PWDVALUE", "Broker-Live", "TOKENVALUE", "INVVALUE", "CHATVALUE"):
+            self.assertNotIn(leaked, text)
+        self.assertIn("Lots", text)
+        self.assertGreaterEqual(result["redacted_parameter_rows"], 7)
+
     def test_utf16_set_decoding(self):
         val = self.root / "05_Optimization_and_Presets" / "utf16.set"
         val.write_bytes("Length=21\r\n".encode("utf-16"))

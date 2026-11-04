@@ -23,7 +23,11 @@ EXT_CLASS = {
     ".zip": "ARCHIVE", ".rar": "ARCHIVE", ".7z": "ARCHIVE",
 }
 ID_RE = re.compile(r"^[A-Z][A-Z0-9_-]{2,63}$")
-SENSITIVE = re.compile(r"password|secret|token|apikey|api_key|credential|private.?key", re.I)
+# Deny-list for preset keys whose VALUE is never exported. Deliberately broad: over-redacting a strategy
+# parameter is harmless, leaking an account login or broker server from a downloaded preset is not.
+SENSITIVE = re.compile(
+    r"pass|pwd|secret|token|api.?key|credential|private.?key|login|account|user|server|broker|"
+    r"investor|licen[sc]e|auth|chat.?id|webhook", re.I)
 DRAFT_AUTH = "LOCAL_DRAFT_UNVERIFIED"
 
 
@@ -48,6 +52,12 @@ def write_csv(path: Path, fields: list[str], records: list[dict]) -> None:
 
 def write_json(path: Path, obj: object) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def write_json_new(path: Path, obj: object) -> None:
+    """Exclusive create: never follows or replaces an existing path, including a dangling symlink."""
+    with path.open("x", encoding="utf-8") as handle:
+        handle.write(json.dumps(obj, ensure_ascii=False, indent=2) + "\n")
 
 
 def no_duplicate_keys(pairs):
@@ -145,6 +155,7 @@ def scan(root: Path, out: Path, index: Path | None, projects: Path | None) -> di
     failures = []
     presets = []
     params = []
+    redacted = 0
     for path in source_files(root):
         rel = path.relative_to(root).as_posix()
         try:
@@ -170,6 +181,7 @@ def scan(root: Path, out: Path, index: Path | None, projects: Path | None) -> di
                 for key, val in entries:
                     if SENSITIVE.search(key):
                         # Never export even a value associated with credential-like keys.
+                        redacted += 1
                         continue
                     segments = val.split("||")
                     params.append({
@@ -277,6 +289,7 @@ def scan(root: Path, out: Path, index: Path | None, projects: Path | None) -> di
         "duplicate_extra_copies": sum(r["copies"] - 1 for r in duplicates),
         "external_project_folders": len(extra_projects),
         "preset_files": len(presets), "preset_parameter_rows": len(params),
+        "redacted_parameter_rows": redacted,
         "read_failures": failures,
         "unknowns": ["No verified StrategyID, FamilyID, VariantID mapping",
                      "No source-to-template parity", "No actual Backtest or Optimize results",
@@ -392,7 +405,7 @@ def import_builder_draft(source: Path, out: Path) -> dict:
             "ENTRY_PARITY_NOT_PROVEN", "T3_EXECUTION_NOT_AUTHORIZED",
         ],
     }
-    write_json(out, result)
+    write_json_new(out, result)
     return result
 
 
