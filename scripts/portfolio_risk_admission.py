@@ -13,9 +13,9 @@ Safety defaults (non-negotiable, each one has a CAGE test proving it below):
     wrong/not PSD, and this script REFUSES to emit a number rather than guess):
         max_i(DD95_i) <= portfolio_DD_est <= sum_i(DD95_i)
 
-Budget: DEMO accounts = 30% of equity (fixed project number, see
-docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 -- do not invent a different number
-here). REAL_CENT accounts: computed and reported ONLY, tagged "user decision
+Budget: DEMO accounts = 30% of equity (owner decision 2026-11-03, template +
+optimize standard R17 -- do not invent a different number here; the live
+sizing bar in docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 is a separate number). REAL_CENT accounts: computed and reported ONLY, tagged "user decision
 needed" -- this script never assigns a DD budget to real-money accounts.
 
 Admission is resize-first, never a rejection verdict on the EA: a candidate
