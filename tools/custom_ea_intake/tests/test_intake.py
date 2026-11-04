@@ -92,15 +92,18 @@ class CatalogTest(unittest.TestCase):
 
     def test_common_credential_style_keys_are_never_exported(self):
         (self.root / "05_Optimization_and_Presets" / "cred.set").write_text(
-            "Passwd=hunter2\nLogin=12345678\nPwd=zzz\nServer=Broker-Live\nInpToken=abc\n"
-            "InvestorPassword=q\nTelegramChatId=99\nLots=0.1||0.1||0.1||1.0||N\n", encoding="utf-8")
+            "Passwd=hunter2\nLogin=LOGINVALUE\nPwd=PWDVALUE\nServer=Broker-Live\nInpToken=TOKENVALUE\n"
+            "InvestorPassword=INVVALUE\nTelegramChatId=CHATVALUE\nLots=0.1||0.1||0.1||1.0||N\n", encoding="utf-8")
         out = self.tmp / "report"
         result = intake.scan(self.root, out, self.index, self.projects)
         text = (out / "PRESET_PARAMETERS.csv").read_text(encoding="utf-8-sig")
+        # Every sentinel must be present in the fixture above, so absence from the export means redaction.
         for leaked in ("hunter2", "LOGINVALUE", "PWDVALUE", "Broker-Live", "TOKENVALUE", "INVVALUE", "CHATVALUE"):
-            self.assertNotIn(leaked, text)
+            with self.subTest(leaked=leaked):
+                self.assertNotIn(leaked, text)
         self.assertIn("Lots", text)
-        self.assertGreaterEqual(result["redacted_parameter_rows"], 7)
+        # 7 credential-style rows here plus the fixture's own `password=NO_EXPORT` row.
+        self.assertEqual(result["redacted_parameter_rows"], 8)
 
     def test_utf16_set_decoding(self):
         val = self.root / "05_Optimization_and_Presets" / "utf16.set"

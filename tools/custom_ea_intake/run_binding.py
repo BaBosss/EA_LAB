@@ -15,9 +15,11 @@ from pathlib import Path
 import re
 import sys
 
-# Default 2026H1 holdout (CLAUDE.md VERDICT GATE). A run window reaching this date is refused: this tool cannot
-# tell whether the Owner authorised it, and a spent holdout is burned. Re-pin here when the holdout is re-declared.
+# Default 2026H1 holdout (CLAUDE.md VERDICT GATE). A run window overlapping it is refused: this tool cannot
+# tell whether the Owner authorised it, and a spent holdout is burned. Windows wholly before or after it pass.
+# Re-pin both dates here when the holdout is re-declared.
 PROTECTED_HOLDOUT_START = datetime.date(2026, 1, 1)
+PROTECTED_HOLDOUT_END = datetime.date(2026, 6, 30)
 STAGES = ("MODEL1", "MODEL4", "OPTIMIZATION", "BWD", "OOS")  # HOLDOUT is refused, never bound
 HASH_RE = re.compile(r"^[a-fA-F0-9]{64}$")
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{2,127}$")
@@ -105,8 +107,9 @@ def bind_manifest(path: Path, out: Path) -> dict:
     start, end = parse_day("window_start", data["window_start"]), parse_day("window_end", data["window_end"])
     if start > end:
         raise ValueError("window_start is after window_end")
-    if end >= PROTECTED_HOLDOUT_START:
-        raise ValueError(f"window reaches the protected holdout (>= {PROTECTED_HOLDOUT_START}); refused")
+    if start <= PROTECTED_HOLDOUT_END and end >= PROTECTED_HOLDOUT_START:
+        raise ValueError(
+            f"window overlaps the protected holdout ({PROTECTED_HOLDOUT_START}..{PROTECTED_HOLDOUT_END}); refused")
     if data.get("holdout_authorized") is True:
         raise ValueError("Cannot authorize HOLDOUT by importing a manifest")
     outputs = {k: check_artifact(k, v) for k, v in sorted(artifacts.items())}
