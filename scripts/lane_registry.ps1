@@ -297,10 +297,8 @@ function New-ConflictList {
     foreach($r in @($Records)){
         if([string]$r.lane_id -ceq $RequestedLane){ continue }
         if(-not [bool]$r.writer -or $ActiveWriterStates -notcontains [string]$r.state){ continue }
-        if([string]$r.owner_chat -ceq $RequestedOwner){
-            $conflicts.Add([pscustomobject]@{lane_id=$r.lane_id;reason='owner_chat_active_writer';state=$r.state})
-            continue
-        }
+        # Owner 2026-11-04: one owner_chat may hold several writer lanes. Concurrency is guarded by
+        # critical-path and runtime-lane overlap below, not by the owning-chat label.
         $hit=$false
         foreach($a in @($RequestedCritical)){
             foreach($b in @($r.critical_paths)){

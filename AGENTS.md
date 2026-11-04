@@ -10,7 +10,7 @@
 
 **EA_LAB CHAT ROLE ROUTER -- Owner 2026-10-28:** CHAT_ROLE and LANE_ID come from the original admitted task ticket, not shared Project text. Generic Owner "continue / finish" in a WORKER or REVIEWER chat means continue the SAME lane, never self-promote to Main CT, issue leases, dispatch workers, self-review or push. Changing CT role needs explicit Owner instruction and serialized CT handoff; missing proof means ROLE_UNVERIFIED_READ_ONLY. Registry remains the source authorization gate.
 
-**Cross-agent operating protocol -- owner-ratified 2026-11-02:** `docs/workflows/CORE_SEAT_PROTOCOL_V8_20261102.md` governs seat rotation, author/reviewer transfers versus continuations, the admission boundary before any write, completion dimensions, evidence custody and money-safety RED scope, for every provider alike. It adds no role and changes no routing in §1.1/§1.5. Where it and a stricter task contract or `docs/PIPELINE.md` gate differ, the stricter gate applies.
+**Cross-agent operating protocol -- owner-ratified 2026-11-02 (Seat rotation retired 2026-11-04, see §1.0 Hub):** `docs/workflows/CORE_SEAT_PROTOCOL_V8_20261102.md` governs author/reviewer transfers versus continuations, the admission boundary before any write, completion dimensions, evidence custody and money-safety RED scope, for every provider alike. It adds no role and changes no routing in §1.1/§1.5. Where it and a stricter task contract or `docs/PIPELINE.md` gate differ, the stricter gate applies.
 
 ---
 
@@ -19,10 +19,10 @@
 | Agent           | Role                                                                        | May do                                                | Absolutely forbidden                                                                                 |
 | --------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | **Owner / user** | Final owner and approval authority | approve vision, irreversible direction, risk-default changes, DEMO/LIVE promotion, real-money deployment, and governance exceptions; explicitly assign scoped work to any agent | no agent may substitute for an owner approval that this file requires |
-| **ChatGPT** | Project manager / architect / dispatcher / reviewer | discuss goals, read the GitHub repository, set priorities with the owner, create task contracts, route work, review commits/PRs, coordinate working decisions, maintain cross-session management context | claim local tests/runtime evidence it has not received · assume it can see uncommitted local files, MT4/MT5 runtime, or local-only reports unless they are supplied or pushed · make binding risk/live/irreversible decisions without owner approval |
+| **ChatGPT** | Hub when the owner works with it (§1.0) / architect / reviewer; reviewer for Claude-authored work | discuss goals, read the GitHub repository, set priorities with the owner, create task contracts, route work, review commits/PRs, coordinate working decisions, maintain cross-session management context | claim local tests/runtime evidence it has not received · assume it can see uncommitted local files, MT4/MT5 runtime, or local-only reports unless they are supplied or pushed · make binding risk/live/irreversible decisions without owner approval |
 | **Codex** | Specialist developer / local-tooling reserve | inspect the actual workspace, implement approved bounded contracts, compile/test, operate local tooling, prepare focused commits/evidence, and provide specialist second opinions when explicitly routed | become a default critical-path dependency; push/integrate shared master; independently change vision, risk defaults, live policy, DEMO/LIVE status, or task scope; act as author and sole final reviewer of high-risk work; edit governance without explicit owner authorization |
 | **Gemini** | Default bounded implementation / analysis / acceptance-review worker when routed | implement assigned contracts, run bounded tests, prepare docs/evidence, perform triage/precheck, propose bounded repairs, and perform acceptance-grade exact-head review only in a fresh separate read-only reviewer job/lane/contract | self-approve its authored candidate or reuse the author job/trajectory as reviewer; push/integrate shared master; expand scope/risk/owner authority; silently switch auth/model/billing route |
-| **Claude** | Scarce reserve specialist / escalation reviewer when concretely necessary | deep architecture/RCA/research, difficult bounded implementation/repair, alternative proposals, and independent exact-head escalation review only when the task contract or ordinary-route limitation justifies scarce quota | become a routine/default dependency; acquire authority merely from vendor/model name; self-review authored high-risk output; make owner-reserved decisions; expand an assigned contract |
+| **Claude** | Hub when the owner works with it (§1.0), lead author, design, verdicts, risk code, reviewer for GPT-authored work | everything ChatGPT may do, plus local tooling, tests, MT5 runs and integration (push) under the §1.0 integration rule | self-review its own work; push without a different-family PASS on the exact head; make owner-reserved decisions (§2, FULL path) |
 | **ZCode / Qwen / batch agents** | Bounded execution workers | under an explicit bounded task contract, inspect the repository, edit the contracted source, implement bounded changes, run deterministic tests, perform bounded repair, execute approved local backtest/orchestration, and generate evidence | independently expand scope, change owner approval boundaries or risk policy/defaults, deploy, promote LIVE, make owner attestations, or make irreversible strategic decisions |
 | **Hermes** | Deterministic/mechanical EA R&D evidence factory | execute exact approved manifests/backtests/batches, normalize evidence, build smoke/year/regime/parent-child outputs, and run pre-registered optimization stages under the Hermes contract | invent hypotheses, change parent mechanics/risk/defaults, choose HOLDOUT, widen ranges outside contract, deploy/attach runtime, trade, promote a candidate, or reinterpret harness/environment failure as strategy failure |
 | **OpenClaw team (commanded from Telegram)** | Remote execution/coordination lanes mapped to the roles above | perform only the role and task contract assigned to each lane; track via STATUS.md + git log (tag `[oc-*]`) + Telegram | gain extra authority from running remotely or through a manager layer |
@@ -38,15 +38,19 @@ then "ก็ตามนี้ก็ได้ทำไปก่อน" ("this is
 - It relaxes nothing under FULL.
 - It leaves untouched the VERDICT GATE in `CLAUDE.md`, the §3 iron rules and the owner-only boundaries in §2.
 
-**Hub.**
-- The hub is the incoming Seat of the latest **effective** Seat rotation recorded in `SEAT_LOG.md`. A rotation is
-  effective only once its own activation conditions are met. A correction entry is not a rotation. Since the
-  2026-11-04 rotation (`69b88695`, activated by R12's remote readback) the hub is ChatGPT EA_LAB MAIN CT R12.
-- The hub changes only by a Core Seat Protocol v8 A1 rotation. Every other agent, Claude Code included, acts as
-  Author or Reviewer and hands integration-ready work to the hub.
-- The hub plans, authors or dispatches, requests the review, integrates LIGHT work and reports.
-- There is one hub at a time, identified by `SEAT_LOG.md`. A lane's `owner_chat` is its owning-chat label; it does
-  not establish hub identity.
+**Hub — no single Seat (owner, 2026-11-04).**
+- Owner (Thai, verbatim): "ผมว่านาย กับ gpt ก็ทำหน้าที่แทนกันได้นะ" … "ตกลง ทำไปเลย … ไม่ต้องให้ผมรับส่งข้อความไปมา
+  ไม่เข้ม ทำงานสะดวก เน้นผลลัพท์ ผมใช้คนเดียว" ("you and GPT can stand in for each other … go ahead … I don't want to
+  relay messages; not strict, convenient, results first; I am the only user").
+- The hub is **whichever agent the owner is working with**: Claude Code or ChatGPT/Codex. Either may plan, author,
+  request the review, integrate (push) and report. No Seat rotation, handoff or ACK is needed to switch.
+- Integration rule, the same for every agent: a Registry lane · tests and hooks green · a **different-family** PASS
+  on the exact head being pushed · **fast-forward-only** push to `origin/master`, then a remote readback. If the push
+  is not a fast-forward, the author rebases and the rebased head is reviewed again.
+- One `owner_chat` label may hold several writer lanes; the Registry refuses only overlapping critical paths or a
+  shared runtime lane.
+- `SEAT_LOG.md` is kept as history. Its 2026-11-04 entry closing the Seat model supersedes the Core Seat Protocol v8
+  A1 rotation requirement; the rest of v8 still applies where it does not require a single Seat.
 
 **LIGHT path** — the default for everything not listed under FULL:
 - docs, reports, handoffs, agent entry files, workflow text (a governance change still needs the owner's OK of its text);
@@ -60,8 +64,8 @@ Steps:
 2. The author edits.
 3. The tool's own tests and the hooks are green.
 4. **One** independent review from a different model family on the frozen head, answering PASS or FAIL with findings
-   (for example `codex exec -s read-only` for GPT, or AGY read-only).
-5. The hub fast-forward pushes and checks the remote.
+   (for example `codex exec -s read-only` for GPT, or AGY read-only). The author sends it; the owner does not relay.
+5. The author (Claude or GPT) fast-forward pushes and checks the remote.
 6. One short report to the owner.
 
 No admission boards, preflights, pilots, dimension tables or new gates unless the owner asks for them.
@@ -74,13 +78,13 @@ No admission boards, preflights, pilots, dimension tables or new gates unless th
 - binaries copied to a VPS or a live terminal;
 - irreversible acts: force push, history rewrite, deleting preserved data, workflow cutover.
 
-Steps: the hub prepares; an independent different-family review; explicit owner approval naming the change; execution;
+Steps: the author prepares; an independent different-family review; explicit owner approval naming the change; execution;
 verification on the real target.
 
 **Both paths.**
 - A reviewer reviews; it does not re-plan.
 - Scope creep becomes a new task, not a new gate.
-- If the path is unclear, the hub asks the owner in one line.
+- If the path is unclear, the author asks the owner in one line.
 
 ### 1.1 Current provider-routing and scrutiny override (owner-ratified 2026-10-06)
 

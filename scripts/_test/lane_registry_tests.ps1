@@ -47,7 +47,10 @@ try {
 
     $r3=New-Reg 'r3'; [void](Invoke-Tool (New-ClaimArgs $r3 'w1' 'same-chat' $repo $branchA $head 'alpha'))
     $x=Invoke-Tool (New-ClaimArgs $r3 'w2' 'same-chat' $wtB 'lane-b' $head 'beta')
-    Assert-True 'same chat cannot own two active writers' ($x.ExitCode -ne 0 -and $x.Text -match 'owner_chat_active_writer') $x.Text
+    Assert-True 'same chat may own two active writers on disjoint paths' ($x.ExitCode -eq 0) $x.Text
+    $r3b=New-Reg 'r3b'; [void](Invoke-Tool (New-ClaimArgs $r3b 'w1' 'same-chat' $repo $branchA $head 'alpha'))
+    $x=Invoke-Tool (New-ClaimArgs $r3b 'w2' 'same-chat' $wtB 'lane-b' $head 'alpha/sub')
+    Assert-True 'same chat still refused on overlapping critical paths' ($x.ExitCode -ne 0 -and $x.Text -match 'critical_path_overlap') $x.Text
 
     $r4=New-Reg 'r4'; [void](Invoke-Tool (New-ClaimArgs $r4 'w1' 'chat-1' $repo $branchA $head 'alpha' 'RUNNING' 'MT5-DEMO-A'))
     $x=Invoke-Tool (New-ClaimArgs $r4 'w2' 'chat-2' $wtB 'lane-b' $head 'beta' 'RUNNING' 'MT5-DEMO-A')
@@ -297,7 +300,7 @@ try {
     Reset-Amend; Add-Competitor '../ambiguous'; Refuse-Amend 'unresolvable active competitor fails closed' (Amend-Params) 'unsafe_path|unsafe_namespace'
     Reset-Amend; Add-Competitor 'separate'; $otherFile=Join-Path $amendRoot 'competitor.json'; $obj=Get-Content -Raw $otherFile|ConvertFrom-Json; $obj.worktree=Join-Path $tempRoot 'missing-worktree'; [IO.File]::WriteAllText($otherFile,($obj|ConvertTo-Json -Depth 100)); Refuse-Amend 'missing active competitor namespace fails closed' (Amend-Params) 'unsafe_namespace'
     Reset-Amend; Add-Competitor 'separate'; $obj=Get-Content -Raw $otherFile|ConvertFrom-Json; $obj.critical_paths=@(); [IO.File]::WriteAllText($otherFile,($obj|ConvertTo-Json -Depth 100)); Refuse-Amend 'empty active competitor scope fails closed' (Amend-Params) 'unsafe_namespace'
-    Reset-Amend; Add-Competitor 'separate' 'amend-owner'; Refuse-Amend 'same owner active writer rule preserved' (Amend-Params) 'owner_chat_active_writer'
+    Reset-Amend; Add-Competitor 'new/path.ps1' 'amend-owner'; Refuse-Amend 'same owner overlapping scope still conflicts' (Amend-Params) 'conflict'
     Reset-Amend; $obj=$baseline|ConvertFrom-Json; $obj.runtime_lane='runtime-A'; [IO.File]::WriteAllText($laneFile,($obj|ConvertTo-Json -Depth 100)); Add-Competitor 'separate' 'competitor-owner' 'runtime-A'; Refuse-Amend 'runtime conflict preserved' (Amend-Params) 'runtime_lane_overlap'
     Reset-Amend
     $junction=Join-Path $wtB 'escape'; New-Item -ItemType Junction -Path $junction -Target $otherRepo | Out-Null
@@ -565,8 +568,8 @@ $p=Import-Clixml -LiteralPath $InputFile
     }
     Reset-HookAmend; Add-Competitor (Join-Path $wtB '.githooks\fast_tier_pathspec')
     Refuse-Amend 'hook compat retains absolute cross-worktree alias conflict' (Amend-Params) 'conflict'
-    Reset-HookAmend; Add-Competitor 'separate' 'amend-owner'
-    Refuse-Amend 'hook compat retains same-owner active writer refusal' (Amend-Params) 'owner_chat_active_writer'
+    Reset-HookAmend; Add-Competitor $hookRel 'amend-owner'
+    Refuse-Amend 'hook compat: same-owner overlapping scope still conflicts' (Amend-Params) 'conflict'
     Reset-HookAmend; $p=Amend-Params; $p.AuthoritySha256=('0'*64)
     Refuse-Amend 'hook compat retains authority verification' $p 'authority_hash'
     Reset-HookAmend; $p=Amend-Params; $p.ExpectedState='WAITING'

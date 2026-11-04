@@ -60,3 +60,18 @@ Rules for this file:
 - This entry takes effect when it is on `origin/master` **and** R12 has independently read it back from the
   remote.
 - Until both are true, the previous coordination state stands.
+## 2026-11-04 — Seat model closed: no single ONE HUB (owner decision)
+
+| Field | Value |
+|---|---|
+| Change | The single-Seat model ends. The hub is whichever agent the owner is working with (Claude Code or ChatGPT/Codex). Rules: `AGENTS.md` §1.0 "Hub — no single Seat". |
+| Cites | The 2026-11-04 rotation entry above (`69b88695`). That entry stays as history; it is no longer the source of hub identity. |
+| Owner instruction | Claude Code session `c2a2ed17-07fb-4221-be9e-454e4d3afb49`, 2026-11-04: "ผมว่านาย กับ gpt ก็ทำหน้าที่แทนกันได้นะ" then "ตกลง ทำไปเลย นายส่งให้ GPT review อะไรให้เรียบร้อยเลยนะ ไม่ต้องให้ผมรับส่งข้อความไปมา ไม่เข้ม ทำงานสะดวก เน้นผลลัพท์ ผมใช้คนเดียว ไม่จำเป้นต้องเข้มความปลอดภัยขนาดนัน้" |
+| Approval record | `D:\EA_LAB_CONTROL\evidence\claude-onehub-retire-20261104\OWNER_APPROVAL_RETIRE_SEAT_20261104.md`, sha256 `5c241506910b139e4b7ed52f08e07c375f37520fcf35636a7f672726fed691cc` |
+| Why | R12 cannot act on the machine, so every integration needed the owner to relay messages; the owner's ChatGPT subscription ends about 2026-11-18, after which a single ChatGPT Seat would have left nobody able to push. |
+| Integration rule now | Registry lane · tests and hooks green · different-family PASS on the exact head · fast-forward-only push · remote readback. FULL-path owner approvals are unchanged. |
+| Integrated by | Claude Code, on the owner's instruction above, after a GPT (Codex) PASS on this commit. Not routed through R12. |
+| Registry | `scripts/lane_registry.ps1` no longer refuses a second writer lane for the same `owner_chat`; critical-path and runtime-lane overlap are still refused. |
+
+### Effect
+Takes effect when this entry is on `origin/master`. No incoming or outgoing ACK is required, because no Seat moves.
