@@ -53,7 +53,11 @@ def is_link_or_junction(path: Path) -> bool:
     if path.is_symlink():
         return True
     isjunction = getattr(os.path, "isjunction", None)
-    return bool(isjunction and isjunction(path))
+    if isjunction is not None:
+        return bool(isjunction(path))
+    # Python < 3.12 has no junction API. Fail closed instead of silently skipping the check: a junction resolves to
+    # a different real path, so any difference is refused (this can also refuse an 8.3 short-name path, by design).
+    return os.path.normcase(os.path.realpath(path)) != os.path.normcase(os.path.abspath(path))
 
 
 def check_artifact(kind: str, value: object) -> dict:

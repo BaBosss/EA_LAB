@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 MODULE = Path(__file__).resolve().parents[1] / "run_binding.py"
 spec = importlib.util.spec_from_file_location("run_binding", MODULE)
@@ -153,6 +154,13 @@ class RunBindingTest(unittest.TestCase):
         self.dump()
         with self.assertRaisesRegex(ValueError, "symlink or junction"):
             binder.bind_manifest(self.input, self.root / "j.json")
+        # Python < 3.12 has no os.path.isjunction: the fallback must still refuse (fail closed, not skip the check).
+        with mock.patch.object(os.path, "isjunction", None):
+            with self.assertRaisesRegex(ValueError, "symlink or junction"):
+                binder.bind_manifest(self.input, self.root / "j2.json")
+        # ...and the fallback must not refuse an ordinary directory.
+        with mock.patch.object(os.path, "isjunction", None):
+            self.assertFalse(binder.is_link_or_junction(real / "x.bin"))
 
     def test_replacing_output_fails(self):
         binder.bind_manifest(self.input, self.root / "one.json")
