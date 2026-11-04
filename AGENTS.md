@@ -39,10 +39,12 @@ then "ก็ตามนี้ก็ได้ทำไปก่อน" ("this is
 - It leaves untouched the VERDICT GATE in `CLAUDE.md`, the §3 iron rules and the owner-only boundaries in §2.
 
 **Hub.**
-- The agent the owner is working through is the hub. Today that is Claude Code; ChatGPT Main CT can hold the role when
-  the owner works through it.
+- The hub is the incoming Seat named in the latest entry of `SEAT_LOG.md`. Since the 2026-11-04 entry (`69b88695`)
+  that is ChatGPT EA_LAB MAIN CT R12. The hub changes only by a Core Seat Protocol v8 A1 rotation recorded there.
+  Every other agent, Claude Code included, acts as Author or Reviewer and hands integration-ready work to the hub.
 - The hub plans, authors or dispatches, requests the review, integrates LIGHT work and reports.
-- There is one hub at a time, identified by the lane's `owner_chat`.
+- There is one hub at a time, identified by `SEAT_LOG.md`. A lane's `owner_chat` labels the lane's author, not the
+  hub.
 
 **LIGHT path** — the default for everything not listed under FULL:
 - docs, reports, handoffs, agent entry files, workflow text (a governance change still needs the owner's OK of its text);
