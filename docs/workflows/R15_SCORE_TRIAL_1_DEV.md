@@ -61,7 +61,7 @@ and `score_trial.py`. Raw output is `trial.json` next to them. Source is the loc
 ## Recommendation for R15 (to confirm in trial 2)
 
 - Keep the score simple and monotone. **F5 (recovery × R19 confidence, hard 12 % equity-DD cap)** is the provisional pick.
-  - It is never worst on the clean pairs.
+  - On top-5 out-of-sample PF it is never the worst formula (best on STF BTC, middle on the others). On Spearman it ties worst on ST03 (−0.32), where every formula is negative.
   - It encodes two already-ratified rules: the 12 % DD cap and R19 confidence.
   - It is explainable in one line.
 - Put the selection effort in a **neighbour-smoothed score** instead: rank passes by the mean score of the pass and its

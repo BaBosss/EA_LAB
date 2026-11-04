@@ -72,6 +72,7 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 | V5 | `extra_round` is either `null` or `{reason, lever, approved_by, approved_utc}` with `approved_by ≠ frozen_by` (R20). At most one. |
 | V6 | Each `symbol_preset_ref` resolves and pins digits, point, tick value and contract size (R8). |
 | V7 | `stages` contains `MODEL4` before any stage that would issue CANDIDATE (R16). |
+| V8 | `score.dd_cap_equity_pct` ≤ 12.0 (R17). A recipe may tighten the cap, never loosen it. |
 
 ## 3. `AcceptanceReceipt` (one JSONL row per accepted stage result)
 
@@ -98,12 +99,12 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 }
 ```
 
-**Acceptance rules (any failure ⇒ `result: REFUSE`, row still written, R21):**
+**Acceptance rules (any failure ⇒ `result: REFUSE`; the REFUSE row is written here **and** a refusal entry is appended to `factory/optimize_decisions.jsonl`, R21):**
 
 | ID | Rule |
 |---|---|
 | A1 | `recipe_sha256` matches the frozen recipe file at check time. |
-| A2 | The run's window, model, symbol and timeframe equal the recipe stage, and the stage order is respected: a receipt exists for every earlier stage. |
+| A2 | The run's window, model, symbol and timeframe equal the recipe stage, and the stage order is respected: a receipt with `result: ACCEPT` exists for every earlier stage. A `REFUSE` receipt never satisfies a prerequisite. |
 | A3 | `preflight_ref` is an `ALLOW` row of the same `hypothesis_revision`, made in **enforcing** mode. A `-WarnOnly` run or a missing row means no acceptance. |
 | A4 | The report, set and binary hashes are read from the files, not copied from another record. The set swept only `TUNABLE` parameters, and every other input equals its binding's `locked_value`. |
 | A5 | The tester leverage is asserted as `1:N` from the report (memory: tester-cache nondeterminism). A full `.set` was used. |
