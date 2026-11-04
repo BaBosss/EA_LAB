@@ -89,6 +89,17 @@ def finite(x):
     return v if math.isfinite(v) else None
 
 
+def has_null(obj):
+    """True if obj or anything nested in it is None or an empty string."""
+    if obj is None or obj == '':
+        return True
+    if isinstance(obj, dict):
+        return any(has_null(v) for v in obj.values())
+    if isinstance(obj, list):
+        return any(has_null(v) for v in obj)
+    return False
+
+
 # Roles whose value must be frozen in the recipe when the binding fixes none (R13).
 FROZEN_VALUE_ROLES = ('SAFETY', 'SIZING')
 
@@ -218,7 +229,7 @@ def validate_recipe(recipe, root):
     if score.get('formula_sha256') != SCORE_FORMULA_SHA256:
         ref.append('V2 score.formula_sha256 does not pin the frozen R15 formula text')
     plateau = recipe.get('plateau_rule') or {}
-    if not plateau.get('id') or not plateau.get('text') or any(v in (None, '') for v in plateau.values()):
+    if not plateau.get('id') or not plateau.get('text') or has_null(plateau):
         ref.append('V2 plateau_rule has a null or empty field')
     fixed = recipe.get('fixed_inputs')
     if fixed is not None and not isinstance(fixed, dict):
@@ -322,7 +333,8 @@ def validate_recipe(recipe, root):
         ref.append('V7 stages out of order: %s' % known)
 
     # V8 DD cap never looser than 12 %
-    cap = finite(score.get('dd_cap_equity_pct'))
+    raw_cap = score.get('dd_cap_equity_pct')
+    cap = finite(raw_cap) if isinstance(raw_cap, (int, float)) and not isinstance(raw_cap, bool) else None
     if cap is None or cap <= 0 or cap > DD_CAP_MAX:
         ref.append('V8 score.dd_cap_equity_pct=%r must be <= %.1f' % (cap, DD_CAP_MAX))
     return ref

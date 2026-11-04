@@ -153,6 +153,8 @@ def main():
         ('V8 NaN DD cap', lambda r: r['score'].update(dd_cap_equity_pct='NaN'), 'V8'),
         ('V8 infinite DD cap', lambda r: r['score'].update(dd_cap_equity_pct=float('inf')), 'V8'),
         ('V2 nested null in plateau_rule', lambda r: r['plateau_rule'].update(decided_with_owner=None), 'V2'),
+        ('V2 deeply nested null in plateau_rule', lambda r: r['plateau_rule'].update(metadata={'decided_with_owner': None}), 'V2'),
+        ('V8 DD cap given as text', lambda r: r['score'].update(dd_cap_equity_pct='12'), 'V8'),
     ]
     for name, mut, prefix in cases:
         r = copy.deepcopy(good)
