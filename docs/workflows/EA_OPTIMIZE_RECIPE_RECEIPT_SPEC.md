@@ -68,7 +68,7 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 | V1 | Every swept parameter has a binding in `bindings_ref` with role `TUNABLE`. A `SAFETY` or `LOCKED` parameter in `sweep` = refuse (same logic as `optimize_guard` check 4). |
 | V2 | `score.formula_sha256`, `plateau_rule`, `tie_breaks` and the sweep ranges are non-null **before** `frozen_utc`. A `null` anywhere in these = the recipe is not frozen (R13). |
 | V3 | `windows.MAIN ∩ windows.HOLDOUT = ∅` (VERDICT GATE iron rule). |
-| V4 | `class` equals the class derived from modules (R6). A hand-picked class that disagrees with the derivation = refuse. |
+| V4 | `class` equals the class derived from modules (R6). Today only escalation is derivable (any grid / lot-progression module ⇒ escalation, either direction refused). trend / reversion / breakout cannot yet be told apart from module tokens, so a non-escalation recipe must state `class_derivation`; that choice is the author's and is reviewed, not machine-checked. |
 | V5 | `extra_round` is either `null` or `{reason, lever, approved_by, approved_utc}` with `approved_by ≠ frozen_by` (R20). At most one. |
 | V6 | Each `symbol_preset_ref` resolves and pins digits, point, tick value and contract size (R8). |
 | V7 | `stages` contains `MODEL4` before any stage that would issue CANDIDATE (R16). |
@@ -105,8 +105,8 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 |---|---|
 | A1 | `recipe_sha256` matches the frozen recipe file at check time. |
 | A2 | The run's window, model, symbol and timeframe equal the recipe stage, and the stage order is respected: a receipt with `result: ACCEPT` exists for every earlier stage. A `REFUSE` receipt never satisfies a prerequisite. |
-| A3 | `preflight_ref` is an `ALLOW` row of the same `hypothesis_revision`, made in **enforcing** mode. A `-WarnOnly` run or a missing row means no acceptance. |
-| A4 | The report, set and binary hashes are read from the files, not copied from another record. The set swept only `TUNABLE` parameters, and every other input equals its binding's `locked_value`. |
+| A3 | **Optimize stages (COARSE/FINE):** `preflight_ref` is an `ALLOW` row of the same `hypothesis_revision` and the same `.ini`, made in **enforcing** mode. A `-WarnOnly` run or a missing row means no acceptance. Single-test stages have no preflight (`mt5_run`/`run_backtest` do not call `optimize_guard`); A4 is their parameter guarantee. |
+| A4 | The report, set and binary hashes are read from the files, not copied from another record. The set swept only `TUNABLE` parameters (and only in an optimize stage), and every non-`TUNABLE` bound input (LOCKED, SAFETY, …) equals its binding's `locked_value`. The recipe pins `bindings_ref`, `hypothesis_ref` and each symbol preset by `raw_sha256`; a store whose bytes changed after freezing refuses. |
 | A5 | The tester leverage is asserted as `1:N` from the report (memory: tester-cache nondeterminism). A full `.set` was used. |
 | A6 | Equity DD ≤ `score.dd_cap_equity_pct` (R17). |
 | A7 | Escalation class only: `worst_basket_*` is non-null and sourced from the in-EA equity/basket log or price replay (R18). If it is null, refuse; never estimate it from deals. |

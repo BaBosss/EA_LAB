@@ -31,6 +31,10 @@ CLASSES = ('trend', 'reversion', 'breakout', 'escalation')
 ESCALATION_TOKEN = re.compile(r'GRID|PROG|LOTLOG|MARTING|RECOVER|LADDER|PYRAMID|DCA', re.I)
 DD_CAP_MAX = 12.0                 # R17
 SCORE_FORMULA_ID = 'R15_F5_v1'    # R15 (rule table v2)
+# The frozen formula text; a recipe pins its sha256 (V2), so a silent formula edit breaks every recipe.
+SCORE_FORMULA_TEXT = ('R15_F5_v1: score = recovery_factor * confidence_multiplier(A=1.0,B=0.75,C=0.5,D=0.0); '
+                      'excluded when equity_dd_pct > dd_cap_equity_pct')
+SCORE_FORMULA_SHA256 = hashlib.sha256(SCORE_FORMULA_TEXT.encode('utf-8')).hexdigest()
 CONF_MULT = {'A': 1.0, 'B': 0.75, 'C': 0.5, 'D': 0.0}
 CHECKER_VERSION = 'recipe_check/1'
 RECEIPTS_REL = 'factory/acceptance_receipts.jsonl'
@@ -55,8 +59,13 @@ def read_jsonl(path, allow_missing=False):
             return []
         raise Unreadable('missing %s' % path)
     rows = []
-    with open(path, encoding='utf-8-sig') as f:
-        for n, line in enumerate(f, 1):
+    try:
+        with open(path, encoding='utf-8-sig') as f:
+            lines = f.read().split('\n')
+    except (OSError, UnicodeDecodeError) as exc:
+        raise Unreadable('cannot read %s: %s' % (path, exc))
+    if True:
+        for n, line in enumerate(lines, 1):
             line = line.strip()
             if not line:
                 continue
@@ -127,15 +136,32 @@ def norm_symbol(s):
 # Recipe validity V1-V8
 # --------------------------------------------------------------------------------------------
 
+def pinned_rows(root, ref_obj, default_path, label):
+    """Rows of a pinned store. The recipe's raw_sha256 must equal the file's bytes now (V2/A1):
+    a store edited after freezing must not change what an unchanged recipe accepts."""
+    ref_obj = ref_obj or {}
+    path = os.path.join(root, ref_obj.get('path') or default_path)
+    want = ref_obj.get('raw_sha256')
+    if not want:
+        raise Unreadable('%s.raw_sha256 is null (the store is not pinned)' % label)
+    if sha256_file(path) != want:
+        raise Unreadable('%s pin differs from %s bytes now' % (label, ref_obj.get('path') or default_path))
+    return read_jsonl(path)
+
+
+def load_bindings(recipe, root):
+    rev = (recipe.get('bindings_ref') or {}).get('hypothesis_revision') or recipe.get('recipe_id')
+    rows = pinned_rows(root, recipe.get('bindings_ref'), 'factory/parameter_bindings.jsonl', 'bindings_ref')
+    return rev, [b for b in rows if b.get('hypothesis_revision') == rev]
+
+
 def validate_recipe(recipe, root):
     """-> list of refusal strings (empty = valid)."""
     ref = []
-    rev = (recipe.get('bindings_ref') or {}).get('hypothesis_revision') or recipe.get('recipe_id')
     try:
-        bindings = [b for b in read_jsonl(os.path.join(root, 'factory/parameter_bindings.jsonl'))
-                    if b.get('hypothesis_revision') == rev]
+        rev, bindings = load_bindings(recipe, root)
     except Unreadable as exc:
-        return ['A9 ' + str(exc)]
+        return ['V2 ' + str(exc)]
     by_param = {b.get('parameter'): b for b in bindings}
 
     stages = recipe.get('stages')
@@ -145,6 +171,14 @@ def validate_recipe(recipe, root):
     unknown = [n for n in names if n not in STAGE_ORDER]
     if unknown:
         ref.append('V2 unknown stage(s): %s' % unknown)
+    win_keys = set((recipe.get('windows') or {}).keys())
+    for s in stages:
+        if s.get('stage') in STAGE_ORDER and s.get('stage') != 'FREEZE':
+            sw = stage_windows(s)
+            if not sw:
+                ref.append('V2 stage %s names no window' % s.get('stage'))
+            elif not set(sw) <= win_keys:
+                ref.append('V2 stage %s names unknown window(s) %s' % (s.get('stage'), sorted(set(sw) - win_keys)))
 
     # V1 every swept parameter is TUNABLE in this revision
     for s in stages:
@@ -165,11 +199,14 @@ def validate_recipe(recipe, root):
         ref.append('V2 score.formula_id is null')
     elif score.get('formula_id') != SCORE_FORMULA_ID:
         ref.append('V2 score.formula_id=%r is not the frozen R15 formula %s' % (score.get('formula_id'), SCORE_FORMULA_ID))
+    if score.get('formula_sha256') != SCORE_FORMULA_SHA256:
+        ref.append('V2 score.formula_sha256 does not pin the frozen R15 formula text')
     plateau = recipe.get('plateau_rule') or {}
     if not plateau.get('id') or not plateau.get('text'):
         ref.append('V2 plateau_rule id/text is null')
-    if not recipe.get('tie_breaks'):
-        ref.append('V2 tie_breaks is empty')
+    tb = recipe.get('tie_breaks')
+    if not isinstance(tb, list) or not tb or not all(isinstance(x, str) and x.strip() for x in tb):
+        ref.append('V2 tie_breaks must be a non-empty list of non-empty strings')
     for k in ('frozen_utc', 'frozen_by'):
         if not recipe.get(k):
             ref.append('V2 %s is null (recipe not frozen, R13)' % k)
@@ -192,8 +229,10 @@ def validate_recipe(recipe, root):
         ref.append('V4 class %r is not one of %s' % (cls, CLASSES))
     else:
         hyp_key = (recipe.get('hypothesis_ref') or {}).get('key') or rev
+        if not (recipe.get('class_derivation') or '').strip():
+            ref.append('V4 class_derivation is empty (a non-escalation class must say which modules make it %s)' % cls)
         try:
-            hyps = [h for h in read_jsonl(os.path.join(root, 'factory/hypotheses.jsonl'))
+            hyps = [h for h in pinned_rows(root, recipe.get('hypothesis_ref'), 'factory/hypotheses.jsonl', 'hypothesis_ref')
                     if hyp_key in (h.get('hypothesis_revision'), h.get('hypothesis_id'), h.get('key'))
                     or (h.get('hypothesis_id') and hyp_key.startswith(h['hypothesis_id'] + '-'))]
         except Unreadable as exc:
@@ -230,7 +269,9 @@ def validate_recipe(recipe, root):
             continue
         path = os.path.join(root, p.get('path') or '')
         try:
-            if p.get('raw_sha256') and sha256_file(path) != p['raw_sha256']:
+            if not p.get('raw_sha256'):
+                ref.append('V6 %s preset ref has no raw_sha256' % s)
+            elif sha256_file(path) != p['raw_sha256']:
                 ref.append('V6 %s preset file hash differs from raw_sha256' % s)
             rows = [r for r in read_jsonl(path) if norm_symbol(r.get('symbol')) == norm_symbol(s)]
         except Unreadable as exc:
@@ -246,7 +287,7 @@ def validate_recipe(recipe, root):
         ref.append('V7 no MODEL4 stage')
     else:
         m4 = stages[names.index('MODEL4')]
-        if set(m4.get('windows') or []) < {'MAIN', 'BWD'}:
+        if not {'MAIN', 'BWD'} <= set(m4.get('windows') or []):
             ref.append('V7 MODEL4 stage must cover MAIN and BWD')
         if int(m4.get('model', 0)) != 4:
             ref.append('V7 MODEL4 stage model is not 4')
@@ -275,7 +316,24 @@ def stage_windows(stage):
 
 def accept(recipe_path, stage_name, window, report_path, set_path, binary_path, root, lane,
            ini_path=None, read_report=None, now=None):
-    """-> receipt dict (result ACCEPT or REFUSE). Never raises for bad input."""
+    """-> receipt dict (result ACCEPT or REFUSE). Never raises for bad input: an unexpected error is
+    itself a refusal, so a receipt row is always produced (A9)."""
+    try:
+        return _accept(recipe_path, stage_name, window, report_path, set_path, binary_path, root, lane,
+                       ini_path, read_report, now)
+    except Exception as exc:  # noqa: BLE001
+        receipt = {'entity': 'AcceptanceReceipt', 'recipe_id': None, 'recipe_sha256': None,
+                   'stage': stage_name, 'window': window, 'lane': lane, 'symbol': None, 'timeframe': None,
+                   'result': 'REFUSE', 'refusals': ['A9 checker error: %s: %s' % (type(exc).__name__, exc)],
+                   'checker_version': CHECKER_VERSION,
+                   'checked_utc': (now or datetime.now(timezone.utc)).strftime('%Y-%m-%dT%H:%M:%SZ')}
+        body = json.dumps(receipt, sort_keys=True)
+        receipt['receipt_id'] = hashlib.sha256(body.encode('utf-8')).hexdigest()
+        return receipt
+
+
+def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path, root, lane,
+            ini_path, read_report, now):
     refusals = []
     receipt = {
         'entity': 'AcceptanceReceipt', 'recipe_id': None, 'recipe_sha256': None,
@@ -389,9 +447,7 @@ def accept(recipe_path, stage_name, window, report_path, set_path, binary_path, 
     # A4 set: only TUNABLE swept, everything else at its locked value; A5 full surface
     try:
         sv = parse_set(set_path)
-        rev = (recipe.get('bindings_ref') or {}).get('hypothesis_revision') or recipe.get('recipe_id')
-        binds = [b for b in read_jsonl(os.path.join(root, 'factory/parameter_bindings.jsonl'))
-                 if b.get('hypothesis_revision') == rev]
+        rev, binds = load_bindings(recipe, root)
         if not binds:
             refusals.append('A4 no ParameterBinding rows for %s' % rev)
         for b in binds:
@@ -403,8 +459,10 @@ def accept(recipe_path, stage_name, window, report_path, set_path, binary_path, 
             val, swept = sv[p]
             if swept and (stage_name not in OPTIMIZE_STAGES or b.get('role') != 'TUNABLE'):
                 refusals.append('A4 %s is swept in a %s run' % (p, stage_name))
-            if b.get('role') == 'LOCKED' and b.get('locked_value') is not None and val != str(b['locked_value']):
-                refusals.append('A4 %s=%s but its binding locks it at %s' % (p, val, b['locked_value']))
+            # Every non-TUNABLE input (LOCKED, SAFETY, ...) must sit at its bound value; a single-test
+            # stage has no preflight (A3 is optimize-only), so this is its parameter guarantee.
+            if b.get('role') != 'TUNABLE' and b.get('locked_value') is not None and val != str(b['locked_value']):
+                refusals.append('A4 %s=%s but its %s binding fixes it at %s' % (p, val, b.get('role'), b['locked_value']))
     except Unreadable as exc:
         refusals.append('A9 ' + str(exc))
 

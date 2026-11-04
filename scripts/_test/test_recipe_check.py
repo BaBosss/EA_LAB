@@ -57,9 +57,12 @@ def make_root(escalation=False):
 
 def base_recipe(root):
     prof = os.path.join(root, 'factory', 'instrument_profiles.jsonl')
+    fac = os.path.join(root, 'factory')
     return {
         'entity': 'OptimizeRecipe', 'recipe_id': 'B99-H01-r1',
-        'hypothesis_ref': {'key': 'B99-H01-r1'}, 'class': 'trend',
+        'hypothesis_ref': {'key': 'B99-H01-r1', 'path': 'factory/hypotheses.jsonl',
+                           'raw_sha256': rc.sha256_file(os.path.join(fac, 'hypotheses.jsonl'))},
+        'class': 'trend', 'class_derivation': 'MACD crossover entry, no grid/lot progression',
         'symbols': ['GBPUSD'], 'timeframes': ['H1'],
         'symbol_preset_refs': [{'symbol': 'GBPUSD', 'path': 'factory/instrument_profiles.jsonl', 'raw_sha256': rc.sha256_file(prof)}],
         'windows': {'MAIN': ['2023.01.01', '2025.12.31'], 'BWD': ['2020.01.01', '2022.12.31'],
@@ -72,8 +75,9 @@ def base_recipe(root):
             {'stage': 'MODEL4', 'model': 4, 'windows': ['MAIN', 'BWD']},
             {'stage': 'HOLDOUT', 'model': 4, 'window': 'HOLDOUT'},
         ],
-        'bindings_ref': {'hypothesis_revision': 'B99-H01-r1'},
-        'score': {'formula_id': 'R15_F5_v1', 'dd_cap_equity_pct': 12.0},
+        'bindings_ref': {'hypothesis_revision': 'B99-H01-r1', 'path': 'factory/parameter_bindings.jsonl',
+                         'raw_sha256': rc.sha256_file(os.path.join(fac, 'parameter_bindings.jsonl'))},
+        'score': {'formula_id': 'R15_F5_v1', 'formula_sha256': rc.SCORE_FORMULA_SHA256, 'dd_cap_equity_pct': 12.0},
         'plateau_rule': {'id': 'R14-smoothed', 'text': 'neighbour-smoothed centre'},
         'tie_breaks': ['higher BWD PF'], 'extra_round': None,
         'frozen_utc': '2026-11-04T00:00:00Z', 'frozen_by': 'claude',
@@ -138,12 +142,28 @@ def main():
         ('V7 no MODEL4', lambda r: r.update(stages=[s for s in r['stages'] if s['stage'] != 'MODEL4']), 'V7'),
         ('V7 MODEL4 not covering BWD', lambda r: r['stages'][4].update(windows=['MAIN']), 'V7'),
         ('V8 DD cap looser than 12', lambda r: r['score'].update(dd_cap_equity_pct=15.0), 'V8'),
+        ('V2 score formula hash missing', lambda r: r['score'].pop('formula_sha256'), 'V2'),
+        ('V2 null tie-break entry', lambda r: r.update(tie_breaks=[None]), 'V2'),
+        ('V2 bindings store not pinned', lambda r: r['bindings_ref'].pop('raw_sha256'), 'V2'),
+        ('V2 runnable stage without a window', lambda r: r['stages'][0].pop('window'), 'V2'),
+        ('V2 stage names an unknown window', lambda r: r['stages'][0].update(window='RECENT'), 'V2'),
+        ('V4 non-escalation class without derivation', lambda r: r.update(class_derivation=''), 'V4'),
+        ('V6 preset ref without hash', lambda r: r['symbol_preset_refs'][0].pop('raw_sha256'), 'V6'),
+        ('V7 MODEL4 windows MAIN+HOLDOUT (no BWD)', lambda r: r['stages'][4].update(windows=['MAIN', 'HOLDOUT']), 'V7'),
     ]
     for name, mut, prefix in cases:
         r = copy.deepcopy(good)
         mut(r)
         out = rc.validate_recipe(r, root)
         check(name, has(out, prefix), out)
+    # pinned stores: editing bindings after freezing refuses an unchanged recipe
+    proot = make_root()
+    prec = base_recipe(proot)
+    with open(os.path.join(proot, 'factory', 'parameter_bindings.jsonl'), 'a') as fh:
+        fh.write(json.dumps({'hypothesis_revision': 'B99-H01-r1', 'parameter': '_99_Safety', 'role': 'TUNABLE'}) + '\n')
+    out = rc.validate_recipe(prec, proot)
+    check('V2 bindings edited after freezing refuse', has(out, 'V2 bindings_ref pin differs'), out)
+    shutil.rmtree(proot)
     eroot = make_root(escalation=True)
     er = base_recipe(eroot)
     out = rc.validate_recipe(er, eroot)
@@ -182,6 +202,11 @@ def main():
     r = run(root, rp, 'SMOKE', 'MAIN', set_path=bad_set, write=False)
     check('A4 locked value changed', any('ExitMode=21' in x for x in r['refusals']), r['refusals'])
     check('A4 swept parameter in a single run', any('_99_Len is swept' in x for x in r['refusals']), r['refusals'])
+    safety_set = os.path.join(root, 'safety.set')
+    with open(safety_set, 'w') as fh:
+        fh.write('ExitMode=22\n_99_Len=14\n_99_Safety=250\n')
+    r = run(root, rp, 'SMOKE', 'MAIN', set_path=safety_set, write=False)
+    check('A4 SAFETY value changed without a sweep', any('_99_Safety=250' in x for x in r['refusals']), r['refusals'])
     short_set = os.path.join(root, 'short.set')
     with open(short_set, 'w') as fh:
         fh.write('ExitMode=22\n_99_Len=14\n')
@@ -232,6 +257,17 @@ def main():
     except Exception as exc:  # noqa: BLE001
         check('refusal row parses under optimize_log record_version 1', False, exc)
     shutil.rmtree(r4)
+
+    # A9 an unreadable receipts store still yields a REFUSE receipt (never an exception)
+    r5 = make_root()
+    rp5 = write_recipe(r5, base_recipe(r5))
+    os.makedirs(os.path.join(r5, rc.RECEIPTS_REL))  # a directory where the file should be
+    try:
+        r = run(r5, rp5, 'SMOKE', 'MAIN', write=False)
+        check('A9 unreadable receipts store refuses instead of raising', r['result'] == 'REFUSE' and has(r['refusals'], 'A9'), r['refusals'])
+    except Exception as exc:  # noqa: BLE001
+        check('A9 unreadable receipts store refuses instead of raising', False, exc)
+    shutil.rmtree(r5)
 
     # A1 recipe edited after receipts: the old receipts no longer count
     good2 = copy.deepcopy(good)
