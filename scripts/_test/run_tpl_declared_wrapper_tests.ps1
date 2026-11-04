@@ -126,6 +126,52 @@ try {
     if ($currentRun.ExitCode -eq 0 -or $currentRun.Output -notmatch 'active selector build is 6090, expected 6230') { throw "FAIL: current gate did not refuse Build-6090 data for the build reason: $($currentRun.Output)" }
     $pass++; Write-Host '[PASS] current Build 6230 gate refuses Build-6090 baseline data for the build reason'
 
+    # LIVE GATE: every replay above runs the frozen Build-6090 gate. This block runs the gate scripts as
+    # they stand in RepoRoot on the current Build-6230 tree, so a live regression in declared-delta
+    # admission cannot hide behind the frozen copies. Control = current HEAD plus the RepoRoot gate bytes;
+    # source = one undeclared-by-default behavioral change on top of it.
+    $live = Join-Path $fixture 'live-gate'
+    $liveHead = (& git -C $RepoRoot rev-parse HEAD).Trim()
+    & git clone --quiet --no-local --no-checkout $RepoRoot $live
+    if ($LASTEXITCODE -ne 0) { throw 'live fixture clone failed' }
+    & git -C $live config core.longpaths true
+    & git -C $live config core.autocrlf false
+    & git -C $live checkout --quiet $liveHead
+    if ($LASTEXITCODE -ne 0) { throw 'live fixture checkout failed' }
+    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\tpl_regression.ps1') -Destination (Join-Path $live 'scripts\tpl_regression.ps1') -Force
+    Copy-Item -LiteralPath (Join-Path $RepoRoot 'scripts\lib\tpl_baseline.ps1') -Destination (Join-Path $live 'scripts\lib\tpl_baseline.ps1') -Force
+    & git -C $live add -- scripts/tpl_regression.ps1 scripts/lib/tpl_baseline.ps1
+    & git -C $live -c user.name='TPL wrapper cage' -c user.email='tpl-wrapper@example.invalid' commit --quiet --allow-empty -m 'live gate control'
+    $liveControl = (& git -C $live rev-parse HEAD).Trim()
+    $liveDeltaPath = 'ea_template/core/Execution.mqh'
+    [IO.File]::AppendAllText((Join-Path $live ($liveDeltaPath -replace '/','\')), "`n// live-gate fixture behavioral delta`n")
+    & git -C $live add -- $liveDeltaPath
+    & git -C $live -c user.name='TPL wrapper cage' -c user.email='tpl-wrapper@example.invalid' commit --quiet -m 'live gate source'
+    $liveSource = (& git -C $live rev-parse HEAD).Trim()
+    if ($liveControl -notmatch '^[0-9a-f]{40}$' -or $liveSource -notmatch '^[0-9a-f]{40}$' -or $liveSource -eq $liveControl) { throw 'live fixture commits failed' }
+    function Invoke-LiveDeclared([string[]]$Declared) {
+        $quote = { param($v) "'" + ([string]$v).Replace("'","''") + "'" }
+        $items = @($Declared | ForEach-Object { & $quote $_ }) -join ','
+        $command = '$env:GIT_CONFIG_COUNT=''1'';$env:GIT_CONFIG_KEY_0=''core.excludesfile'';$env:GIT_CONFIG_VALUE_0=' + (& $quote $emptyExclude) + ';' +
+            '$p=@{ValidateOnly=$true;DeclaredCoreDelta=$true;ControlCommit=' + (& $quote $liveControl) + ';SourceCommit=' + (& $quote $liveSource) +
+            ';BehavioralDeltaPaths=@(' + $items + ')};& ' + (& $quote (Join-Path $live 'scripts\tpl_regression.ps1')) + ' @p'
+        return Invoke-EncodedHarness $command
+    }
+    Expect-Pass 'LIVE gate admits an exactly declared behavioral delta on the Build 6230 tree' { Invoke-LiveDeclared @($liveDeltaPath) }
+    Expect-Refusal 'LIVE gate rejects an undeclared behavioral delta' { Invoke-LiveDeclared @('ea_template/core/LabCore.mqh') } 'undeclared behavioral delta'
+    # The two precommit profiles pin ControlCommit to b586d4d3, whose Boss_15 wrapper bytes are not the ones
+    # the Build 6230 baseline pins. They are closed historical admissions: the live gate must refuse them, and
+    # for the wrapper-identity reason rather than an earlier argument error.
+    Copy-Item -LiteralPath (Join-Path $RepoRoot 'tools\python312\python312.zip') -Destination (Join-Path $live 'tools\python312\python312.zip')
+    $liveTree = (& git -C $live rev-parse ($liveSource + '^{tree}')).Trim()
+    $liveEvidence = Join-Path $fixture 'live-precommit-evidence'
+    $liveB17 = @($b17Paths | ForEach-Object { "'" + $_ + "'" }) -join ','
+    $livePrecommitCmd = '$env:GIT_CONFIG_COUNT=''1'';$env:GIT_CONFIG_KEY_0=''core.excludesfile'';$env:GIT_CONFIG_VALUE_0=''' + $emptyExclude.Replace("'","''") + ''';' +
+        '$p=@{ValidateOnly=$true;PrecommitExactTree=$true;PrecommitProfile=''B17_FINALCLOSURE'';ControlCommit=''' + $controlCommit + ''';RepairParent=''' + $liveControl +
+        ''';SourceTree=''' + $liveTree + ''';BehavioralDeltaPaths=@(' + $liveB17 + ');PrecommitEvidenceRoot=''' + $liveEvidence.Replace("'","''") + '''};& ''' +
+        (Join-Path $live 'scripts\tpl_regression.ps1').Replace("'","''") + ''' @p'
+    Expect-Refusal 'LIVE gate refuses the closed B17 precommit profile for the wrapper-identity reason' { Invoke-EncodedHarness $livePrecommitCmd } 'expected wrapper identity does not match'
+
     Expect-Pass 'declared mode admits exact 94f/b586 through SourceRoot' { Invoke-Harness $source }
     Expect-Refusal 'wrong control is rejected' { Invoke-Harness $source $sourceCommit } 'expected wrapper identity|single immediate parent'
     Expect-Refusal 'undeclared wrapper is rejected' { Invoke-Harness $source $controlCommit $sourceCommit @($paths | Where-Object { $_ -ne 'ea_template/Boss_15_ST03.mq5' }) } 'source hash mismatch'

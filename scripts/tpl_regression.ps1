@@ -232,7 +232,7 @@ try {
             $earlyAllowed = $legacyAllowed
         } elseif ($PrecommitProfile -ceq 'B17_FINALCLOSURE') {
             if ($ControlCommit -cne 'b586d4d32c04fa33a30517ab3a1a8469b238d2ac') {
-                throw 'REFUSE: B17 precommit profile requires the frozen Build-6230-compatible control'
+                throw 'REFUSE: B17 precommit profile requires the frozen Build-6090-compatible control'
             }
             $expectedBehavioral = $b17Behavioral
             $earlyAllowed = $b17Allowed
