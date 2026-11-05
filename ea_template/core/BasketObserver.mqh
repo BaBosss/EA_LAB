@@ -79,7 +79,11 @@ void BasketObserver_OnTick()
       double d = (g_bo_start_eq - eq) / g_bo_start_eq * 100.0;
       if(d > g_bo_depth_pct) g_bo_depth_pct = d;
    }
-   if(open <= 0) BasketObserver_Close(TimeCurrent());
+   if(open <= 0)
+   {
+      g_bo_flat_eq = eq;                // flat again: the next basket starts from here
+      BasketObserver_Close(TimeCurrent());
+   }
 }
 
 double BasketObserver_Result()
