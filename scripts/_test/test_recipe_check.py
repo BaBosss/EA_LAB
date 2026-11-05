@@ -321,7 +321,7 @@ def main():
     check('A7 escalation accepted with an R18 observation', r['result'] == 'ACCEPT' and r['metrics']['worst_basket_depth'] == 0.98 and r['metrics']['worst_basket_hold_s'] == 86 * 3600.0, (r['refusals'], r['metrics']))
     r = run(r4, rp4, 'SMOKE', 'MAIN', report=rep(ontester_result=0.0), write=False)
     check('A7 escalation refused when OnTester is 0 (pre-R18 binary)', has(r['refusals'], 'A7'), r['refusals'])
-    for bad_v in (float('nan'), 3e12, 1e12 + 20000 * 1e6):
+    for bad_v in (float('nan'), 3e12, 1e12 + 20000 * 1e6, 1e12 + 98 * 1e6 + 86.25):
         r = run(r4, rp4, 'SMOKE', 'MAIN', report=rep(ontester_result=bad_v), write=False)
         check('A7 malformed observer value %r refuses' % bad_v, has(r['refusals'], 'A7'), r['refusals'])
     check('decode_r18 round-trip', rc.decode_r18(1e12 + 1234 * 1e6 + 999999) == (12.34, 999999.0), rc.decode_r18(1e12 + 1234 * 1e6 + 999999))

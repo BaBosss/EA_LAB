@@ -53,9 +53,22 @@ void BasketObserver_OnTick()
    if(!g_bo_active)
    {
       if(open <= 0) return;
+      // The hook runs before trading, so the first tick that SEES the basket is the one after
+      // its first entry. Start from what was true at entry: while flat, equity equals balance and
+      // opening a position does not change the balance, so balance is the pre-entry equity; the
+      // start time is the earliest open position's own open time.
       g_bo_active     = true;
+      g_bo_start_eq   = AccountInfoDouble(ACCOUNT_BALANCE);
       g_bo_start_time = TimeCurrent();
-      g_bo_start_eq   = eq;
+      for(int i = 0; i < open; i++)
+      {
+         ulong tk = PositionGetTicket(i);
+         if(tk > 0 && PositionSelectByTicket(tk))
+         {
+            datetime ot = (datetime)PositionGetInteger(POSITION_TIME);
+            if(ot > 0 && ot < g_bo_start_time) g_bo_start_time = ot;
+         }
+      }
       g_bo_depth_pct  = 0.0;
       g_bo_baskets++;
    }
@@ -70,11 +83,8 @@ void BasketObserver_OnTick()
 double BasketObserver_Result()
 {
    if(!MQLInfoInteger(MQL_TESTER)) return 0.0;
-   if(g_bo_active)
-   {
-      BasketObserver_OnTick();          // last tick's equity, open positions still counted
-      if(g_bo_active) { g_bo_open_at_end = true; BasketObserver_Close(TimeCurrent()); }
-   }
+   BasketObserver_OnTick();             // final sample, also opens a basket first entered on the last tick
+   if(g_bo_active) { g_bo_open_at_end = true; BasketObserver_Close(TimeCurrent()); }
    double bp = MathMin(10000.0, MathMax(0.0, MathRound(g_bo_worst_pct * 100.0)));
    double hh = MathMin(999999.0, MathFloor(g_bo_worst_hold / 3600.0));
    PrintFormat("[R18] baskets=%d worst_depth_pct=%.2f worst_hold_h=%.0f open_at_end=%s",

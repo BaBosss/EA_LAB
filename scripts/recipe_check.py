@@ -119,8 +119,10 @@ def decode_r18(value):
     if v is None or v < R18_BASE or v >= 2 * R18_BASE:
         return None
     x = v - R18_BASE
-    bp = math.floor(x / 1e6 + 1e-9)
-    hh = round(x - bp * 1e6)
+    if abs(x - round(x)) > 1e-6:          # the encoder emits integers only
+        return None
+    x = int(round(x))
+    bp, hh = divmod(x, 1000000)
     if bp < 0 or bp > 10000 or hh < 0 or hh > 999999:
         return None
     return bp / 100.0, float(hh)
