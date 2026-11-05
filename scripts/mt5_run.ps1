@@ -229,6 +229,17 @@ if (Test-Path $srcHtm) {
   Move-Item $srcHtm $destHtm -Force
   Get-ChildItem $DataDir -Filter "$ReportName*.png" -File -ErrorAction SilentlyContinue |
     Move-Item -Destination "$auto\reports\" -Force
+  # BLANK REPORT (2026-11-05): the tester sometimes writes a report with empty Settings (no Expert, Period
+  # M0, 1970 window, leverage 1:0). It is not a result. Keep the bytes under a .BLANK name so nothing reads
+  # it as a report, and exit 1 exactly like "no report" so callers retry instead of recording zeros.
+  . (Join-Path $PSScriptRoot 'lib\blank_report.ps1')
+  $blankWhy = Test-BlankTesterReport -Path $destHtm
+  if ($blankWhy) {
+    $blankPath = "$auto\reports\$ReportName.BLANK.htm"
+    Move-Item $destHtm $blankPath -Force
+    Write-Output "ABORT BLANK REPORT: $ReportName ($blankWhy) - kept as $blankPath; treat as no report and re-run"
+    exit 1
+  }
   # ORDER-193 TRUNCATION CHECK: the safety cage hard-kills on equity DD and then halts for
   # the rest of the run, and it is NOT gated out of the tester. The report gives no hint:
   # you get a PF computed over however much of the window ran before the kill, formatted
