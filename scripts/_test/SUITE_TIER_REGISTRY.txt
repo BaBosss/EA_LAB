@@ -211,3 +211,4 @@ run_taskboard_manifest_reader_tests.ps1|UNMEASURED|Logical-board cage for 4 boar
 run_batch_resume_identity_tests.ps1|UNMEASURED|ORDER-1708 run_batch.ps1 offline resume-identity cage (replayed onto canonical 2026-11-02); not timed against the pinned budget.
 run_mt5_optimize_lifecycle_tests.ps1|UNMEASURED|ORDER-1707 mt5_optimize.ps1 offline lifecycle and negative-control cage (merged 2026-11-03); not timed against the pinned budget.
 run_status_publisher_root_tests.ps1|UNMEASURED|Status-publisher recorded-root cage (A10 pilot P1, 2026-11-02); not timed against the pinned budget.
+run_blank_report_tests.ps1|UNMEASURED|mt5_run blank tester-report refusal cage (c375540b, 2026-11-05); not timed against the pinned budget.

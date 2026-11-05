@@ -115,7 +115,7 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 | A5 | The tester leverage is asserted as `1:N` from the report (memory: tester-cache nondeterminism). A full `.set` was used. |
 | A6 | Equity DD ≤ `score.dd_cap_equity_pct` (R17). |
 | A6o | **Optimize stages:** every pass must carry a readable equity DD (A9). Passes above the cap are excluded from scoring (F5), not refused. A run where every pass exceeds the cap is refused, because nothing in it is selectable. |
-| A7 | Escalation class only: `worst_basket_*` is non-null and sourced from the in-EA equity/basket log or price replay (R18). If it is null, refuse; never estimate it from deals. |
+| A7 | Escalation class only: the worst-basket depth and hold come from the in-EA observer `ea_template/core/BasketObserver.mqh` (R18 v1), never from deals. It returns `OnTester() = 1e12 + depth_bp*1e6 + min(hold_hours, 999999)`, read from the report's "OnTester result" (single runs) or every pass's "Custom" column (optimizer). A value below 1e12 (a binary built before R18, or the observer did not run) or a malformed value refuses. Depth = largest equity fall below basket-start equity (closed + floating legs of the episode), % of that start; a basket open on the last tick is closed there. Penalty weights in the score stay `OPEN`. |
 | A8 | `HOLDOUT` stage: only one receipt per recipe may exist. A second run is refused as "holdout spent" (VERDICT GATE). |
 | A9 | An input the checker cannot read or resolve means refuse, never skip (memory: unreadable-input-must-refuse-not-skip). |
 

@@ -109,6 +109,23 @@ PROFILE_SPEC_KEYS = ('spec_digits', 'spec_point', 'spec_tick_value', 'spec_contr
 # (it followed the recipe) and still fail its gate, which then blocks every later stage (A2).
 GATE_KEYS = ('pf_min', 'dd_max_pct')
 
+# R18 v1: ea_template/core/BasketObserver.mqh returns OnTester() = 1e12 + depth_bp*1e6 + hold_hours.
+R18_BASE = 1e12
+
+
+def decode_r18(value):
+    """-> (worst_depth_pct, worst_hold_hours) or None when the observer did not run / value is malformed."""
+    v = finite(value)
+    if v is None or v < R18_BASE or v >= 2 * R18_BASE:
+        return None
+    x = v - R18_BASE
+    bp = math.floor(x / 1e6 + 1e-9)
+    hh = round(x - bp * 1e6)
+    if bp < 0 or bp > 10000 or hh < 0 or hh > 999999:
+        return None
+    return bp / 100.0, float(hh)
+
+
 # Roles whose value must be frozen in the recipe when the binding fixes none (R13).
 FROZEN_VALUE_ROLES = ('SAFETY', 'SIZING')
 
@@ -684,9 +701,15 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
             refusals.append('A9 equity drawdown %r or cap %r is not a finite number' % (dd, cap))
         elif not finite(dd) <= finite(cap):
             refusals.append('A6 equity DD %.2f%% > cap %.2f%%' % (finite(dd), finite(cap)))
-        # A7 escalation needs the in-EA basket log (R18) -- never estimated from deals
+        # A7 escalation needs the in-EA basket observer (R18 v1, OnTester) -- never estimated from deals
         if recipe.get('class') == 'escalation':
-            refusals.append('A7 escalation: worst-basket depth/hold not available (no in-EA basket log yet, R18)')
+            r18 = decode_r18(rep.get('ontester_result'))
+            if r18 is None:
+                refusals.append('A7 escalation: report OnTester result %r carries no R18 basket observation '
+                                '(binary built before R18, or observer did not run)' % rep.get('ontester_result'))
+            else:
+                receipt['metrics']['worst_basket_depth'] = r18[0]
+                receipt['metrics']['worst_basket_hold_s'] = r18[1] * 3600.0
 
     # A4 set: only TUNABLE swept, everything else at its locked value; A5 full surface
     try:
@@ -887,6 +910,13 @@ def check_optimize_run(recipe, st, stage_name, window, xml_path, set_path, ini_p
         refusals.append('A6 every optimizer pass exceeds the %.2f%% equity-DD cap; nothing is selectable' % cap)
     receipt['metrics'] = {'pass_count': len(passes), 'grid_points': expected, 'passes_over_dd_cap': over,
                           'swept': names, 'score_formula': SCORE_FORMULA_ID}
+    if recipe.get('class') == 'escalation':
+        bad = [rec.get('pass_id') for rec in passes if decode_r18(rec.get('custom')) is None]
+        if bad:
+            refusals.append('A7 escalation: %d optimizer pass(es) carry no R18 basket observation in Custom (e.g. %s)' % (len(bad), bad[:3]))
+        else:
+            depths = [decode_r18(rec.get('custom'))[0] for rec in passes]
+            receipt['metrics']['worst_basket_depth_max'] = max(depths)
 
 
 def refusal_decision_row(receipt):

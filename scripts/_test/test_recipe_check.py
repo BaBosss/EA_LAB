@@ -317,6 +317,14 @@ def main():
     rp4 = write_recipe(r4, rec4)
     r = run(r4, rp4, 'SMOKE', 'MAIN', write=False)
     check('A7 escalation refused without basket log', has(r['refusals'], 'A7'), r['refusals'])
+    r = run(r4, rp4, 'SMOKE', 'MAIN', report=rep(ontester_result=1e12 + 98 * 1e6 + 86), write=False)
+    check('A7 escalation accepted with an R18 observation', r['result'] == 'ACCEPT' and r['metrics']['worst_basket_depth'] == 0.98 and r['metrics']['worst_basket_hold_s'] == 86 * 3600.0, (r['refusals'], r['metrics']))
+    r = run(r4, rp4, 'SMOKE', 'MAIN', report=rep(ontester_result=0.0), write=False)
+    check('A7 escalation refused when OnTester is 0 (pre-R18 binary)', has(r['refusals'], 'A7'), r['refusals'])
+    for bad_v in (float('nan'), 3e12, 1e12 + 20000 * 1e6):
+        r = run(r4, rp4, 'SMOKE', 'MAIN', report=rep(ontester_result=bad_v), write=False)
+        check('A7 malformed observer value %r refuses' % bad_v, has(r['refusals'], 'A7'), r['refusals'])
+    check('decode_r18 round-trip', rc.decode_r18(1e12 + 1234 * 1e6 + 999999) == (12.34, 999999.0), rc.decode_r18(1e12 + 1234 * 1e6 + 999999))
     # refusal row is readable by the existing decision-log reader
     row = rc.refusal_decision_row(r)
     try:
@@ -376,10 +384,12 @@ def main():
     BEFORE = (_dt.datetime.strptime(CREATED_UTC, '%Y-%m-%dT%H:%M:%SZ') - _dt.timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
     AFTER = (_dt.datetime.strptime(CREATED_UTC, '%Y-%m-%dT%H:%M:%SZ') + _dt.timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    def opt_root(preflight=True, warn_only=False, submitted=None, dims=('_99_Len',)):
+    def opt_root(preflight=True, warn_only=False, submitted=None, dims=('_99_Len',), escalation=False):
         submitted = BEFORE if submitted is None else submitted
-        o = make_root()
+        o = make_root(escalation=escalation)
         orec = base_recipe(o)
+        if escalation:
+            orec['class'] = 'escalation'
         orp = write_recipe(o, orec)
         run(o, orp, 'SMOKE', 'MAIN')  # prerequisite
         with open(os.path.join(o, 'opt.set'), 'w') as fh:
@@ -461,6 +471,16 @@ def main():
     rc.append_jsonl(os.path.join(o, rc.RECEIPTS_REL), opt(o, orp))
     r = run(o, orp, 'BOTH_WINDOW', 'MAIN', write=False)
     check('BOTH_WINDOW after an accepted COARSE is ACCEPT', r['result'] == 'ACCEPT', r['refusals'])
+    shutil.rmtree(o)
+    # A7 on optimize passes: every pass's Custom column must carry an R18 observation
+    o, orp = opt_root(escalation=True)
+    rc.append_jsonl(os.path.join(o, rc.RECEIPTS_REL), run(o, orp, 'SMOKE', 'MAIN', report=rep(ontester_result=1e12 + 50 * 1e6 + 10), write=False))
+    good_c = {'passes': [{'pass_id': i, '_99_Len': v, 'max_drawdown_percent': 3.0, 'custom': 1e12 + (100 + i) * 1e6 + 5} for i, v in enumerate((8, 10, 12, 14, 16, 18, 20))]}
+    r = opt(o, orp, xml=good_c)
+    check('COARSE escalation with R18 Custom on every pass is ACCEPT', r['result'] == 'ACCEPT' and r['metrics'].get('worst_basket_depth_max') == 1.06, (r['refusals'], r['metrics']))
+    bad_c = {'passes': [dict(p, custom=(0.0 if p['pass_id'] == 3 else p['custom'])) for p in good_c['passes']]}
+    r = opt(o, orp, xml=bad_c)
+    check('COARSE escalation with one pass lacking R18 Custom refuses', has(r['refusals'], 'A7 escalation: 1 optimizer pass'), r['refusals'])
     shutil.rmtree(o)
     # V2: an optimize recipe must name its EA
     vr = copy.deepcopy(good)
