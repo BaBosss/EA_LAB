@@ -450,6 +450,7 @@ def main():
                            ('warn-only preflight', {'warn_only': True}, 'A3'),
                            ('preflight after the run ended', {'submitted': AFTER}, 'A3'),
                            ('preflight with no timestamp', {'submitted': ''}, 'A3'),
+                           ('preflight with an impossible date', {'submitted': '2026-00-00T00:00:00Z'}, 'A3'),
                            ('preflight on other dimensions', {'dims': ('_99_Other',)}, 'A3')):
         o, orp = opt_root(**kw)
         r = opt(o, orp)

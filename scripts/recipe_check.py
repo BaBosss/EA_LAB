@@ -265,11 +265,21 @@ def xml_created_utc(path):
 ISO_Z = re.compile(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ')
 
 
+def iso_z(s):
+    """A real UTC timestamp 'YYYY-MM-DDTHH:MM:SSZ' (calendar-checked), else None."""
+    if not isinstance(s, str) or not ISO_Z.fullmatch(s):
+        return None
+    try:
+        return datetime.strptime(s, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        return None
+
+
 def created_local_to_utc(c):
     """MT5 writes the optimizer XML <Created> in TERMINAL-LOCAL time with a 'Z' suffix (seen 2026-11-04: a run
     ending 14:47 UTC was stamped 21:47Z in Bangkok). Read it as local time of this machine -- the lanes are
     local terminals -- and convert to UTC. File mtimes are not used: copying a file changes them."""
-    if not c or not ISO_Z.fullmatch(c):
+    if iso_z(c) is None:
         return None
     naive = datetime.strptime(c, '%Y-%m-%dT%H:%M:%SZ')
     return naive.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -750,8 +760,8 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
               and d.get('exit_code') == 0 and d.get('hypothesis_revision') == rev
               and expert and d.get('expert') == expert
               and sorted(x.get('name') for x in (d.get('dimensions') or [])) == want_dims
-              and created and ISO_Z.fullmatch(str(d.get('submitted_utc') or ''))
-              and str(d['submitted_utc']) <= created]
+              and created and iso_z(d.get('submitted_utc')) is not None
+              and iso_z(d.get('submitted_utc')) <= created]
         if not ok:
             refusals.append('A3 no enforcing ALLOW preflight for %s %s sweeping %s (before %s)' % (rev, expert, want_dims, created))
         else:
