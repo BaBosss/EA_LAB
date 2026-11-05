@@ -95,3 +95,38 @@ scope = REPOSITORY_ONLY
 This view makes no claim about strategy quality, Candidate, Grade, KINT, HOLDOUT, optimization, runtime correctness, deployment, trading, DEMO/LIVE, risk defaults, or promotion. `READY / CONSUME_OWNER_RECIPE` means only that the repository read model has no unresolved P1 control.
 
 No tracked `factory/vnext/owner_recipe_catalog.json` or presentation catalog is created. Current B11-B18 aliases remain `SEMANTICS_REQUIRED`, so a real populated recipe presentation would still require explicit owner-approved logical-variant semantics and valid P1 source bundles.
+
+## Optional per-control Source Owner provenance
+
+The same three public presentation APIs accept an optional `source_owner_source`
+reference with exactly `commit`, `path`, and `sha256`. The path is fixed to
+`docs/PARAM_REGISTRY.csv`; commit must be a full lowercase Git commit SHA and
+match every supplied package's `source_commit`. SHA256 is over the raw committed
+CSV blob, including its original line endings. `repo_root` is required.
+
+The consumer reads that immutable Git object, checks its hash, and reuses the
+existing Factory registry parser and build-tag naming helper. It selects an
+exact build-specific row before a generic row and checks the parameter PID.
+Duplicate names, malformed CSV, mismatched PID/hash/commit, arbitrary paths,
+missing Git objects and caller-invented reference fields refuse closed.
+It does not read an uncommitted CSV as historical provenance, follow a supplied
+path outside the fixed registry, or execute source/configuration data.
+
+Opting in adds `SourceOwnerSource` and a `SourceOwner` object to every control:
+declared owner text, `DECLARED` or `UNKNOWN`, machine reason, registry name/line
+and the exact commit/path/SHA256 source reference. The owner text is the
+registry's declared owner, not a fresh assertion that runtime mechanics were
+tested. A missing row or blank/UNKNOWN owner remains visibly UNKNOWN with a null
+owner; it cannot manufacture applicability or resolve P1 semantics. Existing
+control states, blockers, null build/run evidence and lot formulas are preserved.
+
+The opt-in provenance participates in presentation ID/hash generation and is
+reconstructed by validation and serialization. Rehashing a forged owner is
+insufficient. P0/P1 identities and accepted artifacts remain unchanged.
+Without the optional reference, the API, schema and serialized bytes remain
+exactly compatible with the pre-enrichment presentation. No real family catalog
+or new evidence/configuration authority is created.
+
+The new tests use disposable, explicitly synthetic Git objects for ownership
+positives and adversarial negatives. Their metadata and owners are fixtures,
+not native trading or economic evidence.
