@@ -15,7 +15,7 @@ Safety defaults (non-negotiable, each one has a CAGE test proving it below):
 
 Budget: DEMO accounts = 30% of equity (owner decision 2026-11-03, template +
 optimize standard R17 -- do not invent a different number here; the live
-sizing bar in docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 is a separate number). REAL_CENT accounts: computed and reported ONLY, tagged "user decision
+sizing bar in docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 is set separately; both are 30% since 2026-11-05). REAL_CENT accounts: computed and reported ONLY, tagged "user decision
 needed" -- this script never assigns a DD budget to real-money accounts.
 
 Admission is resize-first, never a rejection verdict on the EA: a candidate
@@ -62,7 +62,7 @@ BACKTEST_CORR_MAP = ROOT / "portfolio" / "backtest_corr_reports.csv"
 OUT_MD = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.md"
 OUT_JSON = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.json"
 
-DEMO_BUDGET_PCT = 30.0  # owner 2026-11-03 (template+optimize standard R17): DEMO 25 -> 30. The live sizing bar in docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 stays 25% until the owner decides it separately.
+DEMO_BUDGET_PCT = 30.0  # owner 2026-11-03 (template+optimize standard R17): DEMO 25 -> 30; the live sizing bar in docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3 is also 30% (owner 2026-11-05). REAL_CENT still gets no automatic budget here.
 MIN_SHARED_MONTHS = 4   # same threshold _mt5_auto/corr_monthly.py uses before trusting a pearson r
 # ORDER-170 SEV-1 #4: this MUST default to None (fail closed), not to a placeholder.
 # The real value is (broker_min_lot / locked_set_lot) and is not derivable from any
