@@ -23,6 +23,7 @@
 #include "Recovery.mqh"
 #include "Hedge.mqh"
 #include "Basket.mqh"
+#include "BasketObserver.mqh"   // R18: tester-only worst-basket depth/hold, read-only, exposed via OnTester
 #include "MiddlePath.mqh"   // AAM Module 2: Middle Path Veto (off by default)
 
 // compile-time entry selection (one only; wrapper defines the token + LAB_ENTRY_TAG)
@@ -559,6 +560,17 @@ int OnInit()
 }
 
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| R18: worst basket depth + hold for the optimize standard. Probe   |
+//| builds that define their own OnTester set LAB_ENTRY_19.           |
+//+------------------------------------------------------------------+
+#ifndef LAB_ENTRY_19
+double OnTester()
+{
+   return BasketObserver_Result();
+}
+#endif
+
 void OnDeinit(const int reason)
 {
 #ifdef LAB_ENTRY_25
@@ -678,6 +690,7 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
 void OnTick()
 {
    RuntimeIdentity_Update();  // binds the first observed entry to this attach epoch
+   BasketObserver_OnTick();   // R18: tester-only observer; returns at once outside the Strategy Tester
 #ifdef LAB_ENTRY_25
    if(RiskControl_CheckDD() || RiskControl_IsHalted())
    {
