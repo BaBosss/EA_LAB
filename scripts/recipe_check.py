@@ -194,7 +194,7 @@ def parse_ini(path):
     except OSError as exc:
         raise Unreadable('cannot read ini %s: %s' % (path, exc))
     text = raw.decode('utf-16') if raw[:2] in (b'\xff\xfe', b'\xfe\xff') else raw.decode('utf-8-sig', errors='strict')
-    out, section = {}, None
+    out, inputs, section = {}, {}, None
     for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith(';'):
@@ -202,12 +202,45 @@ def parse_ini(path):
         if line.startswith('[') and line.endswith(']'):
             section = line[1:-1]
             continue
-        if section == 'Tester' and '=' in line:
+        if '=' in line and section in ('Tester', 'TesterInputs'):
             k, v = line.split('=', 1)
-            out[k.strip()] = v.strip()
+            (out if section == 'Tester' else inputs)[k.strip()] = v.strip()
     if not out:
         raise Unreadable('ini %s has no [Tester] section' % path)
+    out['__inputs__'] = inputs
     return out
+
+
+def set_raw(path):
+    """-> {name: raw value text after '='} of a .set, stripped."""
+    try:
+        with open(path, encoding='utf-8-sig', errors='strict') as f:
+            lines = f.read().splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise Unreadable('cannot read set %s: %s' % (path, exc))
+    out = {}
+    for line in lines:
+        if not line.strip() or line.lstrip().startswith(';') or '=' not in line:
+            continue
+        k, v = line.split('=', 1)
+        out[k.strip()] = v.strip()
+    return out
+
+
+def bind_set_to_ini(set_path, ini, refusals):
+    """The --set must be what the run actually loaded: the launch .ini's [TesterInputs]."""
+    inputs = ini.get('__inputs__') or {}
+    if not inputs:
+        refusals.append('A4 launch ini has no [TesterInputs], so the run inputs cannot be checked')
+        return
+    try:
+        sv = set_raw(set_path)
+    except Unreadable as exc:
+        refusals.append('A9 ' + str(exc))
+        return
+    diff = sorted(k for k in set(sv) | set(inputs) if sv.get(k) != inputs.get(k))
+    if diff:
+        refusals.append('A4 --set differs from the launch ini inputs on %d key(s): %s' % (len(diff), diff[:8]))
 
 
 def grid_values(start, step, stop):
@@ -229,19 +262,22 @@ def xml_created_utc(path):
     return m.group(1).strip() if m else None
 
 
+ISO_Z = re.compile(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ')
+
+
+def created_local_to_utc(c):
+    """MT5 writes the optimizer XML <Created> in TERMINAL-LOCAL time with a 'Z' suffix (seen 2026-11-04: a run
+    ending 14:47 UTC was stamped 21:47Z in Bangkok). Read it as local time of this machine -- the lanes are
+    local terminals -- and convert to UTC. File mtimes are not used: copying a file changes them."""
+    if not c or not ISO_Z.fullmatch(c):
+        return None
+    naive = datetime.strptime(c, '%Y-%m-%dT%H:%M:%SZ')
+    return naive.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
 def run_time_bound(path):
-    """Latest moment the optimizer run can have ended, in UTC: the earlier of the XML's <Created> and the
-    file's mtime. MT5 writes <Created> in terminal-local time with a 'Z' suffix (seen 2026-11-04: 21:47 Bangkok
-    written as 21:47Z), so <Created> alone can sit hours late; the mtime is a real UTC clock."""
-    vals = []
-    c = xml_created_utc(path)
-    if c and re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ', c):
-        vals.append(c)
-    try:
-        vals.append(datetime.fromtimestamp(os.path.getmtime(path), timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
-    except OSError:
-        pass
-    return min(vals) if vals else None
+    """When the optimizer run ended, in UTC, from the XML's own <Created>; None if absent or malformed."""
+    return created_local_to_utc(xml_created_utc(path))
 
 
 def xml_title(path):
@@ -525,6 +561,7 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
     }
 
     def done():
+        receipt.pop('_ini', None)
         receipt['result'] = 'REFUSE' if refusals else 'ACCEPT'
         body = json.dumps({k: v for k, v in receipt.items() if k != 'receipt_id'}, sort_keys=True)
         receipt['receipt_id'] = hashlib.sha256(body.encode('utf-8')).hexdigest()
@@ -560,6 +597,15 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
     if os.path.exists(binary_path):
         receipt['binary']['mtime_utc'] = datetime.fromtimestamp(
             os.path.getmtime(binary_path), timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    # the launch .ini is required for every stage: it is what the tester actually ran
+    try:
+        ini = parse_ini(ini_path)
+        receipt['_ini'] = ini
+        receipt['ini'] = {'path': ini_path, 'raw_sha256': sha256_file(ini_path)}
+        bind_set_to_ini(set_path, ini, refusals)
+    except Unreadable as exc:
+        refusals.append('A9 ' + str(exc))
 
     # report
     rep = None
@@ -704,7 +750,8 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
               and d.get('exit_code') == 0 and d.get('hypothesis_revision') == rev
               and expert and d.get('expert') == expert
               and sorted(x.get('name') for x in (d.get('dimensions') or [])) == want_dims
-              and created and str(d.get('submitted_utc', '')) <= created]
+              and created and ISO_Z.fullmatch(str(d.get('submitted_utc') or ''))
+              and str(d['submitted_utc']) <= created]
         if not ok:
             refusals.append('A3 no enforcing ALLOW preflight for %s %s sweeping %s (before %s)' % (rev, expert, want_dims, created))
         else:
@@ -727,11 +774,9 @@ def check_optimize_run(recipe, st, stage_name, window, xml_path, set_path, ini_p
         refusals.append('A2 %s stage has no explicit sweep (a FINE grid derived from a COARSE centre is not '
                         'built; freeze it as an explicit sweep)' % stage_name)
         return
-    # ini = the run's real configuration
-    try:
-        ini = parse_ini(ini_path)
-    except Unreadable as exc:
-        refusals.append('A9 ' + str(exc))
+    # ini = the run's real configuration (parsed and bound to --set by _accept)
+    ini = receipt.get('_ini')
+    if ini is None:
         return
     receipt['symbol'] = ini.get('Symbol')
     receipt['timeframe'] = ini.get('Period')
@@ -823,8 +868,13 @@ def check_optimize_run(recipe, st, stage_name, window, xml_path, set_path, ini_p
         refusals.append('A2 optimizer XML has %d passes over %d grid points; the full grid is %d (missing %d, extra %d)'
                         % (len(passes), len(seen), expected, len(full - seen), len(seen - full)))
     cap = finite((recipe.get('score') or {}).get('dd_cap_equity_pct')) or DD_CAP_MAX
-    over = sum(1 for rec in passes if finite(rec.get('max_drawdown_percent')) is None
-               or finite(rec.get('max_drawdown_percent')) > cap)
+    missing = [rec.get('pass_id') for rec in passes if finite(rec.get('max_drawdown_percent')) is None]
+    if missing:
+        refusals.append('A9 %d optimizer pass(es) have no readable equity DD (e.g. %s)' % (len(missing), missing[:3]))
+    over = sum(1 for rec in passes if finite(rec.get('max_drawdown_percent')) is not None
+               and finite(rec.get('max_drawdown_percent')) > cap)
+    if passes and over == len(passes):
+        refusals.append('A6 every optimizer pass exceeds the %.2f%% equity-DD cap; nothing is selectable' % cap)
     receipt['metrics'] = {'pass_count': len(passes), 'grid_points': expected, 'passes_over_dd_cap': over,
                           'swept': names, 'score_formula': SCORE_FORMULA_ID}
 

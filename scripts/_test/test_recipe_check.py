@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Cage for scripts/recipe_check.py (V1-V8, A1-A9). Self-contained: builds a temp factory root."""
 import copy
+import datetime as _dt
 import json
 import re
 import os
@@ -107,14 +108,29 @@ def rep(**kw):
     return r
 
 
-def run(root, recipe_path, stage, window, report=None, raises=None, write=True, set_path=None):
+def write_ini(path, set_path, tester=None):
+    """A launch .ini whose [TesterInputs] are exactly the given .set (what mt5_run/mt5_optimize write)."""
+    t = {'Expert': 'EALabTpl\\Boss_99_Test', 'Symbol': 'GBPUSD', 'Period': 'H1', 'Model': '1', 'Optimization': '0',
+         'FromDate': '2023.01.01', 'ToDate': '2025.12.31', 'Leverage': '1:100', 'Deposit': '10000'}
+    t.update(tester or {})
+    body = ['[Tester]'] + ['%s=%s' % kv for kv in t.items()] + ['[TesterInputs]']
+    with open(set_path) as fh:
+        body += [l.strip() for l in fh if l.strip() and not l.lstrip().startswith(';')]
+    with open(path, 'w') as fh:
+        fh.write('\n'.join(body) + '\n')
+    return path
+
+
+def run(root, recipe_path, stage, window, report=None, raises=None, write=True, set_path=None, ini_path=None):
     def reader(_):
         if raises:
             raise raises
         return report or rep()
+    sp = set_path or os.path.join(root, 'run.set')
+    ip = ini_path or write_ini(os.path.join(root, 'run_%s_%s.ini' % (stage, window)), sp)
     r = rc.accept(recipe_path, stage, window, os.path.join(root, 'report.htm'),
-                  set_path or os.path.join(root, 'run.set'), os.path.join(root, 'ea.ex5'),
-                  root, 'MT5-TEST', read_report=reader)
+                  sp, os.path.join(root, 'ea.ex5'),
+                  root, 'MT5-TEST', ini_path=ip, read_report=reader)
     if write:
         rc.append_jsonl(os.path.join(root, rc.RECEIPTS_REL), r)
     return r
@@ -208,7 +224,7 @@ def main():
     r = run(root, rp, 'BOTH_WINDOW', 'MAIN', write=False)
     check('A2 BOTH_WINDOW refused while COARSE has no receipt', has(r['refusals'], 'A2 earlier stage COARSE'), r['refusals'])
     r = run(root, rp, 'COARSE', 'MAIN', write=False)
-    check('COARSE without an ini or preflight refuses (A9 + A3)', has(r['refusals'], 'A9 no --ini') and has(r['refusals'], 'A3'), r['refusals'])
+    check('COARSE through the single-run fixture refuses (not a grid run, no preflight)', has(r['refusals'], 'A2 ini Optimization=0') and has(r['refusals'], 'A3'), r['refusals'])
     r = run(root, rp, 'SMOKE', 'BWD', write=False)
     check('A2 window not in stage', has(r['refusals'], 'A2 window BWD'), r['refusals'])
     r = run(root, rp, 'SMOKE', 'MAIN', report=rep(symbol='EURUSD'), write=False)
@@ -241,6 +257,11 @@ def main():
     check('A4 unbound swept input in a single run', any('Unbound is swept' in x for x in r['refusals']), r['refusals'])
     r = run(root, rp, 'SMOKE', 'MAIN', report=rep(equity_drawdown_relative_pct=float('nan')), write=False)
     check('A6/A9 NaN equity DD refuses', r['result'] == 'REFUSE' and has(r['refusals'], 'A9 equity drawdown'), r['refusals'])
+    other_ini = write_ini(os.path.join(root, 'other_single.ini'), bad_set)
+    r = run(root, rp, 'SMOKE', 'MAIN', ini_path=other_ini, write=False)
+    check('A4 single run whose launch ini inputs differ from --set refuses', has(r['refusals'], 'A4 --set differs from the launch ini'), r['refusals'])
+    r = run(root, rp, 'SMOKE', 'MAIN', ini_path=os.path.join(root, 'nope.ini'), write=False)
+    check('A9 single run without a launch ini refuses', has(r['refusals'], 'A9 cannot read ini'), r['refusals'])
     short_set = os.path.join(root, 'short.set')
     with open(short_set, 'w') as fh:
         fh.write('ExitMode=22\n_99_Len=14\n')
@@ -350,18 +371,22 @@ def main():
     shutil.rmtree(r5)
 
     # ---- optimize stages (COARSE): ini + set sweep + full-grid XML + preflight join
-    def opt_root(preflight=True, warn_only=False, submitted='2026-11-05T00:00:00Z', dims=('_99_Len',)):
+    CREATED_LOCAL = '2026-11-05T12:00:00Z'          # what MT5 writes: terminal-local time with a 'Z'
+    CREATED_UTC = rc.created_local_to_utc(CREATED_LOCAL)
+    BEFORE = (_dt.datetime.strptime(CREATED_UTC, '%Y-%m-%dT%H:%M:%SZ') - _dt.timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    AFTER = (_dt.datetime.strptime(CREATED_UTC, '%Y-%m-%dT%H:%M:%SZ') + _dt.timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    def opt_root(preflight=True, warn_only=False, submitted=None, dims=('_99_Len',)):
+        submitted = BEFORE if submitted is None else submitted
         o = make_root()
         orec = base_recipe(o)
         orp = write_recipe(o, orec)
         run(o, orp, 'SMOKE', 'MAIN')  # prerequisite
-        with open(os.path.join(o, 'opt.ini'), 'w') as fh:
-            fh.write('[Tester]\nExpert=EALabTpl\\Boss_99_Test\nSymbol=GBPUSD\nPeriod=H1\nModel=1\nOptimization=1\n'
-                     'FromDate=2023.01.01\nToDate=2025.12.31\nLeverage=1:100\nDeposit=10000\n')
         with open(os.path.join(o, 'opt.set'), 'w') as fh:
             fh.write('ExitMode=22\n_99_Len=14||8||2||20||Y\n_99_Safety=25\n')
+        write_ini(os.path.join(o, 'opt.ini'), os.path.join(o, 'opt.set'), {'Optimization': '1'})
         with open(os.path.join(o, 'opt.xml'), 'w') as fh:
-            fh.write('<Title>Boss_99_Test GBPUSD,H1 2023.01.01-2025.12.31</Title><Created>2026-11-05T01:00:00Z</Created>')
+            fh.write('<Title>Boss_99_Test GBPUSD,H1 2023.01.01-2025.12.31</Title><Created>%s</Created>' % CREATED_LOCAL)
         if preflight:
             jl(os.path.join(o, 'factory', 'optimize_decisions.jsonl'), [{
                 'record_version': 1, 'submitted_utc': submitted, 'lane': 'L', 'hypothesis_revision': 'B99-H01-r1',
@@ -373,9 +398,12 @@ def main():
     def full_passes(values=(8, 10, 12, 14, 16, 18, 20)):
         return {'passes': [{'pass_id': i, '_99_Len': v, 'max_drawdown_percent': 3.0} for i, v in enumerate(values)]}
 
-    def opt(o, orp, xml=None, ini=None, set_name='opt.set'):
-        return rc.accept(orp, 'COARSE', 'MAIN', os.path.join(o, 'opt.xml'), os.path.join(o, set_name),
-                         os.path.join(o, 'ea.ex5'), o, 'MT5-TEST', ini_path=ini or os.path.join(o, 'opt.ini'),
+    def opt(o, orp, xml=None, ini=None, set_name='opt.set', bind=True):
+        sp = os.path.join(o, set_name)
+        ip = ini or (write_ini(os.path.join(o, 'opt_%s.ini' % set_name), sp, {'Optimization': '1'}) if bind and set_name != 'opt.set'
+                     else os.path.join(o, 'opt.ini'))
+        return rc.accept(orp, 'COARSE', 'MAIN', os.path.join(o, 'opt.xml'), sp,
+                         os.path.join(o, 'ea.ex5'), o, 'MT5-TEST', ini_path=ip,
                          read_xml=lambda _p: xml if xml is not None else full_passes())
 
     o, orp = opt_root()
@@ -407,10 +435,21 @@ def main():
     check('COARSE set sweeping a SAFETY input refuses', any('_99_Safety is swept' in x for x in r['refusals']), r['refusals'])
     r = opt(o, orp, ini=os.path.join(o, 'missing.ini'))
     check('COARSE without a readable ini refuses', has(r['refusals'], 'A9 cannot read ini'), r['refusals'])
+    with open(os.path.join(o, 'other.set'), 'w') as fh:
+        fh.write('ExitMode=21\n_99_Len=14||8||2||20||Y\n_99_Safety=25\n')
+    r = opt(o, orp, ini=write_ini(os.path.join(o, 'other.ini'), os.path.join(o, 'other.set'), {'Optimization': '1'}))
+    check('COARSE run launched with a different set than --set refuses', has(r['refusals'], 'A4 --set differs from the launch ini'), r['refusals'])
+    hot = {'passes': [{'pass_id': i, '_99_Len': v, 'max_drawdown_percent': 30.0} for i, v in enumerate((8, 10, 12, 14, 16, 18, 20))]}
+    r = opt(o, orp, xml=hot)
+    check('COARSE where every pass exceeds the DD cap refuses (A6)', has(r['refusals'], 'A6 every optimizer pass'), r['refusals'])
+    nodd = {'passes': [{'pass_id': i, '_99_Len': v} for i, v in enumerate((8, 10, 12, 14, 16, 18, 20))]}
+    r = opt(o, orp, xml=nodd)
+    check('COARSE passes without DD refuse (A9)', has(r['refusals'], 'A9 7 optimizer pass'), r['refusals'])
     shutil.rmtree(o)
     for name, kw, frag in (('no preflight', {'preflight': False}, 'A3'),
                            ('warn-only preflight', {'warn_only': True}, 'A3'),
-                           ('preflight after the XML', {'submitted': '2026-11-06T00:00:00Z'}, 'A3'),
+                           ('preflight after the run ended', {'submitted': AFTER}, 'A3'),
+                           ('preflight with no timestamp', {'submitted': ''}, 'A3'),
                            ('preflight on other dimensions', {'dims': ('_99_Other',)}, 'A3')):
         o, orp = opt_root(**kw)
         r = opt(o, orp)
