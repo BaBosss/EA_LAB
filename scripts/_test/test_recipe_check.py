@@ -165,6 +165,7 @@ def main():
         ('V10 SMOKE gate below 1.0', lambda r: r['stages'][0].update(gate={'pf_min': 0.9}), 'V10'),
         ('V10 unknown gate key', lambda r: r['stages'][0].update(gate={'pf_min': 1.0, 'sharpe_min': 1}), 'V10'),
         ('V10 gate value as text', lambda r: r['stages'][0].update(gate={'pf_min': '1.2'}), 'V10'),
+        ('V10 gate on FREEZE', lambda r: r['stages'][2].update(gate={'pf_min': 1.0}), 'V10'),
     ]
     for name, mut, prefix in cases:
         r = copy.deepcopy(good)

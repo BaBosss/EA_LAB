@@ -364,6 +364,9 @@ def validate_recipe(recipe, root):
         if bad:
             ref.append('V10 stage %s gate %s must be finite numbers' % (s.get('stage'), bad))
             continue
+        if s.get('stage') == 'FREEZE':
+            ref.append('V10 FREEZE has no run, so it cannot carry a gate')
+            continue
         if s.get('stage') == 'SMOKE' and not (g.get('pf_min') is not None and g['pf_min'] >= 1.0):
             ref.append('V10 SMOKE gate pf_min must be >= 1.0 (R11)')
 
