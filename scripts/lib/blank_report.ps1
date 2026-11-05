@@ -24,10 +24,16 @@ function Get-TesterReportText {
 function Test-BlankTesterReport {
   param([Parameter(Mandatory)][string]$Path)
   $t = Get-TesterReportText -Path $Path
+  # Only the FIRST Expert:/Period: fields are read: they are the Settings block, which precedes Inputs.
+  # An input value (e.g. a comment string) may contain the same words and must not count.
   $reasons = @()
-  if ($t -match 'Expert:\s*Symbol:') { $reasons += 'Expert is empty' }
-  if ($t -match 'Period:\s*M0\b') { $reasons += 'Period is M0' }
-  if ($t -match '1970\.01\.01\s*-\s*1970\.01\.01') { $reasons += 'window is 1970.01.01-1970.01.01' }
+  $e = [regex]::Match($t, 'Expert:\s*(.*?)\s*Symbol:')
+  if (-not $e.Success -or [string]::IsNullOrWhiteSpace($e.Groups[1].Value)) { $reasons += 'Expert is empty' }
+  $p = [regex]::Match($t, 'Period:\s*(\S+)\s*\(\s*(\d{4}\.\d\d\.\d\d)\s*-\s*(\d{4}\.\d\d\.\d\d)\s*\)')
+  if ($p.Success) {
+    if ($p.Groups[1].Value -eq 'M0') { $reasons += 'Period is M0' }
+    if ($p.Groups[2].Value -eq '1970.01.01' -and $p.Groups[3].Value -eq '1970.01.01') { $reasons += 'window is 1970.01.01-1970.01.01' }
+  } else { $reasons += 'no readable Period field' }
   if ($reasons.Count -eq 0) { return $null }
   return ($reasons -join '; ')
 }

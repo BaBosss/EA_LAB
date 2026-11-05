@@ -24,6 +24,10 @@ $zero = New-Report 'Boss_17_Wave5|EURUSD|M15 (2023.01.01 - 2025.12.31)|1:0'
 Check 'zero-trade report with a named expert and real window is NOT blank' ($null -eq (Test-BlankTesterReport -Path $zero))
 $normal = New-Report 'Boss_15_ST03|GBPUSD|H1 (2023.01.01 - 2025.12.31)|1:100'
 Check 'normal report is NOT blank' ($null -eq (Test-BlankTesterReport -Path $normal))
+$withInput = Join-Path ([IO.Path]::GetTempPath()) ("blankrep_" + [guid]::NewGuid().ToString('N') + '.htm')
+[IO.File]::WriteAllText($withInput, '<td>Expert:</td><td>Boss_15_ST03</td><td>Symbol:</td><td>GBPUSD</td><td>Period:</td><td>H1 (2023.01.01 - 2025.12.31)</td><td>Inputs:</td><td>Comment=Period: M0 (1970.01.01 - 1970.01.01) Expert: Symbol:</td>')
+Check 'a normal report whose input text contains blank-looking words is NOT blank' ($null -eq (Test-BlankTesterReport -Path $withInput))
+Remove-Item $withInput -ErrorAction SilentlyContinue
 $utf8 = Join-Path ([IO.Path]::GetTempPath()) ("blankrep_" + [guid]::NewGuid().ToString('N') + '.htm')
 [IO.File]::WriteAllText($utf8, '<td>Expert:</td><td></td><td>Symbol:</td><td></td><td>Period:</td><td>M0 (1970.01.01 - 1970.01.01)</td>')
 Check 'blank report in UTF-8 is recognised too' ($null -ne (Test-BlankTesterReport -Path $utf8))
