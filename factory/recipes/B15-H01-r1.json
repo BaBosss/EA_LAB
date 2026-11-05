@@ -1,0 +1,105 @@
+{
+ "bindings_ref": {
+  "hypothesis_revision": "B15-H01-r1",
+  "path": "factory/parameter_bindings.jsonl",
+  "raw_sha256": "a63691282d768b85a4a19a93b6d9202594643ef245f9fcd49d87ddc4831a3ddf"
+ },
+ "class": "trend",
+ "class_derivation": "LAB_CAP_ENTRY_ST03 (MACD cross entry); module set has no grid, stack or lot-progression capability",
+ "ea": {
+  "expert": "EALabTpl\\Boss_15_ST03",
+  "set": "ea_template/sets/regression/Boss_15_ST03_defaults.set",
+  "set_sha256": "ca1415f1f7d855faa51a39e79631b0ad1914ce3ee4d0b0508802d251de239c3c",
+  "source_sha256": "d1821126fcc3a69605627086cf319336c0101c7f287cce90cc47c8fb7a1a6975",
+  "wrapper": "ea_template/Boss_15_ST03.mq5"
+ },
+ "entity": "OptimizeRecipe",
+ "extra_round": null,
+ "fixed_inputs": {
+  "DryRun": "false",
+  "ProtectLevel": "2",
+  "RC_AdoptLegacyHalt": "false",
+  "RC_MaxLot": "0.2",
+  "RC_PersistHalt": "true",
+  "_41_FixedLot": "0.01",
+  "_9_MaxLevels": "5",
+  "_HEAT_Enable": "false"
+ },
+ "frozen_by": "claude-code-opus-5.5",
+ "frozen_utc": "2026-11-05T00:00:00Z",
+ "hypothesis_ref": {
+  "key": "B15-H01-r1",
+  "path": "factory/hypotheses.jsonl",
+  "raw_sha256": "ca0421e276e0fbcca42b3d8ef5358b70af9c104b1705a5aadb172209b741c842"
+ },
+ "plateau_rule": {
+  "id": "R14-v2-neighbour-smoothed",
+  "text": "not used: no sweep in this pipeline-test recipe"
+ },
+ "purpose": "PIPELINE_TEST: first end-to-end run of the optimize standard on declared defaults. Not a verdict, no selection.",
+ "recipe_id": "B15-H01-r1",
+ "score": {
+  "dd_cap_equity_pct": 12.0,
+  "formula_id": "R15_F5_v1",
+  "formula_sha256": "e82c23deb24c90529b2be6f5c97d55d796ba1c768956fff7763dd4ec4269311b"
+ },
+ "stages": [
+  {
+   "model": 1,
+   "params": "defaults",
+   "stage": "SMOKE",
+   "window": "MAIN"
+  },
+  {
+   "stage": "FREEZE"
+  },
+  {
+   "model": 1,
+   "stage": "BOTH_WINDOW",
+   "windows": [
+    "MAIN",
+    "BWD"
+   ]
+  },
+  {
+   "model": 4,
+   "stage": "MODEL4",
+   "windows": [
+    "MAIN",
+    "BWD"
+   ]
+  }
+ ],
+ "symbol_preset_refs": [
+  {
+   "lane": "1",
+   "path": "factory/instrument_profiles.jsonl",
+   "raw_sha256": "ef0b8a791d563790d1f83605db7f8a081267b9cf6bfbc97e2f0f606c01f7ad1d",
+   "symbol": "GBPUSD"
+  }
+ ],
+ "symbols": [
+  "GBPUSD"
+ ],
+ "tie_breaks": [
+  "higher BWD PF",
+  "lower equity DD"
+ ],
+ "timeframes": [
+  "H1"
+ ],
+ "windows": {
+  "BWD": [
+   "2020.01.01",
+   "2022.12.31"
+  ],
+  "HOLDOUT": [
+   "2026.01.01",
+   "2026.06.30"
+  ],
+  "MAIN": [
+   "2023.01.01",
+   "2025.12.31"
+  ]
+ }
+}
