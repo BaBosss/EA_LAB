@@ -2,6 +2,7 @@
 """Cage for scripts/recipe_check.py (V1-V8, A1-A9). Self-contained: builds a temp factory root."""
 import copy
 import json
+import re
 import os
 import shutil
 import sys
@@ -67,6 +68,7 @@ def base_recipe(root):
         'hypothesis_ref': {'key': 'B99-H01-r1', 'path': 'factory/hypotheses.jsonl',
                            'raw_sha256': rc.sha256_file(os.path.join(fac, 'hypotheses.jsonl'))},
         'class': 'trend', 'class_derivation': 'MACD crossover entry, no grid/lot progression',
+        'ea': {'expert': 'EALabTpl\\Boss_99_Test'},
         'symbols': ['GBPUSD'], 'timeframes': ['H1'],
         'symbol_preset_refs': [{'symbol': 'GBPUSD', 'lane': '1', 'path': 'factory/instrument_profiles.jsonl', 'raw_sha256': rc.sha256_file(prof)}],
         'windows': {'MAIN': ['2023.01.01', '2025.12.31'], 'BWD': ['2020.01.01', '2022.12.31'],
@@ -206,7 +208,7 @@ def main():
     r = run(root, rp, 'BOTH_WINDOW', 'MAIN', write=False)
     check('A2 BOTH_WINDOW refused while COARSE has no receipt', has(r['refusals'], 'A2 earlier stage COARSE'), r['refusals'])
     r = run(root, rp, 'COARSE', 'MAIN', write=False)
-    check('A2/A3 optimize stage refused by the single-test checker', has(r['refusals'], 'A2 COARSE') and has(r['refusals'], 'A3'), r['refusals'])
+    check('COARSE without an ini or preflight refuses (A9 + A3)', has(r['refusals'], 'A9 no --ini') and has(r['refusals'], 'A3'), r['refusals'])
     r = run(root, rp, 'SMOKE', 'BWD', write=False)
     check('A2 window not in stage', has(r['refusals'], 'A2 window BWD'), r['refusals'])
     r = run(root, rp, 'SMOKE', 'MAIN', report=rep(symbol='EURUSD'), write=False)
@@ -346,6 +348,105 @@ def main():
     except Exception as exc:  # noqa: BLE001
         check('A9 unreadable receipts store refuses instead of raising', False, exc)
     shutil.rmtree(r5)
+
+    # ---- optimize stages (COARSE): ini + set sweep + full-grid XML + preflight join
+    def opt_root(preflight=True, warn_only=False, submitted='2026-11-05T00:00:00Z', dims=('_99_Len',)):
+        o = make_root()
+        orec = base_recipe(o)
+        orp = write_recipe(o, orec)
+        run(o, orp, 'SMOKE', 'MAIN')  # prerequisite
+        with open(os.path.join(o, 'opt.ini'), 'w') as fh:
+            fh.write('[Tester]\nExpert=EALabTpl\\Boss_99_Test\nSymbol=GBPUSD\nPeriod=H1\nModel=1\nOptimization=1\n'
+                     'FromDate=2023.01.01\nToDate=2025.12.31\nLeverage=1:100\nDeposit=10000\n')
+        with open(os.path.join(o, 'opt.set'), 'w') as fh:
+            fh.write('ExitMode=22\n_99_Len=14||8||2||20||Y\n_99_Safety=25\n')
+        with open(os.path.join(o, 'opt.xml'), 'w') as fh:
+            fh.write('<Title>Boss_99_Test GBPUSD,H1 2023.01.01-2025.12.31</Title><Created>2026-11-05T01:00:00Z</Created>')
+        if preflight:
+            jl(os.path.join(o, 'factory', 'optimize_decisions.jsonl'), [{
+                'record_version': 1, 'submitted_utc': submitted, 'lane': 'L', 'hypothesis_revision': 'B99-H01-r1',
+                'result': 'ALLOW', 'checked': len(dims), 'allow_count': len(dims), 'refuse_count': 0,
+                'dimensions': [{'name': d, 'verdict': 'ALLOW', 'facts': []} for d in dims], 'exit_code': 0,
+                'warn_only': warn_only, 'expert': 'EALabTpl\\Boss_99_Test', 'ini_path': 'C:\\tmp\\x.ini'}])
+        return o, orp
+
+    def full_passes(values=(8, 10, 12, 14, 16, 18, 20)):
+        return {'passes': [{'pass_id': i, '_99_Len': v, 'max_drawdown_percent': 3.0} for i, v in enumerate(values)]}
+
+    def opt(o, orp, xml=None, ini=None, set_name='opt.set'):
+        return rc.accept(orp, 'COARSE', 'MAIN', os.path.join(o, 'opt.xml'), os.path.join(o, set_name),
+                         os.path.join(o, 'ea.ex5'), o, 'MT5-TEST', ini_path=ini or os.path.join(o, 'opt.ini'),
+                         read_xml=lambda _p: xml if xml is not None else full_passes())
+
+    o, orp = opt_root()
+    r = opt(o, orp)
+    check('COARSE full grid with enforcing preflight is ACCEPT', r['result'] == 'ACCEPT', r['refusals'])
+    check('COARSE receipt records pass count and grid', r['metrics'].get('pass_count') == 7 and r['metrics'].get('grid_points') == 7, r['metrics'])
+    r = opt(o, orp, xml=full_passes((8, 10, 12, 14, 16, 18)))
+    check('COARSE missing grid point refuses', has(r['refusals'], 'A2 optimizer XML has 6 passes'), r['refusals'])
+    r = opt(o, orp, xml=full_passes((8, 10, 12, 14, 16, 18, 18)))
+    check('COARSE repeated grid point refuses', has(r['refusals'], 'A2 optimizer XML repeats'), r['refusals'])
+    r = opt(o, orp, xml=full_passes((8, 10, 12, 14, 16, 18, 22)))
+    check('COARSE off-grid point refuses', has(r['refusals'], 'A2 optimizer XML has 7 passes'), r['refusals'])
+    for key, val, frag in (('Optimization', '2', 'R12 requires 1'), ('Model', '4', 'ini Model=4'),
+                           ('ToDate', '2026.03.31', 'ini window'), ('Expert', 'EALabTpl\\Other', 'ini Expert'),
+                           ('Leverage', '100', 'A5 ini Leverage')):
+        t = open(os.path.join(o, 'opt.ini')).read()
+        bad_ini = os.path.join(o, 'bad_%s.ini' % key)
+        with open(bad_ini, 'w') as fh:
+            fh.write(re.sub(r'(?m)^%s=.*$' % key, lambda _m, k=key, v=val: '%s=%s' % (k, v), t))
+        r = opt(o, orp, ini=bad_ini)
+        check('COARSE ini %s=%s refuses' % (key, val), any(frag in x for x in r['refusals']), r['refusals'])
+    with open(os.path.join(o, 'range.set'), 'w') as fh:
+        fh.write('ExitMode=22\n_99_Len=14||8||4||20||Y\n_99_Safety=25\n')
+    r = opt(o, orp, set_name='range.set')
+    check('COARSE set range differs from recipe refuses', has(r['refusals'], 'A4 set sweeps _99_Len as'), r['refusals'])
+    with open(os.path.join(o, 'extra.set'), 'w') as fh:
+        fh.write('ExitMode=22\n_99_Len=14||8||2||20||Y\n_99_Safety=25||20||5||30||Y\n')
+    r = opt(o, orp, set_name='extra.set')
+    check('COARSE set sweeping a SAFETY input refuses', any('_99_Safety is swept' in x for x in r['refusals']), r['refusals'])
+    r = opt(o, orp, ini=os.path.join(o, 'missing.ini'))
+    check('COARSE without a readable ini refuses', has(r['refusals'], 'A9 cannot read ini'), r['refusals'])
+    shutil.rmtree(o)
+    for name, kw, frag in (('no preflight', {'preflight': False}, 'A3'),
+                           ('warn-only preflight', {'warn_only': True}, 'A3'),
+                           ('preflight after the XML', {'submitted': '2026-11-06T00:00:00Z'}, 'A3'),
+                           ('preflight on other dimensions', {'dims': ('_99_Other',)}, 'A3')):
+        o, orp = opt_root(**kw)
+        r = opt(o, orp)
+        check('COARSE %s refuses' % name, has(r['refusals'], frag), r['refusals'])
+        shutil.rmtree(o)
+    # a COARSE ACCEPT satisfies the next stage's prerequisite (symbol/timeframe come from the ini)
+    o, orp = opt_root()
+    rc.append_jsonl(os.path.join(o, rc.RECEIPTS_REL), opt(o, orp))
+    r = run(o, orp, 'BOTH_WINDOW', 'MAIN', write=False)
+    check('BOTH_WINDOW after an accepted COARSE is ACCEPT', r['result'] == 'ACCEPT', r['refusals'])
+    shutil.rmtree(o)
+    # V2: an optimize recipe must name its EA
+    vr = copy.deepcopy(good)
+    vr.pop('ea')
+    check('V2 optimize recipe without ea.expert refuses', has(rc.validate_recipe(vr, root), 'V2 recipe has an optimize stage'), rc.validate_recipe(vr, root))
+
+    # ---- V4: STACK token and multi-order inputs force escalation
+    sroot2 = make_root()
+    hp = os.path.join(sroot2, 'factory', 'hypotheses.jsonl')
+    jl(hp, [{'hypothesis_id': 'B99-H01', 'module_set': [{'token': 'LAB_CAP_CORE'}, {'token': 'LAB_CAP_STACK'}]}])
+    out = rc.validate_recipe(base_recipe(sroot2), sroot2)
+    check('V4 STACK module forces escalation', has(out, 'V4 modules include'), out)
+    shutil.rmtree(sroot2)
+    mroot = make_root()
+    bp2 = os.path.join(mroot, 'factory', 'parameter_bindings.jsonl')
+    rows2 = rc.read_jsonl(bp2)
+    rows2.append({'hypothesis_revision': 'B99-H01-r1', 'parameter': '_99_MaxOrdersPerSide', 'role': 'SAFETY', 'locked_value': None, 'surface': 'OPERATOR'})
+    jl(bp2, rows2)
+    mrec = base_recipe(mroot)
+    mrec['fixed_inputs'] = {'_99_MaxOrdersPerSide': '3'}
+    out = rc.validate_recipe(mrec, mroot)
+    check('V4 MaxOrdersPerSide=3 forces escalation', has(out, 'V4 [\'_99_MaxOrdersPerSide\']'), out)
+    mrec['fixed_inputs'] = {'_99_MaxOrdersPerSide': '1'}
+    out = rc.validate_recipe(mrec, mroot)
+    check('V4 MaxOrdersPerSide=1 stays non-escalation', not has(out, 'V4'), out)
+    shutil.rmtree(mroot)
 
     # A1 recipe edited after receipts: the old receipts no longer count
     good2 = copy.deepcopy(good)

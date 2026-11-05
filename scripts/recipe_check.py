@@ -29,7 +29,9 @@ STAGE_ORDER = ('SMOKE', 'COARSE', 'FINE', 'FREEZE', 'BOTH_WINDOW', 'MODEL4', 'HO
 OPTIMIZE_STAGES = ('COARSE', 'FINE')
 CLASSES = ('trend', 'reversion', 'breakout', 'escalation')
 # R6: any grid or lot-progression module makes the class escalation, whatever the author wrote.
-ESCALATION_TOKEN = re.compile(r'GRID|PROG|LOTLOG|MARTING|RECOVER|LADDER|PYRAMID|DCA', re.I)
+ESCALATION_TOKEN = re.compile(r'GRID|PROG|LOTLOG|MARTING|RECOVER|LADDER|PYRAMID|DCA|STACK', re.I)
+# An input that lets one signal hold several same-side orders makes the build a grid whatever its tokens say.
+MULTI_ORDER_PARAM = re.compile(r'MaxOrdersPerSide', re.I)
 DD_CAP_MAX = 12.0                 # R17
 SCORE_FORMULA_ID = 'R15_F5_v1'    # R15 (rule table v2)
 # The frozen formula text; a recipe pins its sha256 (V2), so a silent formula edit breaks every recipe.
@@ -162,6 +164,95 @@ def parse_set(path):
     return out
 
 
+def parse_set_ranges(path):
+    """-> {name: (start, step, stop)} for every swept (||Y) line, as floats."""
+    out = {}
+    try:
+        with open(path, encoding='utf-8-sig', errors='strict') as f:
+            lines = f.read().splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise Unreadable('cannot read set %s: %s' % (path, exc))
+    for line in lines:
+        if '=' not in line or line.lstrip().startswith(';'):
+            continue
+        k, v = line.split('=', 1)
+        parts = v.split('||')
+        if len(parts) >= 5 and parts[-1].strip().upper() == 'Y':
+            nums = [finite(x) for x in parts[1:4]]
+            if any(n is None for n in nums):
+                raise Unreadable('set sweep line for %s has non-numeric range %r' % (k.strip(), v))
+            out[k.strip()] = tuple(nums)
+    return out
+
+
+def parse_ini(path):
+    """-> {key: value} of the [Tester] section of an MT5 launch .ini."""
+    if not path:
+        raise Unreadable('no --ini given (the launch .ini is the authoritative run configuration)')
+    try:
+        raw = open(path, 'rb').read()
+    except OSError as exc:
+        raise Unreadable('cannot read ini %s: %s' % (path, exc))
+    text = raw.decode('utf-16') if raw[:2] in (b'\xff\xfe', b'\xfe\xff') else raw.decode('utf-8-sig', errors='strict')
+    out, section = {}, None
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith(';'):
+            continue
+        if line.startswith('[') and line.endswith(']'):
+            section = line[1:-1]
+            continue
+        if section == 'Tester' and '=' in line:
+            k, v = line.split('=', 1)
+            out[k.strip()] = v.strip()
+    if not out:
+        raise Unreadable('ini %s has no [Tester] section' % path)
+    return out
+
+
+def grid_values(start, step, stop):
+    """Inclusive grid start..stop by step, rounded to 10 dp (the tester's own lattice)."""
+    if step is None or step <= 0 or stop < start:
+        raise Unreadable('bad sweep range %r..%r step %r' % (start, stop, step))
+    n = int(math.floor((stop - start) / step + 1e-9)) + 1
+    if n > 100000:
+        raise Unreadable('sweep has too many points (%d)' % n)
+    return [round(start + i * step, 10) for i in range(n)]
+
+
+def xml_created_utc(path):
+    try:
+        head = open(path, 'rb').read(4000).decode('utf-8', errors='replace')
+    except OSError:
+        return None
+    m = re.search(r'<Created>([^<]+)</Created>', head)
+    return m.group(1).strip() if m else None
+
+
+def run_time_bound(path):
+    """Latest moment the optimizer run can have ended, in UTC: the earlier of the XML's <Created> and the
+    file's mtime. MT5 writes <Created> in terminal-local time with a 'Z' suffix (seen 2026-11-04: 21:47 Bangkok
+    written as 21:47Z), so <Created> alone can sit hours late; the mtime is a real UTC clock."""
+    vals = []
+    c = xml_created_utc(path)
+    if c and re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ', c):
+        vals.append(c)
+    try:
+        vals.append(datetime.fromtimestamp(os.path.getmtime(path), timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+    except OSError:
+        pass
+    return min(vals) if vals else None
+
+
+def xml_title(path):
+    try:
+        head = open(path, 'rb').read(4000).decode('utf-8', errors='replace')
+    except OSError:
+        return ''
+    m = re.search(r'<Title>([^<]*)</Title>', head)
+    return m.group(1) if m else ''
+
+
 def norm_symbol(s):
     return re.sub(r'[^A-Z0-9]', '', (s or '').upper())
 
@@ -284,7 +375,16 @@ def validate_recipe(recipe, root):
             ref.append('V4 no hypothesis row for %s, so the class cannot be derived' % hyp_key)
         else:
             tokens = [m.get('token', '') for h in hyps for m in (h.get('module_set') or [])]
-            esc = any(ESCALATION_TOKEN.search(t) for t in tokens)
+            fixed_vals = recipe.get('fixed_inputs') if isinstance(recipe.get('fixed_inputs'), dict) else {}
+            multi = []
+            for b in bindings:
+                if MULTI_ORDER_PARAM.search(b.get('parameter') or ''):
+                    v = finite(b.get('locked_value') if b.get('locked_value') is not None else fixed_vals.get(b.get('parameter')))
+                    if v is None or v > 1 or b.get('role') == 'TUNABLE':
+                        multi.append(b.get('parameter'))
+            esc = any(ESCALATION_TOKEN.search(t) for t in tokens) or bool(multi)
+            if multi and cls != 'escalation':
+                ref.append('V4 %s allows several same-side orders (value unknown, >1 or tunable), so the class is escalation' % multi)
             if esc and cls != 'escalation':
                 ref.append('V4 modules include grid/lot progression (%s) but class=%s' %
                            ([t for t in tokens if ESCALATION_TOKEN.search(t)], cls))
@@ -349,6 +449,10 @@ def validate_recipe(recipe, root):
     if known != sorted(known, key=STAGE_ORDER.index):
         ref.append('V7 stages out of order: %s' % known)
 
+    # V2 an optimize stage can only be tied to a run if the recipe names the EA
+    if any(n in OPTIMIZE_STAGES for n in names) and not (recipe.get('ea') or {}).get('expert'):
+        ref.append('V2 recipe has an optimize stage but no ea.expert')
+
     # V10 stage gates: SMOKE must gate on PF >= 1.0 before anything is optimized (R11); any gate is
     # a closed object of finite numbers.
     for s in stages:
@@ -389,12 +493,12 @@ def stage_windows(stage):
 
 
 def accept(recipe_path, stage_name, window, report_path, set_path, binary_path, root, lane,
-           ini_path=None, read_report=None, now=None):
+           ini_path=None, read_report=None, now=None, read_xml=None):
     """-> receipt dict (result ACCEPT or REFUSE). Never raises for bad input: an unexpected error is
     itself a refusal, so a receipt row is always produced (A9)."""
     try:
         return _accept(recipe_path, stage_name, window, report_path, set_path, binary_path, root, lane,
-                       ini_path, read_report, now)
+                       ini_path, read_report, now, read_xml)
     except Exception as exc:  # noqa: BLE001
         receipt = {'entity': 'AcceptanceReceipt', 'recipe_id': None, 'recipe_sha256': None,
                    'stage': stage_name, 'window': window, 'lane': lane, 'symbol': None, 'timeframe': None,
@@ -407,7 +511,7 @@ def accept(recipe_path, stage_name, window, report_path, set_path, binary_path, 
 
 
 def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path, root, lane,
-            ini_path, read_report, now):
+            ini_path, read_report, now, read_xml=None):
     refusals = []
     receipt = {
         'entity': 'AcceptanceReceipt', 'recipe_id': None, 'recipe_sha256': None,
@@ -460,8 +564,8 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
     # report
     rep = None
     if stage_name in OPTIMIZE_STAGES:
-        refusals.append('A2 %s produces an optimizer XML; this checker accepts single-test reports '
-                        'only (optimize stages are covered by the A3 preflight + pass count, not yet built)' % stage_name)
+        check_optimize_run(recipe, st, stage_name, window, report_path, set_path, ini_path, root,
+                           receipt, refusals, read_xml)
     else:
         try:
             if read_report is None:
@@ -589,18 +693,140 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
         except Unreadable as exc:
             dec = []
             refusals.append('A9 ' + str(exc))
+        # The preflight judges a temporary copy of the .ini that is deleted afterwards, so the join is
+        # on what the decision row names: revision, expert, the exact swept dimensions, enforcing ALLOW,
+        # submitted no later than the optimizer XML was created.
+        rev = (recipe.get('bindings_ref') or {}).get('hypothesis_revision') or recipe.get('recipe_id')
+        want_dims = sorted(sw.get('parameter') for sw in (st.get('sweep') or []))
+        created = receipt.get('tester', {}).get('xml_created_utc')
+        expert = receipt.get('tester', {}).get('expert')
         ok = [d for d in dec if d.get('result') == 'ALLOW' and d.get('warn_only') is False
-              and d.get('exit_code') == 0 and ini_path and d.get('ini_path') == ini_path]
+              and d.get('exit_code') == 0 and d.get('hypothesis_revision') == rev
+              and expert and d.get('expert') == expert
+              and sorted(x.get('name') for x in (d.get('dimensions') or [])) == want_dims
+              and created and str(d.get('submitted_utc', '')) <= created]
         if not ok:
-            refusals.append('A3 no enforcing ALLOW preflight for ini %r' % ini_path)
+            refusals.append('A3 no enforcing ALLOW preflight for %s %s sweeping %s (before %s)' % (rev, expert, want_dims, created))
         else:
-            receipt['preflight_ref'] = {'path': DECISIONS_REL, 'submitted_utc': ok[-1].get('submitted_utc'), 'result': 'ALLOW'}
+            receipt['preflight_ref'] = {'path': DECISIONS_REL, 'submitted_utc': ok[-1].get('submitted_utc'),
+                                        'result': 'ALLOW', 'ini_path': ok[-1].get('ini_path')}
 
     # A8 the holdout is spent by its first receipt
     if stage_name == 'HOLDOUT':
         if any(r.get('recipe_id') == receipt['recipe_id'] and r.get('stage') == 'HOLDOUT' for r in prior):
             refusals.append('A8 holdout already spent for recipe %s' % receipt['recipe_id'])
     return done()
+
+
+def check_optimize_run(recipe, st, stage_name, window, xml_path, set_path, ini_path, root,
+                       receipt, refusals, read_xml):
+    """COARSE / FINE: the launch .ini, the .set sweep lines and the optimizer XML must all equal the
+    recipe stage, and the XML must cover the full grid exactly once (R12: full grid, no genetic)."""
+    sweep = st.get('sweep') or []
+    if not sweep:
+        refusals.append('A2 %s stage has no explicit sweep (a FINE grid derived from a COARSE centre is not '
+                        'built; freeze it as an explicit sweep)' % stage_name)
+        return
+    # ini = the run's real configuration
+    try:
+        ini = parse_ini(ini_path)
+    except Unreadable as exc:
+        refusals.append('A9 ' + str(exc))
+        return
+    receipt['symbol'] = ini.get('Symbol')
+    receipt['timeframe'] = ini.get('Period')
+    receipt['model'] = finite(ini.get('Model'))
+    receipt['tester'] = {'expert': ini.get('Expert'), 'leverage': ini.get('Leverage'),
+                         'deposit': ini.get('Deposit'), 'optimization': ini.get('Optimization'),
+                         'xml_created_utc': run_time_bound(xml_path), 'xml_created_raw': xml_created_utc(xml_path),
+                         'ini_path': ini_path}
+    want_expert = (recipe.get('ea') or {}).get('expert')
+    if not want_expert:
+        refusals.append('A2 recipe ea.expert is not set, so the run cannot be tied to the EA')
+    elif ini.get('Expert') != want_expert:
+        refusals.append('A2 ini Expert %r != recipe %r' % (ini.get('Expert'), want_expert))
+    if norm_symbol(ini.get('Symbol')) not in [norm_symbol(s) for s in recipe.get('symbols') or []]:
+        refusals.append('A2 ini Symbol %r not in recipe symbols' % ini.get('Symbol'))
+    if ini.get('Period') not in (recipe.get('timeframes') or []):
+        refusals.append('A2 ini Period %r not in recipe timeframes' % ini.get('Period'))
+    if str(ini.get('Model')) != str(st.get('model', 1)):
+        refusals.append('A2 ini Model=%s but stage wants %s' % (ini.get('Model'), st.get('model', 1)))
+    if str(ini.get('Optimization')) != '1':
+        refusals.append('A2 ini Optimization=%s; R12 requires 1 (complete grid, no genetic)' % ini.get('Optimization'))
+    if not re.fullmatch(r'1:\d+', str(ini.get('Leverage') or '')):
+        refusals.append('A5 ini Leverage %r is not asserted as 1:N' % ini.get('Leverage'))
+    try:
+        w = parse_window((recipe.get('windows') or {}).get(window))
+        want = tuple(d.strftime('%Y.%m.%d') for d in w)
+        if (ini.get('FromDate'), ini.get('ToDate')) != want:
+            refusals.append('A2 ini window %s..%s != recipe %s %s..%s' % (ini.get('FromDate'), ini.get('ToDate'), window, want[0], want[1]))
+        title = xml_title(xml_path)
+        if '%s-%s' % want not in title or norm_symbol(ini.get('Symbol')) not in norm_symbol(title):
+            refusals.append('A2 optimizer XML title %r does not name %s %s-%s' % (title, ini.get('Symbol'), want[0], want[1]))
+    except Unreadable as exc:
+        refusals.append('A2 ' + str(exc))
+    # .set sweep lines == recipe sweep
+    try:
+        ranges = parse_set_ranges(set_path)
+    except Unreadable as exc:
+        refusals.append('A9 ' + str(exc))
+        return
+    grids = {}
+    for sw in sweep:
+        p = sw.get('parameter')
+        rs = (finite(sw.get('from')), finite(sw.get('step')), finite(sw.get('to')))
+        if ranges.get(p) is None:
+            refusals.append('A4 set does not sweep %s' % p)
+            continue
+        if any(abs(a - b) > 1e-9 for a, b in zip(ranges[p], rs)):
+            refusals.append('A4 set sweeps %s as %s, recipe says %s' % (p, ranges[p], rs))
+        try:
+            grids[p] = grid_values(rs[0], rs[1], rs[2])
+        except Unreadable as exc:
+            refusals.append('A2 ' + str(exc))
+    extra = sorted(set(ranges) - {sw.get('parameter') for sw in sweep})
+    if extra:
+        refusals.append('A4 set sweeps %s, which the recipe stage does not' % extra)
+    if len(grids) != len(sweep):
+        return
+    # XML covers the full grid exactly once
+    try:
+        if read_xml is None:
+            sys.path.insert(0, os.path.join(root, 'scripts'))
+            import parse_mt5_report
+            from pathlib import Path
+            read_xml = lambda p: parse_mt5_report.parse_optimizer_xml(Path(p))  # noqa: E731
+        xml = read_xml(xml_path)
+    except Exception as exc:  # noqa: BLE001
+        refusals.append('A9 optimizer XML unreadable: %s: %s' % (type(exc).__name__, exc))
+        return
+    passes = xml.get('passes') or []
+    names = sorted(grids)
+    expected = 1
+    for p in names:
+        expected *= len(grids[p])
+    seen = set()
+    for rec in passes:
+        try:
+            key = tuple(round(float(rec[p]), 10) for p in names)
+        except (KeyError, TypeError, ValueError):
+            refusals.append('A2 optimizer pass %r lacks a numeric swept column' % rec.get('pass_id'))
+            return
+        if key in seen:
+            refusals.append('A2 optimizer XML repeats grid point %s' % (key,))
+            return
+        seen.add(key)
+    full = set()
+    for combo in __import__('itertools').product(*[grids[p] for p in names]):
+        full.add(tuple(combo))
+    if seen != full or len(passes) != expected:
+        refusals.append('A2 optimizer XML has %d passes over %d grid points; the full grid is %d (missing %d, extra %d)'
+                        % (len(passes), len(seen), expected, len(full - seen), len(seen - full)))
+    cap = finite((recipe.get('score') or {}).get('dd_cap_equity_pct')) or DD_CAP_MAX
+    over = sum(1 for rec in passes if finite(rec.get('max_drawdown_percent')) is None
+               or finite(rec.get('max_drawdown_percent')) > cap)
+    receipt['metrics'] = {'pass_count': len(passes), 'grid_points': expected, 'passes_over_dd_cap': over,
+                          'swept': names, 'score_formula': SCORE_FORMULA_ID}
 
 
 def refusal_decision_row(receipt):
