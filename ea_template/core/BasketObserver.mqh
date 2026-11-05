@@ -31,6 +31,7 @@
 bool     g_bo_active      = false;   // a basket is open
 datetime g_bo_start_time  = 0;
 double   g_bo_start_eq    = 0.0;
+double   g_bo_flat_eq     = 0.0;     // equity on the last tick with no position (pre-entry baseline)
 double   g_bo_depth_pct   = 0.0;     // depth of the open basket so far
 double   g_bo_worst_pct   = 0.0;     // worst depth over the run
 double   g_bo_worst_hold  = 0.0;     // longest hold over the run, seconds
@@ -52,13 +53,14 @@ void BasketObserver_OnTick()
    double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    if(!g_bo_active)
    {
-      if(open <= 0) return;
+      if(open <= 0) { g_bo_flat_eq = eq; return; }
       // The hook runs before trading, so the first tick that SEES the basket is the one after
-      // its first entry. Start from what was true at entry: while flat, equity equals balance and
-      // opening a position does not change the balance, so balance is the pre-entry equity; the
-      // start time is the earliest open position's own open time.
+      // its first entry. Start from what was true before it: equity on the last flat tick (an
+      // entry commission already lowers the balance, so balance would understate the depth).
+      // Only if the EA has never been flat on a tick (positions from tick one) is balance used.
+      // The start time is the earliest open position's own open time.
       g_bo_active     = true;
-      g_bo_start_eq   = AccountInfoDouble(ACCOUNT_BALANCE);
+      g_bo_start_eq   = (g_bo_flat_eq > 0.0 ? g_bo_flat_eq : AccountInfoDouble(ACCOUNT_BALANCE));
       g_bo_start_time = TimeCurrent();
       for(int i = 0; i < open; i++)
       {
