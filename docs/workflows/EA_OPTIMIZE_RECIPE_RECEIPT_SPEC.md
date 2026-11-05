@@ -74,6 +74,7 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 | V7 | `stages` contains `MODEL4` before any stage that would issue CANDIDATE (R16). |
 | V8 | `score.dd_cap_equity_pct` is a finite number in (0, 12.0] (R17). A recipe may tighten the cap, never loosen it; NaN, ∞ or text refuse. |
 | V9 | Every SAFETY or SIZING binding without a `locked_value` has an entry in the recipe's `fixed_inputs` (R13 freeze). A4 checks the run's set against it. No canonical SAFETY binding carries a value today, so the recipe is where those values are frozen. |
+| V10 | Stage gates. A stage may carry `gate: {pf_min, dd_max_pct}` (finite numbers, no other keys). The SMOKE stage **must** carry `pf_min >= 1.0` (R11: full optimize only where smoke PF >= 1.0). |
 
 ## 3. `AcceptanceReceipt` (one JSONL row per accepted stage result)
 
@@ -106,6 +107,7 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 |---|---|
 | A1 | `recipe_sha256` matches the frozen recipe file at check time. |
 | A2 | The run's window, model, symbol and timeframe equal the recipe stage, and the stage order is respected: a receipt with `result: ACCEPT` exists for every earlier stage. A `REFUSE` receipt never satisfies a prerequisite. |
+| A2g | A gate is an outcome, not a conformance check: a run that followed the recipe is `ACCEPT` and records `gate_passed`. A later stage is refused while no ACCEPT receipt of each earlier gated stage/window has `gate_passed: true`. |
 | A3 | **Optimize stages (COARSE/FINE):** `preflight_ref` is an `ALLOW` row of the same `hypothesis_revision` and the same `.ini`, made in **enforcing** mode. A `-WarnOnly` run or a missing row means no acceptance. Single-test stages have no preflight (`mt5_run`/`run_backtest` do not call `optimize_guard`); A4 is their parameter guarantee. |
 | A4 | The report, set and binary hashes are read from the files, not copied from another record. The set swept only `TUNABLE` parameters (and only in an optimize stage), and every non-`TUNABLE` bound input (LOCKED, SAFETY, …) equals its binding's `locked_value`. The recipe pins `bindings_ref`, `hypothesis_ref` and each symbol preset by `raw_sha256`; a store whose bytes changed after freezing refuses. |
 | A5 | The tester leverage is asserted as `1:N` from the report (memory: tester-cache nondeterminism). A full `.set` was used. |

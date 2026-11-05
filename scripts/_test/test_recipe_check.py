@@ -72,7 +72,7 @@ def base_recipe(root):
         'windows': {'MAIN': ['2023.01.01', '2025.12.31'], 'BWD': ['2020.01.01', '2022.12.31'],
                     'HOLDOUT': ['2026.01.01', '2026.06.30']},
         'stages': [
-            {'stage': 'SMOKE', 'model': 1, 'window': 'MAIN'},
+            {'stage': 'SMOKE', 'model': 1, 'window': 'MAIN', 'gate': {'pf_min': 1.0}},
             {'stage': 'COARSE', 'model': 1, 'window': 'MAIN', 'sweep': [{'parameter': '_99_Len', 'from': 8, 'to': 20, 'step': 2}]},
             {'stage': 'FREEZE'},
             {'stage': 'BOTH_WINDOW', 'model': 1, 'windows': ['MAIN', 'BWD']},
@@ -161,6 +161,10 @@ def main():
         ('V2 nested null in plateau_rule', lambda r: r['plateau_rule'].update(decided_with_owner=None), 'V2'),
         ('V2 deeply nested null in plateau_rule', lambda r: r['plateau_rule'].update(metadata={'decided_with_owner': None}), 'V2'),
         ('V8 DD cap given as text', lambda r: r['score'].update(dd_cap_equity_pct='12'), 'V8'),
+        ('V10 SMOKE without a gate', lambda r: r['stages'][0].pop('gate'), 'V10'),
+        ('V10 SMOKE gate below 1.0', lambda r: r['stages'][0].update(gate={'pf_min': 0.9}), 'V10'),
+        ('V10 unknown gate key', lambda r: r['stages'][0].update(gate={'pf_min': 1.0, 'sharpe_min': 1}), 'V10'),
+        ('V10 gate value as text', lambda r: r['stages'][0].update(gate={'pf_min': '1.2'}), 'V10'),
     ]
     for name, mut, prefix in cases:
         r = copy.deepcopy(good)
@@ -252,6 +256,19 @@ def main():
     run(r2, rp2, 'SMOKE', 'MAIN')
     r = run(r2, rp2, 'BOTH_WINDOW', 'MAIN', write=False)
     check('A2 an ACCEPT receipt does satisfy the earlier stage', r['result'] == 'ACCEPT', r['refusals'])
+    shutil.rmtree(r2)
+    # V10/A2: a conforming SMOKE that fails its PF gate is ACCEPTed but blocks the next stage
+    r2 = make_root()
+    rec2 = base_recipe(r2)
+    rec2['stages'] = [s for s in rec2['stages'] if s['stage'] != 'COARSE']
+    rp2 = write_recipe(r2, rec2)
+    sm = run(r2, rp2, 'SMOKE', 'MAIN', report=rep(profit_factor=0.8))
+    check('gate: conforming SMOKE with PF 0.8 is ACCEPT with gate_passed False', sm['result'] == 'ACCEPT' and sm.get('gate_passed') is False, sm)
+    r = run(r2, rp2, 'BOTH_WINDOW', 'MAIN', write=False)
+    check('gate: a failed SMOKE gate blocks BOTH_WINDOW', has(r['refusals'], 'A2 earlier stage SMOKE/MAIN failed its gate'), r['refusals'])
+    run(r2, rp2, 'SMOKE', 'MAIN', report=rep(profit_factor=1.05))
+    r = run(r2, rp2, 'BOTH_WINDOW', 'MAIN', write=False)
+    check('gate: a later passing SMOKE unblocks BOTH_WINDOW', r['result'] == 'ACCEPT', r['refusals'])
     shutil.rmtree(r2)
 
     # A8 holdout spent by its first receipt (with stage prerequisites forced via fake ACCEPT rows)

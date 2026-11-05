@@ -103,6 +103,10 @@ def has_null(obj):
 # R8: the broker specs a symbol preset must pin, as written by tools/mt5/SymbolSpecDump.mq5.
 PROFILE_SPEC_KEYS = ('spec_digits', 'spec_point', 'spec_tick_value', 'spec_contract_size')
 
+# Stage-gate keys (V10). A gate is an outcome, not a conformance check: a run can be ACCEPTed
+# (it followed the recipe) and still fail its gate, which then blocks every later stage (A2).
+GATE_KEYS = ('pf_min', 'dd_max_pct')
+
 # Roles whose value must be frozen in the recipe when the binding fixes none (R13).
 FROZEN_VALUE_ROLES = ('SAFETY', 'SIZING')
 
@@ -345,6 +349,24 @@ def validate_recipe(recipe, root):
     if known != sorted(known, key=STAGE_ORDER.index):
         ref.append('V7 stages out of order: %s' % known)
 
+    # V10 stage gates: SMOKE must gate on PF >= 1.0 before anything is optimized (R11); any gate is
+    # a closed object of finite numbers.
+    for s in stages:
+        g = s.get('gate')
+        if g is None:
+            if s.get('stage') == 'SMOKE':
+                ref.append('V10 SMOKE stage has no gate (R11 requires pf_min >= 1.0)')
+            continue
+        if not isinstance(g, dict) or not g or set(g) - set(GATE_KEYS):
+            ref.append('V10 stage %s gate must be an object using only %s' % (s.get('stage'), GATE_KEYS))
+            continue
+        bad = [k for k, v in g.items() if isinstance(v, bool) or not isinstance(v, (int, float)) or finite(v) is None]
+        if bad:
+            ref.append('V10 stage %s gate %s must be finite numbers' % (s.get('stage'), bad))
+            continue
+        if s.get('stage') == 'SMOKE' and not (g.get('pf_min') is not None and g['pf_min'] >= 1.0):
+            ref.append('V10 SMOKE gate pf_min must be >= 1.0 (R11)')
+
     # V8 DD cap never looser than 12 %
     raw_cap = score.get('dd_cap_equity_pct')
     cap = finite(raw_cap) if isinstance(raw_cap, (int, float)) and not isinstance(raw_cap, bool) else None
@@ -485,6 +507,16 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
                               'worst_basket_depth': None, 'worst_basket_hold_s': None,
                               'score': score_f5(rep.get('recovery_factor'), dd, trades, cap)}
         receipt['evidence_confidence'] = confidence(trades)
+        g = st.get('gate')
+        if isinstance(g, dict) and g:
+            pf, ddv = finite(rep.get('profit_factor')), finite(dd)
+            ok = True
+            if g.get('pf_min') is not None:
+                ok = ok and pf is not None and pf >= float(g['pf_min'])
+            if g.get('dd_max_pct') is not None:
+                ok = ok and ddv is not None and ddv <= float(g['dd_max_pct'])
+            receipt['gate'] = g
+            receipt['gate_passed'] = bool(ok)
         if finite(dd) is None or finite(cap) is None:
             refusals.append('A9 equity drawdown %r or cap %r is not a finite number' % (dd, cap))
         elif not finite(dd) <= finite(cap):
@@ -541,8 +573,11 @@ def _accept(recipe_path, stage_name, window, report_path, set_path, binary_path,
         if en == 'FREEZE':
             continue
         for ew in stage_windows(earlier):
-            if not any(r.get('stage') == en and r.get('window') == ew and r.get('result') == 'ACCEPT' for r in mine):
+            got = [r for r in mine if r.get('stage') == en and r.get('window') == ew and r.get('result') == 'ACCEPT']
+            if not got:
                 refusals.append('A2 earlier stage %s/%s has no ACCEPT receipt' % (en, ew))
+            elif earlier.get('gate') and not any(r.get('gate_passed') is True for r in got):
+                refusals.append('A2 earlier stage %s/%s failed its gate %s' % (en, ew, earlier.get('gate')))
 
     # A3 optimize stages need an enforcing ALLOW preflight on the same .ini
     if stage_name in OPTIMIZE_STAGES:
