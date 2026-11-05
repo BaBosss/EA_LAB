@@ -1,0 +1,554 @@
+[
+  {
+    "id": "F01",
+    "description": "Properly formatted synthetic event chain with valid JCS digests",
+    "target_property": null,
+    "expected_result": "FIXTURE_VALID_ONLY",
+    "error_code": null,
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F02",
+    "description": "Forged HMAC-SHA256 signature in stage envelope",
+    "target_property": "signature_hex",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_SIGNATURE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F03",
+    "description": "Stage nonce reused in subsequent stage across common replay namespace",
+    "target_property": "nonce",
+    "expected_result": "REJECT",
+    "error_code": "ERR_REPLAY_NONCE_COLLISION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F04",
+    "description": "Process ID reused across differing process birth timestamps",
+    "target_property": "process_identity.birth_timestamp",
+    "expected_result": "REJECT",
+    "error_code": "ERR_PROCESS_IDENTITY_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F05",
+    "description": "Stages executed out of order (S2 before S1)",
+    "target_property": "stage_name",
+    "expected_result": "REJECT",
+    "error_code": "ERR_STAGE_CHAIN_ORDER",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F06",
+    "description": "Missing or modified file in legacy 106 path census",
+    "target_property": "manifest_paths",
+    "expected_result": "REJECT",
+    "error_code": "ERR_PATH_CENSUS_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F07",
+    "description": "Substituted broker symbol (XAUUSDx instead of XAUUSD)",
+    "target_property": "symbol",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SYMBOL_SCOPE_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F08",
+    "description": "Missing 2022 M1 warmup or mismatched year attribution",
+    "target_property": "temporal_coverage",
+    "expected_result": "REJECT",
+    "error_code": "ERR_COVERAGE_GAP_DETECTED",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F09",
+    "description": "READ_RETURN event without valid preceding READ_REQUEST parent",
+    "target_property": "parent_event_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_UNPAIRED_READ_RETURN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F10",
+    "description": "Coerced zero commission without authenticated broker S2 deal record",
+    "target_property": "commission",
+    "expected_result": "REJECT",
+    "error_code": "ERR_COMMISSION_ZERO_COERCION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F11",
+    "description": "Missing deal journal, chart HTML, or Hard Kill record in bundle",
+    "target_property": "bundle_assets",
+    "expected_result": "REJECT",
+    "error_code": "ERR_RAW_BUNDLE_INCOMPLETE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F12",
+    "description": "Altered EX5 binary SHA claiming original legacy identity",
+    "target_property": "ex5_sha256",
+    "expected_result": "REJECT",
+    "error_code": "ERR_LEGACY_IDENTITY_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F13",
+    "description": "Broken event digest chain or non-monotonic sequence counter",
+    "target_property": "prev_event_digest",
+    "expected_result": "REJECT",
+    "error_code": "ERR_EVENT_CHAIN_BROKEN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F14",
+    "description": "Reclassifying historical 3/106 drift as benign without new evidence",
+    "target_property": "historical_drift_waiver",
+    "expected_result": "REJECT",
+    "error_code": "ERR_LEGACY_WAIVER_PROHIBITED",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F15",
+    "description": "Missing required top-level schema_version",
+    "target_property": "schema_version",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_REQUIRED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F16",
+    "description": "Invalid schema_version enum value",
+    "target_property": "schema_version",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_SCHEMA_VERSION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F17",
+    "description": "Missing required top-level lineage_id",
+    "target_property": "lineage_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_REQUIRED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F18",
+    "description": "Invalid lineage_id enum value",
+    "target_property": "lineage_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_LINEAGE_ID",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F19",
+    "description": "Invalid trust_domain enum value",
+    "target_property": "trust_domain",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_TRUST_DOMAIN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F20",
+    "description": "Malformed event_id syntax regex",
+    "target_property": "event_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_INVALID_PATTERN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F21",
+    "description": "Negative emitter_generation value",
+    "target_property": "emitter_generation",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F22",
+    "description": "Invalid event_type enum value",
+    "target_property": "event_type",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_EVENT_TYPE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F23",
+    "description": "Negative local_counter integer",
+    "target_property": "local_counter",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F24",
+    "description": "Malformed recorded_utc ISO 8601 regex pattern",
+    "target_property": "recorded_utc",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_INVALID_PATTERN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F25",
+    "description": "Malformed strategy_bar_time ISO 8601 regex pattern",
+    "target_property": "strategy_bar_time",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_INVALID_PATTERN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F26",
+    "description": "Missing call_site.file property",
+    "target_property": "call_site.file",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F27",
+    "description": "Missing call_site.function property",
+    "target_property": "call_site.function",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F28",
+    "description": "call_site.line is zero or negative",
+    "target_property": "call_site.line",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F29",
+    "description": "Missing sensor_payload.symbol property",
+    "target_property": "sensor_payload.symbol",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F30",
+    "description": "Missing sensor_payload.timeframe property",
+    "target_property": "sensor_payload.timeframe",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F31",
+    "description": "Invalid sensor_payload.indicator_kind enum value",
+    "target_property": "sensor_payload.indicator_kind",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_INDICATOR_KIND",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F32",
+    "description": "sensor_payload.period is zero or negative",
+    "target_property": "sensor_payload.period",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F33",
+    "description": "Missing sensor_payload.handle_id property",
+    "target_property": "sensor_payload.handle_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F34",
+    "description": "Negative sensor_payload.handle_generation value",
+    "target_property": "sensor_payload.handle_generation",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F35",
+    "description": "Negative sensor_payload.buffer_id value",
+    "target_property": "sensor_payload.buffer_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F36",
+    "description": "Negative sensor_payload.start_pos value",
+    "target_property": "sensor_payload.start_pos",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F37",
+    "description": "sensor_payload.requested_count is zero or negative",
+    "target_property": "sensor_payload.requested_count",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F38",
+    "description": "Negative sensor_payload.error_code value",
+    "target_property": "sensor_payload.error_code",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F39",
+    "description": "Missing causality_link.consumed_in_decision property",
+    "target_property": "causality_link.consumed_in_decision",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F40",
+    "description": "Invalid causality_link.edge_type enum value",
+    "target_property": "causality_link.edge_type",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_EDGE_TYPE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F41",
+    "description": "Missing assurance_class.trace_internal_closed property",
+    "target_property": "assurance_class.trace_internal_closed",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F42",
+    "description": "Missing assurance_class.static_scope_instrumented property",
+    "target_property": "assurance_class.static_scope_instrumented",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_MISSING_NESTED_KEY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F43",
+    "description": "Invalid assurance_class.actual_api_calls_witnessed enum value",
+    "target_property": "assurance_class.actual_api_calls_witnessed",
+    "expected_result": "REJECT",
+    "error_code": "ERR_INVALID_WITNESS_ENUM",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F44",
+    "description": "prev_event_digest length is not 64 characters",
+    "target_property": "prev_event_digest",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_INVALID_PATTERN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F45",
+    "description": "prev_event_digest contains non-hexadecimal characters",
+    "target_property": "prev_event_digest",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_INVALID_PATTERN",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F46",
+    "description": "Unauthorized additional property in top-level object",
+    "target_property": "unauthorized_top_key",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_ADDITIONAL_PROPERTY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F47",
+    "description": "Unauthorized additional property in call_site object",
+    "target_property": "call_site.unauthorized_key",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_ADDITIONAL_PROPERTY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F48",
+    "description": "Unauthorized additional property in sensor_payload object",
+    "target_property": "sensor_payload.unauthorized_key",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_ADDITIONAL_PROPERTY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F49",
+    "description": "Unauthorized additional property in causality_link object",
+    "target_property": "causality_link.unauthorized_key",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_ADDITIONAL_PROPERTY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F50",
+    "description": "Unauthorized additional property in assurance_class object",
+    "target_property": "assurance_class.unauthorized_key",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_ADDITIONAL_PROPERTY",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F51",
+    "description": "Negative sensor_payload.timeframe value",
+    "target_property": "sensor_payload.timeframe",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F52",
+    "description": "Empty sensor_payload.symbol string",
+    "target_property": "sensor_payload.symbol",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F53",
+    "description": "Empty sensor_payload.handle_id string",
+    "target_property": "sensor_payload.handle_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_VALUE_OUT_OF_RANGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F54",
+    "description": "Null sensor_payload object",
+    "target_property": "sensor_payload",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_TYPE_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F55",
+    "description": "Null call_site object",
+    "target_property": "call_site",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_TYPE_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F56",
+    "description": "Null assurance_class object",
+    "target_property": "assurance_class",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_TYPE_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F57",
+    "description": "Null causality_link object",
+    "target_property": "causality_link",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_TYPE_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F58",
+    "description": "Identical event_id emitted across differing streams or generations",
+    "target_property": "event_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_EVENT_ID_COLLISION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F59",
+    "description": "Identical nonce reused in W5_ACTION and W5_STAGE domains",
+    "target_property": "nonce",
+    "expected_result": "REJECT",
+    "error_code": "ERR_REPLAY_NONCE_COLLISION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F60",
+    "description": "Claiming trading decision based on BAR_ASSOCIATION metadata time",
+    "target_property": "causality_link.edge_type",
+    "expected_result": "REJECT",
+    "error_code": "ERR_METADATA_TIME_NOT_DECISION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F61",
+    "description": "Missing genuine TIME_CONSUMPTION_DECISION edge when time filters used",
+    "target_property": "causality_link.edge_type",
+    "expected_result": "REJECT",
+    "error_code": "ERR_MISSING_TIME_DECISION_EDGE",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F62",
+    "description": "Recycled or released handle reused without new HANDLE_CREATE event",
+    "target_property": "handle_id",
+    "expected_result": "REJECT",
+    "error_code": "ERR_RECYCLED_HANDLE_COLLISION",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F63",
+    "description": "Statically declared call-site in source AST omitted from telemetry",
+    "target_property": "call_site",
+    "expected_result": "REJECT",
+    "error_code": "ERR_STATIC_CALLSITE_OMITTED",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F64",
+    "description": "Claiming CONFIRMED_EXTERNAL_WITNESS without external witness probe",
+    "target_property": "assurance_class.actual_api_calls_witnessed",
+    "expected_result": "REJECT",
+    "error_code": "ERR_UNVERIFIED_COVERAGE_CLAIM",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F65",
+    "description": "Non-integer floating point number encoded in local counter field",
+    "target_property": "local_counter",
+    "expected_result": "REJECT",
+    "error_code": "ERR_SCHEMA_TYPE_MISMATCH",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F66",
+    "description": "Object keys improperly sorted under UTF-16 non-BMP surrogate ordering",
+    "target_property": "jcs_keys",
+    "expected_result": "REJECT",
+    "error_code": "ERR_JCS_KEY_SORT_ORDER",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F67",
+    "description": "CopyBuffer returned 0 bars but error_code was omitted or coerced to 0",
+    "target_property": "sensor_payload.error_code",
+    "expected_result": "REJECT",
+    "error_code": "ERR_UNPRESERVED_LAST_ERROR",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F68",
+    "description": "Synthetic offline fixture attempting to declare NATIVE_AUTHENTIC_PROD_ONLY",
+    "target_property": "trust_domain",
+    "expected_result": "REJECT",
+    "error_code": "ERR_NATIVE_IDENTITY_SPOOF",
+    "actual_status": "PASS"
+  },
+  {
+    "id": "F69",
+    "description": "Signature header uses expired or revoked issuer key fingerprint",
+    "target_property": "key_fingerprint",
+    "expected_result": "REJECT",
+    "error_code": "ERR_KEY_REVOKED",
+    "actual_status": "PASS"
+  }
+]

@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "W5_ENG_OBS_EVENT_V3_0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lineage_id",
+    "trust_domain",
+    "event_id",
+    "run_id",
+    "stream_id",
+    "emitter_generation",
+    "event_type",
+    "local_counter",
+    "recorded_utc",
+    "strategy_bar_time",
+    "call_site",
+    "sensor_payload",
+    "causality_link",
+    "assurance_class",
+    "prev_event_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["W5_ENG_OBS_V3_0"]
+    },
+    "lineage_id": {
+      "type": "string",
+      "enum": ["ENGINEERING_ONLY_TRACK_E"]
+    },
+    "trust_domain": {
+      "type": "string",
+      "enum": ["SYNTHETIC_FIXTURE_TEST_ONLY", "NATIVE_AUTHENTIC_PROD_ONLY"]
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,32}:[A-Za-z0-9_-]{1,16}:[0-9]+:[A-Z_]{3,16}:[0-9]+$"
+    },
+    "parent_event_id": {
+      "type": ["string", "null"]
+    },
+    "parent_event_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}:[A-Za-z0-9_-]{1,16}:[0-9]+:[A-Z_]{3,16}:[0-9]+$"
+      }
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,32}$"
+    },
+    "stream_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,16}$"
+    },
+    "emitter_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "HANDLE_CREATE",
+        "HANDLE_RELEASE",
+        "SOURCE_HISTORY_DECLARED",
+        "READ_REQUEST",
+        "READ_RETURN",
+        "READ_FAILURE",
+        "VALUE_USED",
+        "DECISION",
+        "GAP_DETECTED",
+        "RUN_CLOSE"
+      ]
+    },
+    "local_counter": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recorded_utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "strategy_bar_time": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "call_site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "function", "line"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "function": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "sensor_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "timeframe",
+        "indicator_kind",
+        "period",
+        "handle_id",
+        "handle_generation",
+        "buffer_id",
+        "start_pos",
+        "requested_count",
+        "returned_count",
+        "raw_value",
+        "error_code"
+      ],
+      "properties": {
+        "symbol": { "type": "string", "minLength": 1 },
+        "timeframe": { "type": "integer", "minimum": 0 },
+        "indicator_kind": { "type": "string", "enum": ["ATR", "SMA", "EMA", "PRICE", "CUSTOM"] },
+        "period": { "type": "integer", "minimum": 1 },
+        "handle_id": { "type": "string", "minLength": 1 },
+        "handle_generation": { "type": "integer", "minimum": 0 },
+        "buffer_id": { "type": "integer", "minimum": 0 },
+        "start_pos": { "type": "integer", "minimum": 0 },
+        "requested_count": { "type": "integer", "minimum": 1 },
+        "returned_count": { "type": ["integer", "null"], "minimum": 0 },
+        "raw_value": { "type": ["string", "number", "null"] },
+        "error_code": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "causality_link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["consumed_in_decision", "decision_id", "edge_type"],
+      "properties": {
+        "consumed_in_decision": { "type": "boolean" },
+        "decision_id": { "type": ["string", "null"] },
+        "edge_type": {
+          "type": "string",
+          "enum": ["BAR_ASSOCIATION", "DECISION_DEPENDENCY", "OBSERVATION_ONLY", "NONE", "TIME_CONSUMPTION_DECISION"]
+        }
+      }
+    },
+    "assurance_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trace_internal_closed", "static_scope_instrumented", "actual_api_calls_witnessed"],
+      "properties": {
+        "trace_internal_closed": { "type": "boolean" },
+        "static_scope_instrumented": { "type": "boolean" },
+        "actual_api_calls_witnessed": {
+          "type": "string",
+          "enum": ["CONFIRMED_EXTERNAL_WITNESS", "UNKNOWN", "NOT_WITNESSED"]
+        }
+      }
+    },
+    "prev_event_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
