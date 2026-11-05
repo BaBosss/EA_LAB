@@ -70,7 +70,7 @@ the checker reads. The checker reads only the frozen per-EA recipe. This follows
 | V3 | `windows.MAIN ∩ windows.HOLDOUT = ∅` (VERDICT GATE iron rule). |
 | V4 | `class` equals the class derived from modules (R6). Today only escalation is derivable (any grid / lot-progression module ⇒ escalation, either direction refused). trend / reversion / breakout cannot yet be told apart from module tokens, so a non-escalation recipe must state `class_derivation`; that choice is the author's and is reviewed, not machine-checked. |
 | V5 | `extra_round` is either `null` or `{reason, lever, approved_by, approved_utc}` with `approved_by ≠ frozen_by` (R20). At most one. |
-| V6 | Each `symbol_preset_ref` resolves and pins digits, point, tick value and contract size (R8). |
+| V6 | Each `symbol_preset_ref` names a `lane` and resolves to exactly one `BROKER_LANE` row of `factory/instrument_profiles.jsonl` for that symbol and lane, whose `content_hash` equals the sha256 of its canonical `values`, and whose `values` pin `spec_digits`, `spec_point`, `spec_tick_value` and `spec_contract_size` as finite numbers (R8). Rows are measured by `tools/mt5/SymbolSpecDump.mq5`. |
 | V7 | `stages` contains `MODEL4` before any stage that would issue CANDIDATE (R16). |
 | V8 | `score.dd_cap_equity_pct` is a finite number in (0, 12.0] (R17). A recipe may tighten the cap, never loosen it; NaN, ∞ or text refuse. |
 | V9 | Every SAFETY or SIZING binding without a `locked_value` has an entry in the recipe's `fixed_inputs` (R13 freeze). A4 checks the run's set against it. No canonical SAFETY binding carries a value today, so the recipe is where those values are frozen. |

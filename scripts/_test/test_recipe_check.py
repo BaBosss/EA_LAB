@@ -43,8 +43,12 @@ def make_root(escalation=False):
         {'_comment': 'fixture'},
         {'hypothesis_id': 'B99-H01', 'module_set': [{'token': 'LAB_CAP_CORE'}, {'token': token}]},
     ])
+    vals = {'spec_digits': 5, 'spec_point': 0.00001, 'spec_tick_value': 1.0, 'spec_contract_size': 100000.0}
+    vh = rc.hashlib.sha256(json.dumps(vals, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
     jl(os.path.join(f, 'instrument_profiles.jsonl'), [
-        {'symbol': 'GBPUSD', 'digits': 5, 'point': 0.00001, 'tick_value': 1.0, 'contract_size': 100000},
+        {'_comment': 'fixture'},
+        {'entity': 'InstrumentProfile', 'profile_id': 'GBPUSD_L1', 'profile_version': 1, 'content_hash': vh,
+         'layer': 'BROKER_LANE', 'symbol': 'GBPUSD', 'lane': '1', 'values': vals},
     ])
     with open(os.path.join(root, 'ea.ex5'), 'wb') as fh:
         fh.write(b'EX5')
@@ -64,7 +68,7 @@ def base_recipe(root):
                            'raw_sha256': rc.sha256_file(os.path.join(fac, 'hypotheses.jsonl'))},
         'class': 'trend', 'class_derivation': 'MACD crossover entry, no grid/lot progression',
         'symbols': ['GBPUSD'], 'timeframes': ['H1'],
-        'symbol_preset_refs': [{'symbol': 'GBPUSD', 'path': 'factory/instrument_profiles.jsonl', 'raw_sha256': rc.sha256_file(prof)}],
+        'symbol_preset_refs': [{'symbol': 'GBPUSD', 'lane': '1', 'path': 'factory/instrument_profiles.jsonl', 'raw_sha256': rc.sha256_file(prof)}],
         'windows': {'MAIN': ['2023.01.01', '2025.12.31'], 'BWD': ['2020.01.01', '2022.12.31'],
                     'HOLDOUT': ['2026.01.01', '2026.06.30']},
         'stages': [
@@ -149,6 +153,8 @@ def main():
         ('V2 stage names an unknown window', lambda r: r['stages'][0].update(window='RECENT'), 'V2'),
         ('V4 non-escalation class without derivation', lambda r: r.update(class_derivation=''), 'V4'),
         ('V6 preset ref without hash', lambda r: r['symbol_preset_refs'][0].pop('raw_sha256'), 'V6'),
+        ('V6 preset ref without lane', lambda r: r['symbol_preset_refs'][0].pop('lane'), 'V6'),
+        ('V6 preset ref on a lane with no profile', lambda r: r['symbol_preset_refs'][0].update(lane='5b'), 'V6'),
         ('V7 MODEL4 windows MAIN+HOLDOUT (no BWD)', lambda r: r['stages'][4].update(windows=['MAIN', 'HOLDOUT']), 'V7'),
         ('V8 NaN DD cap', lambda r: r['score'].update(dd_cap_equity_pct='NaN'), 'V8'),
         ('V8 infinite DD cap', lambda r: r['score'].update(dd_cap_equity_pct=float('inf')), 'V8'),
@@ -169,6 +175,15 @@ def main():
     out = rc.validate_recipe(prec, proot)
     check('V2 bindings edited after freezing refuse', has(out, 'V2 bindings_ref pin differs'), out)
     shutil.rmtree(proot)
+    # V6: a profile whose values no longer match its content_hash refuses
+    hroot = make_root()
+    pp = os.path.join(hroot, 'factory', 'instrument_profiles.jsonl')
+    prow = rc.read_jsonl(pp)
+    prow[0]['values']['spec_digits'] = 4
+    jl(pp, prow)
+    out = rc.validate_recipe(base_recipe(hroot), hroot)
+    check('V6 profile values edited without re-hashing refuse', has(out, 'V6 GBPUSD profile content_hash'), out)
+    shutil.rmtree(hroot)
     eroot = make_root(escalation=True)
     er = base_recipe(eroot)
     out = rc.validate_recipe(er, eroot)

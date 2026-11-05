@@ -100,6 +100,9 @@ def has_null(obj):
     return False
 
 
+# R8: the broker specs a symbol preset must pin, as written by tools/mt5/SymbolSpecDump.mq5.
+PROFILE_SPEC_KEYS = ('spec_digits', 'spec_point', 'spec_tick_value', 'spec_contract_size')
+
 # Roles whose value must be frozen in the recipe when the binding fixes none (R13).
 FROZEN_VALUE_ROLES = ('SAFETY', 'SIZING')
 
@@ -312,10 +315,20 @@ def validate_recipe(recipe, root):
         except Unreadable as exc:
             ref.append('V6 ' + str(exc))
             continue
-        if not rows:
-            ref.append('V6 %s has no row in %s' % (s, p.get('path')))
-        elif not all(rows[0].get(k) is not None for k in ('digits', 'point', 'tick_value', 'contract_size')):
-            ref.append('V6 %s profile does not pin digits/point/tick_value/contract_size' % s)
+        lane = p.get('lane')
+        if not lane:
+            ref.append('V6 %s preset ref names no lane (profiles are BROKER_LANE rows)' % s)
+            continue
+        rows = [r for r in rows if r.get('layer') == 'BROKER_LANE' and r.get('lane') == lane]
+        if len(rows) != 1:
+            ref.append('V6 %s has %d BROKER_LANE rows for lane %r in %s (need exactly 1)' % (s, len(rows), lane, p.get('path')))
+            continue
+        vals = rows[0].get('values') if isinstance(rows[0].get('values'), dict) else {}
+        want = hashlib.sha256(json.dumps(vals, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+        if rows[0].get('content_hash') != want:
+            ref.append('V6 %s profile content_hash does not match its values' % s)
+        if not all(finite(vals.get(k)) is not None for k in PROFILE_SPEC_KEYS):
+            ref.append('V6 %s profile does not pin %s' % (s, '/'.join(PROFILE_SPEC_KEYS)))
 
     # V7 Model 4 on MAIN+BWD before anything that could lead to CANDIDATE
     if 'MODEL4' not in names:
