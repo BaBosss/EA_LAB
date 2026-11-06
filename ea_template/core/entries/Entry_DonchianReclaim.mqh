@@ -1,4 +1,4 @@
-// new_entry.py: build 32, copied from Entry_DonchianReclaim.mqh (sha256 e42cd70f849d5e584c2935696c74b40d6022509cb8d3e1f60e04698ec52a26db)
+// new_entry.py: build 32, copied from Entry_DonchianReclaim.mqh (sha256 0c61ca7a6874677c15c2563842a16ba21046a1647b433fd2c93be5b1183d2810)
 //+------------------------------------------------------------------+
 //| Entry_DonchianReclaim.mqh (V2) - entry 32: Donchian breakout     |
 //| then an EMA pullback reclaim, single shot with ATR SL/TP and     |
@@ -164,11 +164,14 @@ bool DonchianReclaim_OnTick()
    {
       double bal = AccountInfoDouble(ACCOUNT_BALANCE);
       double eq  = AccountInfoDouble(ACCOUNT_EQUITY);
-      if(bal > 0.0 && (bal - eq) / bal * 100.0 >= _32_CutDDPct && Exec_CountAll() > 0)
+      if(bal > 0.0 && (bal - eq) / bal * 100.0 >= _32_CutDDPct)   // blocks every tick, flat or not (source)
       {
-         PrintFormat("[32] ACCOUNT CUT: (balance-equity)/balance %.2f%% >= %.2f%% -> close all", (bal - eq) / bal * 100.0, _32_CutDDPct);
-         if(!Exec_CloseAll()) Print("[32] account cut: residual exposure remains - retrying next tick");
-         g_dr_cuts++;
+         if(Exec_CountAll() > 0)
+         {
+            PrintFormat("[32] ACCOUNT CUT: (balance-equity)/balance %.2f%% >= %.2f%% -> close all", (bal - eq) / bal * 100.0, _32_CutDDPct);
+            if(!Exec_CloseAll()) Print("[32] account cut: residual exposure remains - retrying next tick");
+            if(g_dr_last_cut_bar != bar) g_dr_cuts++;
+         }
          g_dr_last_cut_bar = bar;
          return true;
       }
@@ -181,7 +184,9 @@ bool DonchianReclaim_OnTick()
    if(!newBar) return true;
    if(!DR_FiltersOK()) return true;
 
-   int sig = DR_Signal(newBar);
+   int sig = DR_Signal(newBar);                               // state updates happen even if TradeDir drops it (source)
+   if(sig == 1 && TradeDir == TRADEDIR_SHORT_ONLY) sig = 0;   // shared TradeDir, applied as the source does
+   if(sig == -1 && TradeDir == TRADEDIR_LONG_ONLY) sig = 0;
    if(sig == 0) return true;
    int dir = (sig == 1 ? 1 : 2);
    if(!Regime_AllowsEntryDirection(dir)) return true;

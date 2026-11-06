@@ -6,7 +6,7 @@
 #property version   "2.00"
 #property description "Boss Lab V2 - 31 Long-tail pin bar through a Bollinger band, single shot, ATR SL/TP, breakeven"
 #property strict
-// new_entry.py: entry source sha256 59922cd901a8a6245e8dfa848e419c54d4fdf9071ce7d7722b14a90e04081c1a; inputs source sha256 56c234a39e0007b37fb8c92f915c5826e287bb008eb0897b194b1942df5bd479.
+// new_entry.py: entry source sha256 ada0f8446de4097c1de7b7edcf842f0bac37bed6d67ffe0fa5b305fd0d018d25; inputs source sha256 56c234a39e0007b37fb8c92f915c5826e287bb008eb0897b194b1942df5bd479.
 // ported from AGY GrandModular S10 KangarooTail + R01 single shot + L01 flat (GrandFleet_Modular_Lab Module_01_Entries.mqh sha256 5CD115C5F0CD728F9DF125623F65BBF52511A1921ACFE038D018ECEDCE938B74, Module_03_Recovery_Engines.mqh sha256 F18CBB770E59419C63753DB9E0F6C0FA45DA64CDB369AD5064479A3F619E9281)
 
 #define LAB_ENTRY_31

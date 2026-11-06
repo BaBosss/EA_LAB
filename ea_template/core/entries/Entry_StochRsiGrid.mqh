@@ -1,4 +1,4 @@
-// new_entry.py: build 30, copied from Entry_StochRsiGrid.mqh (sha256 8f8d9a7b5a87dbbe013196004c2691ee661b1f1e9d9b833c306223e6a27afee2)
+// new_entry.py: build 30, copied from Entry_StochRsiGrid.mqh (sha256 c132fc46e31f61e33338e94a1df2ea155caaa46e08a4e2fd72aa661f86fd8415)
 //+------------------------------------------------------------------+
 //| Entry_StochRsiGrid.mqh (V2) - entry 30: StochRSI turn + flat     |
 //| two-sided adverse grid with weighted basket TP.                  |
@@ -32,7 +32,11 @@
 //|     a flat side opens layer 1 on its signal; an open side adds   |
 //|     a layer when price is a step beyond its extreme open:        |
 //|     step = max(_30_StepPoints, ATR(closed bar) x _30_StepAtrMult)|
-//|     at most _30_MaxLayers, at most one add per side per bar.     |
+//|     at most _30_MaxLayers (clamped to 1..8 as in the source), at |
+//|     most one add per side per bar.                               |
+//| A breached account cut blocks every tick, flat or not. Shared    |
+//| TradeDir filters the signal. Hedging accounts only: on netting   |
+//| the build refuses to trade (layers would merge).                 |
 //| Lots are flat (MM_FirstLot, normally _41_FixedLot). No per-order |
 //| SL: the account cut and the shared hard kill are the stops.      |
 //+------------------------------------------------------------------+
@@ -48,6 +52,7 @@ static datetime g_srg_last_cut_bar  = 0;
 static datetime g_srg_last_add_bar[3];   // index 1 = buy, 2 = sell
 static int      g_srg_cuts          = 0;
 static int      g_srg_tp_closes     = 0;
+static bool     g_srg_hedging       = false;
 
 struct SrgSide
 {
@@ -77,6 +82,9 @@ void StochRsiGrid_Init()
    g_srg_last_add_bar[0] = 0; g_srg_last_add_bar[1] = 0; g_srg_last_add_bar[2] = 0;
    g_srg_cuts = 0;
    g_srg_tp_closes = 0;
+   g_srg_hedging = ((ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE) == ACCOUNT_MARGIN_MODE_RETAIL_HEDGING);
+   if(!g_srg_hedging)
+      Print("[30] REFUSED: this build needs a hedging account (independent layers per side) - it will not trade here");
    if(g_srg_sto == INVALID_HANDLE || g_srg_rsi == INVALID_HANDLE || g_srg_atr == INVALID_HANDLE)
       Print("[30] indicator handle failed - no new baskets will open");
 }
@@ -101,9 +109,12 @@ int SRG_Signal()
    double d1 = SRG_Buf(g_srg_sto, 1, 1), d2 = SRG_Buf(g_srg_sto, 1, 2);
    double rsi = SRG_Buf(g_srg_rsi, 0, 1);
    if(k1 < 0.0 || k2 < 0.0 || d1 < 0.0 || d2 < 0.0 || rsi < 0.0) return 0;
-   if(k2 <= d2 && k1 > d1 && k1 <= _30_KBuyMax && rsi <= _30_RsiBuyMax) return 1;
-   if(k2 >= d2 && k1 < d1 && k1 >= _30_KSellMin && rsi >= _30_RsiSellMin) return -1;
-   return 0;
+   int sig = 0;
+   if(k2 <= d2 && k1 > d1 && k1 <= _30_KBuyMax && rsi <= _30_RsiBuyMax) sig = 1;
+   else if(k2 >= d2 && k1 < d1 && k1 >= _30_KSellMin && rsi >= _30_RsiSellMin) sig = -1;
+   if(sig == 1 && TradeDir == TRADEDIR_SHORT_ONLY) return 0;   // shared TradeDir, applied as the source does
+   if(sig == -1 && TradeDir == TRADEDIR_LONG_ONLY) return 0;
+   return sig;
 }
 
 double SRG_Atr()
@@ -184,7 +195,7 @@ void SRG_SeedOrAdd(const int dir, const int sig, const double firstLot, const da
    bool open = false;
    if(s.count == 0)
       open = (dir == 1 ? sig == 1 : sig == -1);
-   else if(s.count < _30_MaxLayers && s.extreme > 0.0)
+   else if(s.count < (int)MathMin(8, MathMax(1, _30_MaxLayers)) && s.extreme > 0.0)   // source clamps depth to 1..8
    {
       double atr  = SRG_Atr();
       double step = _30_StepPoints * SymbolInfoDouble(_Symbol, SYMBOL_POINT);
@@ -211,16 +222,24 @@ bool StochRsiGrid_OnTick()
    const bool newBar = (bar != g_srg_last_bar);
    if(newBar) g_srg_last_bar = bar;
 
-   // 1. account cut, then pause for the rest of the bar
+   // a netting account merges same-side layers into one position, so the layer count, the
+   // independent baskets and the layer cap would all be wrong: refuse to trade there
+   if(!g_srg_hedging) return true;
+
+   // 1. account cut, then pause for the rest of the bar. As in the source, a breach returns
+   //    every tick even while flat (no own positions), so nothing opens into a breached account.
    if(_30_CutDDPct > 0.0)
    {
       double bal = AccountInfoDouble(ACCOUNT_BALANCE);
       double eq  = AccountInfoDouble(ACCOUNT_EQUITY);
-      if(bal > 0.0 && (bal - eq) / bal * 100.0 >= _30_CutDDPct && Exec_CountAll() > 0)
+      if(bal > 0.0 && (bal - eq) / bal * 100.0 >= _30_CutDDPct)
       {
-         PrintFormat("[30] ACCOUNT CUT: (balance-equity)/balance %.2f%% >= %.2f%% -> close all", (bal - eq) / bal * 100.0, _30_CutDDPct);
-         if(!Exec_CloseAll()) Print("[30] account cut: residual exposure remains - retrying next tick");
-         g_srg_cuts++;
+         if(Exec_CountAll() > 0)
+         {
+            PrintFormat("[30] ACCOUNT CUT: (balance-equity)/balance %.2f%% >= %.2f%% -> close all", (bal - eq) / bal * 100.0, _30_CutDDPct);
+            if(!Exec_CloseAll()) Print("[30] account cut: residual exposure remains - retrying next tick");
+            if(g_srg_last_cut_bar != bar) g_srg_cuts++;
+         }
          g_srg_last_cut_bar = bar;
          return true;
       }

@@ -6,7 +6,7 @@
 #property version   "2.00"
 #property description "Boss Lab V2 - 30 StochRSI turn + flat two-sided adverse grid, weighted basket TP, account cut"
 #property strict
-// new_entry.py: entry source sha256 8f8d9a7b5a87dbbe013196004c2691ee661b1f1e9d9b833c306223e6a27afee2; inputs source sha256 85bfd04578cfca72eaf51c7e2267327674b6dab0e9db19bb10e38e23b22d9865.
+// new_entry.py: entry source sha256 c132fc46e31f61e33338e94a1df2ea155caaa46e08a4e2fd72aa661f86fd8415; inputs source sha256 85bfd04578cfca72eaf51c7e2267327674b6dab0e9db19bb10e38e23b22d9865.
 // ported from AGY GrandModular S18 StochRsiConvergence + R02 grid + L01 flat (GrandFleet_Modular_Lab Module_01_Entries.mqh sha256 5CD115C5F0CD728F9DF125623F65BBF52511A1921ACFE038D018ECEDCE938B74, Module_03_Recovery_Engines.mqh sha256 F18CBB770E59419C63753DB9E0F6C0FA45DA64CDB369AD5064479A3F619E9281), preset PORT01 S18 StochRSI Safe
 
 #define LAB_ENTRY_30

@@ -1,4 +1,4 @@
-// new_entry.py: build 31, copied from Entry_BBPinBar.mqh (sha256 59922cd901a8a6245e8dfa848e419c54d4fdf9071ce7d7722b14a90e04081c1a)
+// new_entry.py: build 31, copied from Entry_BBPinBar.mqh (sha256 ada0f8446de4097c1de7b7edcf842f0bac37bed6d67ffe0fa5b305fd0d018d25)
 //+------------------------------------------------------------------+
 //| Entry_BBPinBar.mqh (V2) - entry 31: long-tail pin bar that       |
 //| pierces a Bollinger band, single shot with ATR SL/TP + breakeven.|
@@ -142,11 +142,14 @@ bool BBPinBar_OnTick()
    {
       double bal = AccountInfoDouble(ACCOUNT_BALANCE);
       double eq  = AccountInfoDouble(ACCOUNT_EQUITY);
-      if(bal > 0.0 && (bal - eq) / bal * 100.0 >= _31_CutDDPct && Exec_CountAll() > 0)
+      if(bal > 0.0 && (bal - eq) / bal * 100.0 >= _31_CutDDPct)   // blocks every tick, flat or not (source)
       {
-         PrintFormat("[31] ACCOUNT CUT: (balance-equity)/balance %.2f%% >= %.2f%% -> close all", (bal - eq) / bal * 100.0, _31_CutDDPct);
-         if(!Exec_CloseAll()) Print("[31] account cut: residual exposure remains - retrying next tick");
-         g_bpb_cuts++;
+         if(Exec_CountAll() > 0)
+         {
+            PrintFormat("[31] ACCOUNT CUT: (balance-equity)/balance %.2f%% >= %.2f%% -> close all", (bal - eq) / bal * 100.0, _31_CutDDPct);
+            if(!Exec_CloseAll()) Print("[31] account cut: residual exposure remains - retrying next tick");
+            if(g_bpb_last_cut_bar != bar) g_bpb_cuts++;
+         }
          g_bpb_last_cut_bar = bar;
          return true;
       }
@@ -160,6 +163,8 @@ bool BBPinBar_OnTick()
    if(!BPB_FiltersOK()) return true;
 
    int sig = BPB_Signal();
+   if(sig == 1 && TradeDir == TRADEDIR_SHORT_ONLY) sig = 0;   // shared TradeDir, applied as the source does
+   if(sig == -1 && TradeDir == TRADEDIR_LONG_ONLY) sig = 0;
    if(sig == 0) return true;
    int dir = (sig == 1 ? 1 : 2);
    if(!Regime_AllowsEntryDirection(dir)) return true;

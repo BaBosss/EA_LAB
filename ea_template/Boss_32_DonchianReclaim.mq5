@@ -6,7 +6,7 @@
 #property version   "2.00"
 #property description "Boss Lab V2 - 32 Donchian breakout then fast-EMA pullback reclaim, single shot, ATR SL/TP, breakeven"
 #property strict
-// new_entry.py: entry source sha256 e42cd70f849d5e584c2935696c74b40d6022509cb8d3e1f60e04698ec52a26db; inputs source sha256 700ee79cdc60f55f7695b69cfb1f68b568396cc2e8bd5705216a98e85192be44.
+// new_entry.py: entry source sha256 0c61ca7a6874677c15c2563842a16ba21046a1647b433fd2c93be5b1183d2810; inputs source sha256 700ee79cdc60f55f7695b69cfb1f68b568396cc2e8bd5705216a98e85192be44.
 // ported from AGY GrandModular S04 DonchianPullback + R01 single shot + L01 flat (GrandFleet_Modular_Lab Module_01_Entries.mqh sha256 5CD115C5F0CD728F9DF125623F65BBF52511A1921ACFE038D018ECEDCE938B74, Module_03_Recovery_Engines.mqh sha256 F18CBB770E59419C63753DB9E0F6C0FA45DA64CDB369AD5064479A3F619E9281)
 
 #define LAB_ENTRY_32
