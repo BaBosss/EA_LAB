@@ -39,17 +39,50 @@ def write_manifest(d, m, entry='EntrySignal Entry_Evaluate(){ }\nbool Probe_Init
 
 
 class ActiveTests(unittest.TestCase):
-    def test_ifdef_ifndef_else_and_define(self):
-        t = '#ifdef A\nx\n#else\ny\n#endif\n#ifndef A\nz\n#define B\n#endif\n#ifdef B\nw\n#endif\n// c\n\n'
-        self.assertEqual(N.active(t, 'A'), ['x'])
-        self.assertEqual(N.active(t, None), ['y', 'z', '#define B', 'w'])
+    def test_known_conditions_are_decided(self):
+        t = ('#ifdef LAB_ENTRY_1\nx\n#else\ny\n#endif\n#ifndef LAB_ENTRY_1\nz\n#define LAB_B\n#endif\n'
+             '#ifdef LAB_B\nw\n#endif\n// c\n\n')
+        # LAB_B is not defined in this file when the tag is on, so it is an unknown macro: `w` is kept (guarded)
+        self.assertEqual(N.active(t, 'LAB_ENTRY_1'), ['x', 'w'])
+        self.assertEqual(N.active(t, None), ['y', 'z', '#define LAB_B', 'w'])      # defined earlier here: decided
 
-    def test_unbalanced_refused(self):
-        with self.assertRaises(N.Refuse):
-            N.active('#ifdef A\nx\n', 'A')
+    def test_unknown_macro_conditions_are_kept_with_their_guard(self):
+        t = '#ifdef SOME_GUARD\nx\n#else\ny\n#endif\nz\n'
+        self.assertEqual(N.active(t, None, annotate=True),
+                         [((('ifdef', 'SOME_GUARD'),), 'x'), ((('ifndef', 'SOME_GUARD'),), 'y'), ((), 'z')])
+
+    def test_unbalanced_and_if_elif_refused(self):
+        for bad in ('#ifdef LAB_ENTRY_1\nx\n', '#if 1\n#endif\n', '#ifdef LAB_ENTRY_1\n#elif 1\n#endif\n'):
+            with self.assertRaises(N.Refuse):
+                N.active(bad, 'LAB_ENTRY_1')
 
     def test_trailing_comment_is_kept(self):
         self.assertEqual(N.active('input int a = 1; // label\n', None), ['input int a = 1; // label'])
+
+    BASE = '#ifdef LAB_ENTRY_98\nnewonly\n#endif\nshared\n'
+
+    def differs(self, new):
+        return any(N.active(self.BASE, t, annotate=True) != N.active(new, t, annotate=True) for t in ('LAB_ENTRY_14', None))
+
+    def test_conditions_on_other_files_macros_cannot_hide_an_added_line(self):
+        """Codex rounds 2-4: added lines under a macro defined in another file must be seen by existing builds."""
+        add = '#include "entries/Entry_Leak.mqh"\n'
+        scenarios = {
+            'top-level LAB_CONST guard': '#ifdef LAB_CONST_ExitMode\n' + add + '#endif\nshared\n',
+            'ifndef of the new tag around a guard':
+                '#ifndef LAB_ENTRY_98\n#ifdef LAB_CONST_ExitMode\n' + add + '#endif\n#endif\nshared\n',
+            'else branch of a new-tag ifdef':
+                '#ifdef LAB_ENTRY_98\n#ifdef LAB_CONST_ExitMode\n#endif\n#else\n#ifdef LAB_CONST_ExitMode\n' + add
+                + '#endif\n#endif\nshared\n',
+            'include-guard macro': '#ifdef BOSS_LAB_INPUTS_MQH\n' + add + '#endif\nshared\n',
+        }
+        for name, new in scenarios.items():
+            self.assertTrue(self.differs(new), name)
+
+    def test_a_new_tag_only_block_is_invisible_to_existing_builds(self):
+        new = ('#ifdef LAB_ENTRY_98\nnewonly\n#ifndef LAB_CONST__98_X\ninput int a = 1;\n#endif\n'
+               '#ifdef LAB_CONST__98_X\nconst int a = 1;\n#endif\n#endif\nshared\n')
+        self.assertFalse(self.differs(new))
 
 
 class ProofSpecificity(unittest.TestCase):
@@ -229,8 +262,8 @@ class RealCoreEditsAreNeutral(unittest.TestCase):
     def test_existing_builds_see_identical_active_source(self):
         _, ni, nl = self.edit(own_ontick='Probe_OnTick')
         for tag in self.tags + [None]:
-            self.assertEqual(N.active(self.inputs, tag), N.active(ni, tag), 'Inputs.mqh %s' % tag)
-            self.assertEqual(N.active(self.labcore, tag), N.active(nl, tag), 'LabCore.mqh %s' % tag)
+            self.assertEqual(N.active(self.inputs, tag, annotate=True), N.active(ni, tag, annotate=True), 'Inputs.mqh %s' % tag)
+            self.assertEqual(N.active(self.labcore, tag, annotate=True), N.active(nl, tag, annotate=True), 'LabCore.mqh %s' % tag)
 
     def test_new_build_sees_its_blocks(self):
         _, ni, nl = self.edit(own_ontick='Probe_OnTick')
@@ -249,8 +282,8 @@ class RealCoreEditsAreNeutral(unittest.TestCase):
         ni2 = N.edit_inputs(ni, mf2, items2, 'ef' * 32)
         nl2 = N.edit_labcore(nl, mf2)
         for tag in self.tags + [None, 'LAB_ENTRY_98']:
-            a = N.active(ni, tag)
-            self.assertEqual(a, N.active(ni2, tag), tag)
+            a = N.active(ni, tag, annotate=True)
+            self.assertEqual(a, N.active(ni2, tag, annotate=True), tag)
         self.assertEqual(N.active(nl, 'LAB_ENTRY_98'), N.active(nl2, 'LAB_ENTRY_98'))
         self.assertIn('   Probe_Init();', N.active(nl2, 'LAB_ENTRY_97'))
 

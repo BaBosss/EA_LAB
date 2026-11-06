@@ -319,27 +319,55 @@ def add_wrapper_owner(text, build, wrapper_rel):
 
 
 # ------------------------------------------------------------------ neutrality proof
-def active(text, tag):
-    """Lines of `text` that are ACTIVE when `tag` (or nothing) is the only defined build token.
-    Blank lines and whole-line comments carry no tokens and are dropped. Trailing comments stay:
-    in MQL5 the trailing comment of an `input` line is its Inputs-tab label."""
+def active(text, tag, annotate=False):
+    """Lines of `text` that can be active when `tag` (or nothing) is the only defined build token.
+
+    SOUND AGAINST MACROS DEFINED IN OTHER FILES. Known conditions are decided: LAB_ENTRY_<NN> names (defined only
+    when it is `tag`) and names `#define`d earlier in this file. A condition on any OTHER name (an include guard,
+    a LAB_CONST_* token from a generated wrapper's allowlist header) is UNKNOWN: both branches are kept and each
+    line carries the stack of unknown conditions guarding it (annotate=True returns (conditions, line) pairs).
+    Comparing annotated sequences therefore means "identical for every possible value of the unknown macros".
+    #if / #elif are refused (the template does not use them) rather than guessed.
+
+    Blank lines and whole-line comments carry no tokens and are dropped. Trailing comments stay: in MQL5 the
+    trailing comment of an `input` line is its Inputs-tab label."""
     defined = set([tag]) if tag else set()
-    out, stack, cur = [], [], True
-    for l in text.split('\n'):
+    out, stack, conds, cur = [], [], [], True
+
+    def known(name):
+        return name in defined or re.fullmatch(r'LAB_ENTRY_\d+', name) is not None
+
+    for l in text.split(chr(10)):
         s = l.strip()
         m = re.match(r'#(ifdef|ifndef)\s+(\S+)', s)
         if m:
-            cond = (m.group(2) in defined) if m.group(1) == 'ifdef' else (m.group(2) not in defined)
-            stack.append((cur, cond))
-            cur = cur and cond
+            name, neg = m.group(2), m.group(1) == 'ifndef'
+            if known(name):
+                cond = (name in defined) != neg
+                stack.append((cur, 'known', cond, None))
+                cur = cur and cond
+            else:
+                stack.append((cur, 'unknown', None, (m.group(1), name)))
+                conds.append((m.group(1), name))
             continue
+        if re.match(r'#(if|elif)\b', s):
+            raise Refuse('unmodelled preprocessor directive %r (only ifdef/ifndef/else/endif/define are supported)' % s)
         if s.startswith('#else'):
-            parent, cond = stack.pop()
-            stack.append((parent, not cond))
-            cur = parent and (not cond)
+            parent, kind, cond, key = stack.pop()
+            if kind == 'known':
+                stack.append((parent, kind, not cond, None))
+                cur = parent and (not cond)
+            else:
+                conds.pop()
+                flipped = ('ifndef' if key[0] == 'ifdef' else 'ifdef', key[1])
+                stack.append((parent, kind, None, flipped))
+                conds.append(flipped)
             continue
         if s.startswith('#endif'):
-            cur = stack.pop()[0]
+            parent, kind, cond, key = stack.pop()
+            if kind == 'unknown':
+                conds.pop()
+            cur = parent
             continue
         if not cur:
             continue
@@ -348,7 +376,7 @@ def active(text, tag):
             defined.add(d.group(1))
         if s == '' or s.startswith('//'):
             continue
-        out.append(l)
+        out.append((tuple(conds), l) if annotate else l)
     if stack:
         raise Refuse('unbalanced preprocessor nesting')
     return out
@@ -410,6 +438,8 @@ def directive_violations(new_text, added, new_tags, rel=''):
             if stack:
                 in_new = stack.pop()
             continue
+        if re.match(r'#(?:else|elif)', s) and stack:
+            in_new = stack[-1]      # the other branch of any guard is never a new-build-only region
         if not is_added:
             continue
         if re.match(r'#(?:else|elif|if|undef|pragma)', s):
@@ -451,7 +481,7 @@ def prove(root):
             fail.append('%s: contains a bare CR (line ends the proof does not split on)' % rel)
         same = 0
         for tag in tagset:
-            a, b = active(old, tag), active(new, tag)
+            a, b = active(old, tag, annotate=True), active(new, tag, annotate=True)
             if a == b:
                 same += 1
                 continue
