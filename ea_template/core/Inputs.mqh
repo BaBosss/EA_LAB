@@ -28,7 +28,9 @@
 #ifndef LAB_ENTRY_27
 #ifndef LAB_ENTRY_28
 #ifndef LAB_ENTRY_29
+#ifndef LAB_ENTRY_30
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -467,6 +469,21 @@ const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
 const ENUM_STACK_MODE StackMode = STACK_SINGLE; // HIDDEN_INACTIVE: dedicated physical cycle owner
 const ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;
 #endif
+#ifdef LAB_ENTRY_30
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 30: entry-owned pipeline: shared Stack/Exit are not used)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+// new_entry.py: end stack build 30
 // A10 C2 port: stack selectors for builds 23, 26, 27, 28, 29 (single order per signal or entry-owned pipeline).
 #ifdef LAB_ENTRY_23
 #ifndef LAB_CONST_StackMode
@@ -2920,6 +2937,139 @@ input double _29_ChandelierMult = 3.0;     // [P12940] Chandelier ATR trailing s
 #endif
 #ifdef LAB_CONST__29_ChandelierMult
 const double _29_ChandelierMult = LAB_CONSTVAL__29_ChandelierMult;
+#endif
+#endif
+
+// new_entry.py: build 30 StochRsiGrid (inputs source sha256 85bfd04578cfca72eaf51c7e2267327674b6dab0e9db19bb10e38e23b22d9865)
+#ifdef LAB_ENTRY_30
+input group "=== 30 StochRsiGrid signal (AGY S18) ==="
+#ifndef LAB_CONST__30_StochK
+input int _30_StochK = 14; // [P13000] Stochastic %K period
+#endif
+#ifdef LAB_CONST__30_StochK
+const int _30_StochK = LAB_CONSTVAL__30_StochK;
+#endif
+#ifndef LAB_CONST__30_StochD
+input int _30_StochD = 3; // [P13001] Stochastic %D period
+#endif
+#ifdef LAB_CONST__30_StochD
+const int _30_StochD = LAB_CONSTVAL__30_StochD;
+#endif
+#ifndef LAB_CONST__30_StochSlowing
+input int _30_StochSlowing = 3; // [P13002] Stochastic slowing
+#endif
+#ifdef LAB_CONST__30_StochSlowing
+const int _30_StochSlowing = LAB_CONSTVAL__30_StochSlowing;
+#endif
+#ifndef LAB_CONST__30_RsiPeriod
+input int _30_RsiPeriod = 20; // [P13003] RSI period
+#endif
+#ifdef LAB_CONST__30_RsiPeriod
+const int _30_RsiPeriod = LAB_CONSTVAL__30_RsiPeriod;
+#endif
+#ifndef LAB_CONST__30_KBuyMax
+input double _30_KBuyMax = 25.0; // [P13004] buy: %K at or below this after crossing up
+#endif
+#ifdef LAB_CONST__30_KBuyMax
+const double _30_KBuyMax = LAB_CONSTVAL__30_KBuyMax;
+#endif
+#ifndef LAB_CONST__30_RsiBuyMax
+input double _30_RsiBuyMax = 35.0; // [P13005] buy: RSI at or below this
+#endif
+#ifdef LAB_CONST__30_RsiBuyMax
+const double _30_RsiBuyMax = LAB_CONSTVAL__30_RsiBuyMax;
+#endif
+#ifndef LAB_CONST__30_KSellMin
+input double _30_KSellMin = 75.0; // [P13006] sell: %K at or above this after crossing down
+#endif
+#ifdef LAB_CONST__30_KSellMin
+const double _30_KSellMin = LAB_CONSTVAL__30_KSellMin;
+#endif
+#ifndef LAB_CONST__30_RsiSellMin
+input double _30_RsiSellMin = 65.0; // [P13007] sell: RSI at or above this
+#endif
+#ifdef LAB_CONST__30_RsiSellMin
+const double _30_RsiSellMin = LAB_CONSTVAL__30_RsiSellMin;
+#endif
+input group "=== 30 Grid (flat lots, independent buy and sell baskets) ==="
+#ifndef LAB_CONST__30_MaxLayers
+input int _30_MaxLayers = 5; // [P13008] max layers per side
+#endif
+#ifdef LAB_CONST__30_MaxLayers
+const int _30_MaxLayers = LAB_CONSTVAL__30_MaxLayers;
+#endif
+#ifndef LAB_CONST__30_StepPoints
+input double _30_StepPoints = 100; // [P13009] minimum step in points
+#endif
+#ifdef LAB_CONST__30_StepPoints
+const double _30_StepPoints = LAB_CONSTVAL__30_StepPoints;
+#endif
+#ifndef LAB_CONST__30_AtrPeriod
+input int _30_AtrPeriod = 14; // [P13010] ATR period for the step
+#endif
+#ifdef LAB_CONST__30_AtrPeriod
+const int _30_AtrPeriod = LAB_CONSTVAL__30_AtrPeriod;
+#endif
+#ifndef LAB_CONST__30_StepAtrMult
+input double _30_StepAtrMult = 1.0; // [P13011] step = max(points, ATR x this)
+#endif
+#ifdef LAB_CONST__30_StepAtrMult
+const double _30_StepAtrMult = LAB_CONSTVAL__30_StepAtrMult;
+#endif
+#ifndef LAB_CONST__30_AddBarDelay
+input bool _30_AddBarDelay = true; // [P13012] at most one add per side per bar
+#endif
+#ifdef LAB_CONST__30_AddBarDelay
+const bool _30_AddBarDelay = LAB_CONSTVAL__30_AddBarDelay;
+#endif
+input group "=== 30 Basket exits and account cut ==="
+#ifndef LAB_CONST__30_InitTP_Points
+input double _30_InitTP_Points = 150; // [P13013] one layer: TP distance from its open
+#endif
+#ifdef LAB_CONST__30_InitTP_Points
+const double _30_InitTP_Points = LAB_CONSTVAL__30_InitTP_Points;
+#endif
+#ifndef LAB_CONST__30_WeightedTP_Points
+input double _30_WeightedTP_Points = 65; // [P13014] more layers: TP distance from the weighted open
+#endif
+#ifdef LAB_CONST__30_WeightedTP_Points
+const double _30_WeightedTP_Points = LAB_CONSTVAL__30_WeightedTP_Points;
+#endif
+#ifndef LAB_CONST__30_BasketTP_Per001
+input double _30_BasketTP_Per001 = 15.0; // [P13015] basket net TP in money per 0.01 first lot
+#endif
+#ifdef LAB_CONST__30_BasketTP_Per001
+const double _30_BasketTP_Per001 = LAB_CONSTVAL__30_BasketTP_Per001;
+#endif
+#ifndef LAB_CONST__30_CutDDPct
+input double _30_CutDDPct = 12.0; // [P13016] close all at (balance-equity)/balance >= this
+#endif
+#ifdef LAB_CONST__30_CutDDPct
+const double _30_CutDDPct = LAB_CONSTVAL__30_CutDDPct;
+#endif
+#ifndef LAB_CONST__30_PauseBarAfterCut
+input bool _30_PauseBarAfterCut = true; // [P13017] no new orders for the rest of the cut bar
+#endif
+#ifdef LAB_CONST__30_PauseBarAfterCut
+const bool _30_PauseBarAfterCut = LAB_CONSTVAL__30_PauseBarAfterCut;
+#endif
+#ifndef LAB_CONST__30_MaxSpreadPoints
+input int _30_MaxSpreadPoints = 60; // [P13018] no seeds or adds above this spread (0 = off)
+#endif
+#ifdef LAB_CONST__30_MaxSpreadPoints
+const int _30_MaxSpreadPoints = LAB_CONSTVAL__30_MaxSpreadPoints;
+#endif
+#ifndef LAB_CONST__30_StartHour
+input int _30_StartHour = 0; // [P13019] trading hours start (server)
+#endif
+#ifdef LAB_CONST__30_StartHour
+const int _30_StartHour = LAB_CONSTVAL__30_StartHour;
+#endif
+#ifndef LAB_CONST__30_EndHour
+input int _30_EndHour = 23; // [P13020] trading hours end (server)
+#endif
+#ifdef LAB_CONST__30_EndHour
+const int _30_EndHour = LAB_CONSTVAL__30_EndHour;
 #endif
 #endif
 

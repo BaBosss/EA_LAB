@@ -63,3 +63,4 @@
 {"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992701,"scope":"GLOBAL","status":"RESERVED"}
 {"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992801,"scope":"GLOBAL","status":"RESERVED"}
 {"allocated_at_commit":"ed9c85a8bda291c4c32a5d02c9f5ad5d7d71b4f5","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":992901,"scope":"GLOBAL","status":"RESERVED"}
+{"allocated_at_commit":"0016914f15a9b84c26aba65a376ab4380e385919","allocated_to":null,"entity":"MagicAllocation","legacy_exception":false,"magic":993001,"scope":"GLOBAL","status":"RESERVED"}

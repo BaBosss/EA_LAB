@@ -69,6 +69,10 @@
 #ifdef LAB_ENTRY_25
    #include "entries/Entry_PersistentAdaptiveGrid.mqh"
 #endif
+#ifdef LAB_ENTRY_30
+   #include "entries/Entry_StochRsiGrid.mqh"
+#endif
+// new_entry.py: end include build 30
 // A10 C2 port: additive builds 23/26/27/28/29.
 #ifdef LAB_ENTRY_23
    #include "entries/Entry_LUX03_OrderBlock.mqh"
@@ -501,6 +505,10 @@ int OnInit()
 #ifdef LAB_ENTRY_22
    Entry_WickDisplacement_Init();
 #endif
+#ifdef LAB_ENTRY_30
+   StochRsiGrid_Init();
+#endif
+// new_entry.py: end init build 30
 #ifdef LAB_ENTRY_23
    Entry_LUX03_Init();
 #endif
@@ -594,6 +602,10 @@ void OnDeinit(const int reason)
 #ifdef LAB_ENTRY_19
    Entry_AdaptiveTrendGrid_Deinit();
 #endif
+#ifdef LAB_ENTRY_30
+   StochRsiGrid_Deinit();
+#endif
+// new_entry.py: end deinit build 30
 #ifdef LAB_ENTRY_23
    Entry_LUX03_LogCounters();
 #endif
@@ -742,6 +754,11 @@ void OnTick()
    // so shared Exit/Stack/Recovery/Hedge/Basket paths cannot also act.
    if(AdaptiveTrendGrid_OnTick()) return;
 #endif
+#ifdef LAB_ENTRY_30
+   // new_entry.py: entry-owned pipeline (runs its own DD/halt cage first, then always returns).
+   if(StochRsiGrid_OnTick()) return;
+#endif
+// new_entry.py: end tick build 30
 #ifdef LAB_ENTRY_27
    // A10 C2 port: entry-owned pipeline (runs its own DD/halt cage first, then always returns).
    if(TrendRider_OnTick()) return;

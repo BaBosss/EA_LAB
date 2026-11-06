@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 364.
+Rows in source registry: 385.
 
 ## Override pairs
 
@@ -198,6 +198,27 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_29_TrendFilter` | build 29 only | none direct | 0=Both sides, 1=Filter by Trend EMA (only trade with trend) |
 | `_29_UseATR` | build 29 only | none direct | Dynamic ATR scaling for step, SL, TP |
 | `_29_UseOCO` | build 29 only | none direct | One-Cancels-Other (cancel opposite pendings on fill) |
+| `_30_AddBarDelay` | build 30 only | none direct | at most one add per side per bar |
+| `_30_AtrPeriod` | build 30 only | none direct | ATR period for the step |
+| `_30_BasketTP_Per001` | build 30 only | none direct | basket net TP in money per 0.01 first lot |
+| `_30_CutDDPct` | build 30 only | none direct | close all at (balance-equity)/balance >= this |
+| `_30_EndHour` | build 30 only | none direct | trading hours end (server) |
+| `_30_InitTP_Points` | build 30 only | none direct | one layer: TP distance from its open |
+| `_30_KBuyMax` | build 30 only | none direct | buy: %K at or below this after crossing up |
+| `_30_KSellMin` | build 30 only | none direct | sell: %K at or above this after crossing down |
+| `_30_MaxLayers` | build 30 only | none direct | max layers per side |
+| `_30_MaxSpreadPoints` | build 30 only | none direct | no seeds or adds above this spread (0 = off) |
+| `_30_PauseBarAfterCut` | build 30 only | none direct | no new orders for the rest of the cut bar |
+| `_30_RsiBuyMax` | build 30 only | none direct | buy: RSI at or below this |
+| `_30_RsiPeriod` | build 30 only | none direct | RSI period |
+| `_30_RsiSellMin` | build 30 only | none direct | sell: RSI at or above this |
+| `_30_StartHour` | build 30 only | none direct | trading hours start (server) |
+| `_30_StepAtrMult` | build 30 only | none direct | step = max(points, ATR x this) |
+| `_30_StepPoints` | build 30 only | none direct | minimum step in points |
+| `_30_StochD` | build 30 only | none direct | Stochastic %D period |
+| `_30_StochK` | build 30 only | none direct | Stochastic %K period |
+| `_30_StochSlowing` | build 30 only | none direct | Stochastic slowing |
+| `_30_WeightedTP_Points` | build 30 only | none direct | more layers: TP distance from the weighted open |
 | `TradeDir` | builds 11/12/13/15 only (checked explicitly in those 4 Entry_Evaluate() functions); builds 14/16/18 use their own fixed-direction input instead and never read this; build17 is bidirectional by design and never reads this | per-entry: none direct, but functionally overlaps with _14_Direction/_16_Direction/_18_Direction on builds that ignore it | Restricts a symmetric entry signal to long-only, short-only, or both; has zero effect on builds 14/16/17/18. |
 | `TrendFilter` | builds 11/12/13 only; no effect on 14/15/16/17/18 | _71_ATRMA+_71_ATRRatio(71); _72_SlopeBar(72) | Adds a confirming filter (ATR-expansion or MA-slope) before the entry signal is allowed to fire; only wired into 3 of the 8 entry modules. |
 
@@ -552,6 +573,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 364 (must equal the source registry's 364 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 385 (must equal the source registry's 385 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 11.
