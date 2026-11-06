@@ -123,12 +123,34 @@ class HookInjectionTests(unittest.TestCase):
             with self.assertRaises(N.Refuse):
                 N.load_manifest(p)
 
-    def test_directive_audit(self):
-        ok = '+++ b/x\n+#ifdef LAB_ENTRY_98\n+  #include "entries/Entry_Probe.mqh"\n+#endif\n+#ifndef LAB_CONST__98_X\n+#define LAB_CONSTVAL_X 1\n+input int a = 1;\n'
-        self.assertEqual(N.directive_violations(ok), [])
-        for bad in ('+#else', '+#ifdef BOSS_LAB_INPUTS_MQH', '+#include "entries/Leak.mqh"', '+#if 1', '+#undef LAB_ENTRY_14',
-                    '+#ifdef LAB_ENTRY_14 && X', '+#define EVIL 1'):
-            self.assertEqual(N.directive_violations(bad + '\n'), [bad[1:]], bad)
+    NEW = {'LAB_ENTRY_98'}
+
+    def audit(self, text, rel='x.mqh', unchanged=()):
+        lines = text.split('\n')
+        return N.directive_violations(text, set(range(1, len(lines) + 1)) - set(unchanged), self.NEW, rel)
+
+    def test_directive_audit_accepts_the_tools_own_shapes(self):
+        ok = ('#ifndef LAB_ENTRY_98\n#define LAB_ENTRY_11 // fallback\n#endif\n'
+              '#ifdef LAB_ENTRY_98\n#include "entries/Entry_Probe.mqh"\n#ifndef LAB_CONST__98_X\ninput int a = 1;\n#endif\n'
+              '#ifdef LAB_CONST__98_X\nconst int a = LAB_CONSTVAL__98_X;\n#endif\n#endif\n')
+        self.assertEqual(self.audit(ok, unchanged=(2,)), [])      # line 2 is the existing fallback define
+        self.assertEqual(self.audit('#define CFG_SURFACE_ENUMERATED\n', 'ea_template/core/InputSurface_gen.mqh'), [])
+
+    def test_directive_audit_refuses_conditions_on_macros_defined_in_other_files(self):
+        """Codex round 2 P1: LAB_CONST_* is defined by generated wrappers' allowlist headers, which active() cannot see."""
+        codex = '#ifdef LAB_CONST_ExitMode\n#include "entries/Entry_Leak.mqh"\n#endif\n'
+        self.assertEqual(len(self.audit(codex)), 2, self.audit(codex))      # the guard AND the include
+        for bad in ('#else', '#ifdef BOSS_LAB_INPUTS_MQH', '#include "entries/Leak.mqh"', '#if 1', '#undef LAB_ENTRY_14',
+                    '#ifdef LAB_ENTRY_14', '#define EVIL 1', '#define CFG_X 1', '#define LAB_CONSTVAL_X 1',
+                    '#include "entries/Entry_Probe.mqh"', '#define LAB_ENTRY_TAG "x"'):
+            self.assertEqual(len(self.audit(bad + '\n')), 1, bad)
+
+    def test_unchanged_lines_are_not_audited(self):
+        self.assertEqual(N.directive_violations('#ifdef LAB_CONST_ExitMode\n#endif\n', set(), self.NEW), [])
+
+    def test_added_line_numbers(self):
+        d = '@@ -10,0 +11,2 @@\n+a\n+b\n@@ -20,3 +23 @@\n-x\n+y\n@@ -30,2 +33,0 @@\n-z\n'
+        self.assertEqual(N.added_line_numbers(d), {11, 12, 23})
 
     def test_destination_collision_refused(self):
         with tempfile.TemporaryDirectory() as d:

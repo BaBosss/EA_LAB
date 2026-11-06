@@ -363,30 +363,67 @@ def is_code(rel):
 
 
 # `active()` models only #ifdef/#ifndef/#else/#endif/#define inside ONE file. A condition on a macro defined in
-# another file (e.g. an include guard) is not modelled, so an added line could be live for an existing build while
-# the proof says "identical". The audit closes that channel: every preprocessor line this tool may ADD to an
-# existing file is one of these shapes, all keyed on a new LAB_ENTRY_<NN> tag or a LAB_CONST_* token.
-ALLOWED_ADDED_DIRECTIVES = [
-    re.compile(r'#(?:ifdef|ifndef) (?:LAB_ENTRY_\d+|LAB_CONST_\w+)'),
-    re.compile(r'#endif(?: //.*)?'),
-    re.compile(r'#define (?:LAB_CONSTVAL_\w+|LAB_CONST_\w+|LAB_ENTRY_\d+|CFG_[A-Z_]+|LAB_ENTRY_TAG)(?: .*)?'),
+# another file (an include guard, a LAB_CONST_* token from a generated wrapper's allowlist header) is not modelled,
+# so a line added under such a condition could be live for an existing build while the proof says "identical".
+# The audit closes that channel structurally: a preprocessor line ADDED to an existing file may only be
+#   * #ifdef/#ifndef on a NEW LAB_ENTRY_<NN> tag (the new build's own switch),
+#   * #endif / nothing else that opens or flips a condition (#else, #elif, #if, #undef, #pragma are refused),
+#   * inside a region opened by such a new tag: LAB_CONST_*/LAB_CONSTVAL_* guards and defines, and the
+#     `#include "entries/Entry_<Name>.mqh"` of the new entry,
+#   * in the generated *_gen.mqh files only: `#define CFG_<NAME>` (the enumeration markers).
+GEN_DEFINE = re.compile(r'#define CFG_[A-Z_]+(?: .*)?')
+IN_REGION_DIRECTIVES = [
+    re.compile(r'#(?:ifdef|ifndef) LAB_CONST_\w+'),
+    re.compile(r'#define (?:LAB_CONSTVAL_\w+|LAB_CONST_\w+)(?: .*)?'),
     re.compile(r'#include "entries/Entry_[A-Za-z0-9_]+\.mqh"'),
 ]
 
 
-def audit_added_directives(root, rel):
-    return directive_violations(git(root, 'diff', '-U0', 'HEAD', '--', rel))
+def added_line_numbers(diff_text):
+    """Line numbers (new file) of every added line in a `git diff -U0` of ONE file."""
+    out = set()
+    for m in re.finditer(r'(?m)^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@', diff_text):
+        start, count = int(m.group(1)), int(m.group(2)) if m.group(2) is not None else 1
+        out.update(range(start, start + count))
+    return out
 
 
-def directive_violations(diff_text):
+def directive_violations(new_text, added, new_tags, rel=''):
     bad = []
-    for l in diff_text.split('\n'):
-        if not l.startswith('+') or l.startswith('+++'):
+    stack, in_new = [], False
+    for n, raw in enumerate(new_text.split(chr(10)), 1):
+        s = raw.strip()
+        if not s.startswith('#'):
             continue
-        s = l[1:].strip()
-        if s.startswith('#') and not any(p.fullmatch(s) for p in ALLOWED_ADDED_DIRECTIVES):
-            bad.append(s)
+        is_added = n in added
+        m = re.match(r'#(ifdef|ifndef)\s+(\S+)\s*$', s)
+        if m:
+            tag_is_new = m.group(2) in new_tags
+            if is_added and not (tag_is_new or (in_new and IN_REGION_DIRECTIVES[0].fullmatch(s))):
+                bad.append('line %d: %s' % (n, s))
+            stack.append(in_new)
+            in_new = in_new or tag_is_new
+            continue
+        if s.startswith('#endif'):
+            if stack:
+                in_new = stack.pop()
+            continue
+        if not is_added:
+            continue
+        if re.match(r'#(?:else|elif|if|undef|pragma)', s):
+            bad.append('line %d: %s' % (n, s))
+        elif in_new and any(p.fullmatch(s) for p in IN_REGION_DIRECTIVES[1:]):
+            continue
+        elif rel.endswith('_gen.mqh') and GEN_DEFINE.fullmatch(s):
+            continue
+        else:
+            bad.append('line %d: %s' % (n, s))
     return bad
+
+
+def audit_added_directives(root, rel, new_text, new_tags):
+    diff = git(root, 'diff', '-U0', 'HEAD', '--', rel)
+    return directive_violations(new_text, added_line_numbers(diff), new_tags, rel)
 
 
 def prove(root):
@@ -396,6 +433,7 @@ def prove(root):
     if not tags:
         raise Refuse('no existing build tags found at HEAD')
     tagset = tags + [None]
+    new_tags = set(existing_tags(rd(os.path.join(root, 'ea_template', 'core', 'Inputs.mqh')))) - set(tags)
     changed = [p for p in git(root, 'diff', '--name-only', 'HEAD', '--', 'ea_template').split('\n') if p]
     new_files = [p for p in git(root, 'ls-files', '--others', '--exclude-standard', '--', 'ea_template').split('\n') if p]
     report, fail = [], []
@@ -405,8 +443,8 @@ def prove(root):
             continue
         old = git(root, 'show', 'HEAD:' + rel).replace('\r\n', '\n')
         new = rd(os.path.join(root, rel))
-        for d in audit_added_directives(root, rel):
-            fail.append('%s: added preprocessor line outside the allowed shapes: %r' % (rel, d))
+        for d in audit_added_directives(root, rel, new, new_tags):
+            fail.append('%s: added preprocessor line outside the allowed shapes: %s' % (rel, d))
         if '\r' in new:
             fail.append('%s: contains a bare CR (line ends the proof does not split on)' % rel)
         same = 0
