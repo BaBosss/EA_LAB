@@ -47,8 +47,14 @@ LABCORE_ANCHORS = {
     'tick': '   if(AdaptiveTrendGrid_OnTick()) return;\n#endif\n',
 }
 
-IDENT = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
-NAME = re.compile(r'^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$')
+# Every manifest value is matched with fullmatch(): `$` also matches before a trailing newline, and a newline in a
+# value that lands in core text is how a hook call could smuggle in its own preprocessor lines.
+IDENT = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+NAME = re.compile(r'[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*')
+CALL = re.compile(r'[A-Za-z_]\w*\([ A-Za-z0-9_,.+\-*"]*\);')
+ENTRY_FILE = re.compile(r'Entry_[A-Za-z0-9_]+\.mqh')
+EXTRA_FILE = re.compile(r'[A-Za-z0-9_]+\.mqh')
+ENUM_CONST = re.compile(r'[A-Z][A-Z0-9_]*')
 INPUT_DECL = re.compile(r'^input\s+([A-Za-z_]\w*)\s+(_\d+_\w+)\s*=\s*([^;]+);\s*(?://\s*(.*))?$')
 INPUT_GROUP = re.compile(r'^input\s+group\s+"[^"\n]*"\s*;?\s*(?://.*)?$')
 PID_TAG = re.compile(r'^\[P\d{5}\]\s*')
@@ -105,7 +111,7 @@ def load_manifest(path):
     if out['build'] < 11 or out['build'] > 99:
         raise Refuse('manifest: build %d outside 11..99' % out['build'])
     out['name'] = need('name', str)
-    if not NAME.match(out['name']):
+    if not NAME.fullmatch(out['name']):
         raise Refuse('manifest: name %r must look like Donchian_Pullback / DonchianPullback' % out['name'])
     out['title'] = need('title', str).strip()
     if not out['title'] or '"' in out['title'] or '\n' in out['title']:
@@ -113,22 +119,23 @@ def load_manifest(path):
     out['entry_source'] = os.path.join(base, need('entry_source', str))
     out['inputs_source'] = os.path.join(base, need('inputs_source', str))
     out['entry_file'] = m.get('entry_file') or 'Entry_%s.mqh' % out['name']
-    if not re.match(r'^Entry_[A-Za-z0-9_]+\.mqh$', out['entry_file']):
+    if not ENTRY_FILE.fullmatch(out['entry_file']):
         raise Refuse('manifest: entry_file %r must be Entry_<Name>.mqh' % out['entry_file'])
     for key in ('init_call', 'deinit_call'):
         v = (m.get(key) or '').strip()
         if v and not v.endswith(';'):
             v += ';'
-        if v and not re.match(r'^[A-Za-z_]\w*\([^;]*\);$', v):
-            raise Refuse('manifest: %s %r must be a single function call' % (key, v))
+        if v and not CALL.fullmatch(v):
+            raise Refuse('manifest: %s %r must be ONE single-line function call (letters, digits, _ , . + - * and quotes only)'
+                         % (key, v))
         out[key] = v
     ot = m.get('own_ontick')
-    if ot is not None and (not isinstance(ot, str) or not IDENT.match(ot)):
+    if ot is not None and (not isinstance(ot, str) or not IDENT.fullmatch(ot)):
         raise Refuse('manifest: own_ontick must be null or a function name')
     out['own_ontick'] = ot
     st = need('stack', dict)
     for key in ('mode', 'confirm'):
-        if not isinstance(st.get(key), str) or not re.match(r'^[A-Z][A-Z0-9_]*$', st[key]):
+        if not isinstance(st.get(key), str) or not ENUM_CONST.fullmatch(st[key]):
             raise Refuse('manifest: stack.%s must be an ENUM constant such as STACK_SINGLE' % key)
     out['stack'] = {'mode': st['mode'], 'confirm': st['confirm'], 'note': str(st.get('note', 'n/a')).replace('\n', ' ')}
     out['magic'] = need('magic', int)
@@ -139,6 +146,9 @@ def load_manifest(path):
         raise Refuse('manifest: preset_overlay must be {name: value}')
     out['preset_overlay'] = dict((k, str(v).lower() if isinstance(v, bool) else str(v)) for k, v in ov.items())
     out['extra_files'] = [os.path.join(base, p) for p in m.get('extra_files', [])]
+    for p in out['extra_files']:
+        if not EXTRA_FILE.fullmatch(os.path.basename(p)):
+            raise Refuse('manifest: extra file name %r must be <letters/digits/_>.mqh' % os.path.basename(p))
     out['provenance'] = str(m.get('provenance', '')).replace('\n', ' ').strip()
     need_ascii('manifest provenance/title/stack note', out['provenance'] + out['title'] + out['stack']['note'])
     for p in [out['entry_source'], out['inputs_source']] + out['extra_files']:
@@ -344,6 +354,33 @@ def is_code(rel):
     return rel.endswith('.mqh') or rel.endswith('.mq5')
 
 
+# `active()` models only #ifdef/#ifndef/#else/#endif/#define inside ONE file. A condition on a macro defined in
+# another file (e.g. an include guard) is not modelled, so an added line could be live for an existing build while
+# the proof says "identical". The audit closes that channel: every preprocessor line this tool may ADD to an
+# existing file is one of these shapes, all keyed on a new LAB_ENTRY_<NN> tag or a LAB_CONST_* token.
+ALLOWED_ADDED_DIRECTIVES = [
+    re.compile(r'#(?:ifdef|ifndef) (?:LAB_ENTRY_\d+|LAB_CONST_\w+)'),
+    re.compile(r'#endif(?: //.*)?'),
+    re.compile(r'#define (?:LAB_CONSTVAL_\w+|LAB_CONST_\w+|LAB_ENTRY_\d+|CFG_[A-Z_]+|LAB_ENTRY_TAG)(?: .*)?'),
+    re.compile(r'#include "entries/Entry_[A-Za-z0-9_]+\.mqh"'),
+]
+
+
+def audit_added_directives(root, rel):
+    return directive_violations(git(root, 'diff', '-U0', 'HEAD', '--', rel))
+
+
+def directive_violations(diff_text):
+    bad = []
+    for l in diff_text.split('\n'):
+        if not l.startswith('+') or l.startswith('+++'):
+            continue
+        s = l[1:].strip()
+        if s.startswith('#') and not any(p.fullmatch(s) for p in ALLOWED_ADDED_DIRECTIVES):
+            bad.append(s)
+    return bad
+
+
 def prove(root):
     """HEAD vs working tree. Returns a list of lines; raises Refuse on any difference."""
     base_inputs = git(root, 'show', 'HEAD:ea_template/core/Inputs.mqh').replace('\r\n', '\n')
@@ -360,6 +397,8 @@ def prove(root):
             continue
         old = git(root, 'show', 'HEAD:' + rel).replace('\r\n', '\n')
         new = rd(os.path.join(root, rel))
+        for d in audit_added_directives(root, rel):
+            fail.append('%s: added preprocessor line outside the allowed shapes: %r' % (rel, d))
         same = 0
         for tag in tagset:
             a, b = active(old, tag), active(new, tag)
@@ -423,22 +462,38 @@ class Snapshot(object):
             return
         if os.path.exists(path):
             with open(path, 'rb') as f:
-                self.saved[path] = f.read()
+                self.saved[path] = (f.read(), os.stat(path).st_mode)
         else:
             self.saved[path] = None
 
     def restore(self):
-        for path, data in self.saved.items():
-            if data is None:
+        """Restore EVERY file even if one fails (a read-only attribute must not strand the rest)."""
+        errors = []
+        for path, saved in self.saved.items():
+            try:
                 if os.path.exists(path):
-                    os.remove(path)
-            else:
-                with open(path, 'wb') as f:
-                    f.write(data)
+                    os.chmod(path, 0o666)
+                if saved is None:
+                    if os.path.exists(path):
+                        os.remove(path)
+                else:
+                    data, mode = saved
+                    with open(path, 'wb') as f:
+                        f.write(data)
+                    os.chmod(path, mode)
+            except OSError as e:
+                errors.append('%s: %s' % (path, e))
+        if errors:
+            raise Refuse('ROLLBACK INCOMPLETE, fix by hand (git restore / delete):\n  ' + '\n  '.join(errors))
+
+
+# The cages must judge the files on disk. check_input_surface_gen and friends default to the INDEX (which still holds
+# HEAD during an apply) unless told otherwise; EA_LAB_EVIDENCE=worktree is the documented switch.
+WORKTREE_ENV = dict(os.environ, EA_LAB_EVIDENCE='worktree')
 
 
 def run(argv, cwd, label):
-    r = subprocess.run(argv, cwd=cwd, capture_output=True)
+    r = subprocess.run(argv, cwd=cwd, capture_output=True, env=WORKTREE_ENV)
     out = (r.stdout.decode('utf-8', 'replace') + r.stderr.decode('utf-8', 'replace')).strip()
     if r.returncode != 0:
         raise Refuse('%s failed (exit %d):\n%s' % (label, r.returncode, '\n'.join(out.split('\n')[-25:])))
@@ -468,6 +523,16 @@ def compile_wrapper(root, wrapper_rel, metaeditor):
         lines = [l for l in txt.split('\n') if re.search(r'error|warning', l)]
         raise Refuse('compile not 0/0: %s\n%s' % (m.group(0) if m else 'no Result line', '\n'.join(lines[:15])))
     return 'compile %s in isolated copy %s' % (m.group(0), tmp)
+
+
+def check_destinations(dests, root):
+    keys = [os.path.normcase(os.path.abspath(p)) for p in dests]
+    if len(set(keys)) != len(keys):
+        raise Refuse('two files in this manifest resolve to the same destination (entry_file / extra_files / wrapper): %s'
+                     % ', '.join(os.path.relpath(p, root) for p in dests))
+    for p in dests:
+        if os.path.exists(p):
+            raise Refuse('refusing to overwrite existing %s' % os.path.relpath(p, root))
 
 
 def apply(manifest_path, root, do_compile, keep_on_fail, metaeditor):
@@ -504,9 +569,7 @@ def apply(manifest_path, root, do_compile, keep_on_fail, metaeditor):
     p_owners = os.path.join(root, '_triage', 'factory_os', 'wrapper_owners.csv')
     p_registry = os.path.join(root, 'docs', 'PARAM_REGISTRY.csv')
     extra_dst = [os.path.join(core, 'entries', os.path.basename(p)) for p in mf['extra_files']]
-    for p in [p_wrapper, p_entry, p_preset] + extra_dst:
-        if os.path.exists(p):
-            raise Refuse('refusing to overwrite existing %s' % os.path.relpath(p, root))
+    check_destinations([p_wrapper, p_entry, p_preset] + extra_dst, root)
 
     # everything that can be refused is computed BEFORE the first write
     new_inputs = edit_inputs(rd(p_inputs), mf, items, inputs_sha)
@@ -568,7 +631,7 @@ def apply(manifest_path, root, do_compile, keep_on_fail, metaeditor):
 
         # -------- cages
         receipt += [('proof', l) for l in prove(root)]
-        run([py, '-I', os.path.join(fo, 'check_input_surface_gen.py')], root, 'check_input_surface_gen')
+        run([py, '-I', os.path.join(fo, 'check_input_surface_gen.py'), '--worktree'], root, 'check_input_surface_gen')
         receipt.append(('check_input_surface_gen', 'ACCEPTED'))
         run(ps(root, 'param_registry_check.ps1'), root, 'param_registry_check')
         receipt.append(('param_registry_check', 'CLEAN'))
@@ -585,10 +648,13 @@ def apply(manifest_path, root, do_compile, keep_on_fail, metaeditor):
             receipt.append(('compile', compile_wrapper(root, wrapper_rel, metaeditor)))
         else:
             receipt.append(('compile', 'SKIPPED (--no-compile); a build is not done until MetaEditor says 0/0'))
-    except BaseException:
+    except BaseException as exc:
         if not keep_on_fail:
-            snap.restore()
-            sys.stderr.write('apply failed: restored every touched file and removed the created ones\n')
+            try:
+                snap.restore()
+                sys.stderr.write('apply failed: restored every touched file and removed the created ones\n')
+            except Refuse as rb:
+                raise Refuse('%s\n(original failure: %s)' % (rb, exc))
         raise
     return receipt
 

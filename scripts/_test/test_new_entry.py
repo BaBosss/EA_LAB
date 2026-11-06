@@ -83,6 +83,51 @@ class ManifestTests(unittest.TestCase):
                 N.load_manifest(p)
 
 
+class HookInjectionTests(unittest.TestCase):
+    """Codex review 2026-11-06 P1: a multi-line init_call smuggled preprocessor lines into LabCore.mqh."""
+
+    CODEX_PAYLOAD = 'Probe_Init(\n#else\n#ifdef BOSS_LAB_INPUTS_MQH\n#include "entries/Leak.mqh"\n#endif\n#endif\n#ifdef LAB_ENTRY_98\n);'
+
+    def load(self, **over):
+        with tempfile.TemporaryDirectory() as d:
+            return N.load_manifest(write_manifest(d, manifest(**over)))
+
+    def test_multiline_and_directive_calls_refused(self):
+        for bad in (self.CODEX_PAYLOAD, 'Probe_Init();\n#endif', 'Probe_Init(); // x', 'a(b);c();', 'Probe_Init(\n);'):
+            with self.assertRaises(N.Refuse, msg=repr(bad)):
+                self.load(init_call=bad)
+            with self.assertRaises(N.Refuse, msg=repr(bad)):
+                self.load(deinit_call=bad)
+
+    def test_trailing_newline_values_refused(self):
+        for over in (dict(name='Probe\n'), dict(entry_file='Entry_Probe.mqh\n'), dict(own_ontick='Probe_Tick\n'),
+                     dict(stack={'mode': 'STACK_SINGLE\n', 'confirm': 'CONF_DISTANCE'})):
+            with self.assertRaises(N.Refuse, msg=repr(over)):
+                self.load(**over)
+
+    def test_extra_file_names_checked(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write_manifest(d, manifest(extra_files=['bad name.mqh']))
+            open(os.path.join(d, 'bad name.mqh'), 'w').close()
+            with self.assertRaises(N.Refuse):
+                N.load_manifest(p)
+
+    def test_directive_audit(self):
+        ok = '+++ b/x\n+#ifdef LAB_ENTRY_98\n+  #include "entries/Entry_Probe.mqh"\n+#endif\n+#ifndef LAB_CONST__98_X\n+#define LAB_CONSTVAL_X 1\n+input int a = 1;\n'
+        self.assertEqual(N.directive_violations(ok), [])
+        for bad in ('+#else', '+#ifdef BOSS_LAB_INPUTS_MQH', '+#include "entries/Leak.mqh"', '+#if 1', '+#undef LAB_ENTRY_14',
+                    '+#ifdef LAB_ENTRY_14 && X', '+#define EVIL 1'):
+            self.assertEqual(N.directive_violations(bad + '\n'), [bad[1:]], bad)
+
+    def test_destination_collision_refused(self):
+        with tempfile.TemporaryDirectory() as d:
+            a = os.path.join(d, 'x', 'Entry_Probe.mqh')
+            b = os.path.join(d, 'x', '..', 'x', 'Entry_Probe.mqh')
+            with self.assertRaises(N.Refuse):
+                N.check_destinations([a, b], d)
+            N.check_destinations([a, os.path.join(d, 'y.mqh')], d)
+
+
 class InputsBlockTests(unittest.TestCase):
     def test_parse_and_render(self):
         items = N.parse_entry_inputs(GOOD_INPUTS, 98)
@@ -216,6 +261,46 @@ class MiscTests(unittest.TestCase):
             with open(a) as f:
                 self.assertEqual(f.read(), 'old')
             self.assertFalse(os.path.exists(b))
+
+    def test_snapshot_restores_read_only_files_and_continues_after_an_error(self):
+        import stat
+        with tempfile.TemporaryDirectory() as d:
+            ro, created, ok = (os.path.join(d, n) for n in ('ro', 'created', 'ok'))
+            for p in (ro, ok):
+                with open(p, 'w') as f:
+                    f.write('old')
+            os.chmod(ro, stat.S_IREAD)
+            s = N.Snapshot()
+            for p in (ro, created, ok):
+                s.keep(p)
+            os.chmod(ro, stat.S_IWRITE)
+            for p in (ro, created, ok):
+                with open(p, 'w') as f:
+                    f.write('new')
+            os.chmod(ro, stat.S_IREAD)
+            s.restore()
+            with open(ro) as f:
+                self.assertEqual(f.read(), 'old')
+            with open(ok) as f:
+                self.assertEqual(f.read(), 'old')
+            self.assertFalse(os.path.exists(created))
+            self.assertFalse(os.stat(ro).st_mode & stat.S_IWRITE)    # its read-only attribute is back
+            # an unrestorable path (parent directory removed) must not stop the others
+            s2 = N.Snapshot()
+            gone = os.path.join(d, 'sub', 'f')
+            os.makedirs(os.path.dirname(gone))
+            with open(gone, 'w') as f:
+                f.write('x')
+            s2.keep(gone)
+            s2.keep(ok)
+            os.remove(gone)
+            os.rmdir(os.path.dirname(gone))
+            with open(ok, 'w') as f:
+                f.write('new')
+            with self.assertRaises(N.Refuse):
+                s2.restore()
+            with open(ok) as f:
+                self.assertEqual(f.read(), 'old')
 
     def test_wrapper_text(self):
         with tempfile.TemporaryDirectory() as d:
