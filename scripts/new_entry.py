@@ -402,7 +402,9 @@ def directive_violations(new_text, added, new_tags, rel=''):
             if is_added and not (tag_is_new or (in_new and IN_REGION_DIRECTIVES[0].fullmatch(s))):
                 bad.append('line %d: %s' % (n, s))
             stack.append(in_new)
-            in_new = in_new or tag_is_new
+            # Only the POSITIVE test of a new tag is a region that existing builds skip. `#ifndef LAB_ENTRY_<new>`
+            # (the fallback chain's guard) is true for every existing build, so its body is NOT a new-build region.
+            in_new = in_new or (tag_is_new and m.group(1) == 'ifdef')
             continue
         if s.startswith('#endif'):
             if stack:

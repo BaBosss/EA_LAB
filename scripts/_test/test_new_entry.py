@@ -145,6 +145,14 @@ class HookInjectionTests(unittest.TestCase):
                     '#include "entries/Entry_Probe.mqh"', '#define LAB_ENTRY_TAG "x"'):
             self.assertEqual(len(self.audit(bad + '\n')), 1, bad)
 
+    def test_negated_new_tag_guard_is_not_a_new_build_region(self):
+        """Codex round 3 P1: `#ifndef LAB_ENTRY_98` is TRUE for every existing build."""
+        codex = ('#ifndef LAB_ENTRY_98\n#ifdef LAB_CONST_ExitMode\n#include "entries/Entry_Leak.mqh"\n#endif\n#endif\n')
+        v = self.audit(codex)
+        self.assertEqual(len(v), 2, v)                     # the LAB_CONST guard and the include
+        # the legitimate use: the guard wraps only the existing fallback define, which is not an added line
+        self.assertEqual(self.audit('#ifndef LAB_ENTRY_98\n#define LAB_ENTRY_11 // fallback\n#endif\n', unchanged=(2,)), [])
+
     def test_unchanged_lines_are_not_audited(self):
         self.assertEqual(N.directive_violations('#ifdef LAB_CONST_ExitMode\n#endif\n', set(), self.NEW), [])
 
