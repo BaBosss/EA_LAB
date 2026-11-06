@@ -323,22 +323,29 @@ def active(text, tag, annotate=False):
     """Lines of `text` that can be active when `tag` (or nothing) is the only defined build token.
 
     SOUND AGAINST MACROS DEFINED IN OTHER FILES. Known conditions are decided: LAB_ENTRY_<NN> names (defined only
-    when it is `tag`) and names `#define`d earlier in this file. A condition on any OTHER name (an include guard,
-    a LAB_CONST_* token from a generated wrapper's allowlist header) is UNKNOWN: both branches are kept and each
-    line carries the stack of unknown conditions guarding it (annotate=True returns (conditions, line) pairs).
-    Comparing annotated sequences therefore means "identical for every possible value of the unknown macros".
-    #if / #elif are refused (the template does not use them) rather than guessed.
+    when it is `tag`) and names `#define`d unconditionally earlier in this file. A condition on any OTHER name (an
+    include guard, a LAB_CONST_* token from a generated wrapper's allowlist header) is UNKNOWN: both branches are
+    kept and each line carries the stack of unknown conditions guarding it (annotate=True returns
+    (conditions, line) pairs). A condition is (kind, name, version): the version of a name goes up at every
+    #define / #undef of it, so the same words asked before and after a change are different conditions, and the
+    `#else` of a guard keeps the version it was asked at. Comparing annotated sequences therefore means
+    "identical for every possible value of the unknown macros". #if / #elif are refused (the template does not
+    use them) rather than guessed.
 
     Blank lines and whole-line comments carry no tokens and are dropped. Trailing comments stay: in MQL5 the
     trailing comment of an `input` line is its Inputs-tab label."""
     defined = set([tag]) if tag else set()
-    maybe = set()      # defined only under an unknown condition: NOT known to be defined (nor known to be undefined)
+    maybe = set()      # defined/undefined under an unknown condition: not KNOWN either way
+    ver = {}           # name -> number of #define/#undef seen so far
     out, stack, conds, cur = [], [], [], True
 
     def known(name):
         if name in defined:
             return True
         return name not in maybe and re.fullmatch(r'LAB_ENTRY_\d+', name) is not None
+
+    def changed(name):
+        ver[name] = ver.get(name, 0) + 1
 
     for l in text.split(chr(10)):
         s = l.strip()
@@ -350,18 +357,12 @@ def active(text, tag, annotate=False):
                 stack.append((cur, 'known', cond, None))
                 cur = cur and cond
             else:
-                stack.append((cur, 'unknown', None, (m.group(1), name)))
-                conds.append((m.group(1), name))
+                key = (m.group(1), name, ver.get(name, 0))
+                stack.append((cur, 'unknown', None, key))
+                conds.append(key)
             continue
         if re.match(r'#(if|elif)\b', s):
             raise Refuse('unmodelled preprocessor directive %r (only ifdef/ifndef/else/endif/define/undef are supported)' % s)
-        u = re.match(r'#undef\s+(\S+)', s)
-        if u and cur:
-            # after an #undef the name is no longer KNOWN to be defined; for a non-tag name that makes later
-            # conditions on it unknown (both branches kept), which is the conservative reading
-            defined.discard(u.group(1))
-            if conds:
-                maybe.add(u.group(1))
         if s.startswith('#else'):
             parent, kind, cond, key = stack.pop()
             if kind == 'known':
@@ -369,7 +370,7 @@ def active(text, tag, annotate=False):
                 cur = parent and (not cond)
             else:
                 conds.pop()
-                flipped = ('ifndef' if key[0] == 'ifdef' else 'ifdef', key[1])
+                flipped = ('ifndef' if key[0] == 'ifdef' else 'ifdef', key[1], key[2])
                 stack.append((parent, kind, None, flipped))
                 conds.append(flipped)
             continue
@@ -381,12 +382,22 @@ def active(text, tag, annotate=False):
             continue
         if not cur:
             continue
+        u = re.match(r'#undef\s+(\S+)', s)
+        if u:
+            name = u.group(1)
+            defined.discard(name)          # no longer KNOWN defined; later conditions on it are unknown
+            if conds:
+                maybe.add(name)
+            changed(name)
         d = re.match(r'#define\s+(\S+)', s)
         if d:
+            name = d.group(1)
             if conds:
-                maybe.add(d.group(1))          # a define under an unknown condition decides nothing for later lines
+                maybe.add(name)            # a define under an unknown condition decides nothing for later lines
             else:
-                defined.add(d.group(1))
+                defined.add(name)
+                maybe.discard(name)
+            changed(name)
         if s == '' or s.startswith('//'):
             continue
         out.append((tuple(conds), l) if annotate else l)

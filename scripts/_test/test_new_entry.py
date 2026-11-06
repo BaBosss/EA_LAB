@@ -49,7 +49,7 @@ class ActiveTests(unittest.TestCase):
     def test_unknown_macro_conditions_are_kept_with_their_guard(self):
         t = '#ifdef SOME_GUARD\nx\n#else\ny\n#endif\nz\n'
         self.assertEqual(N.active(t, None, annotate=True),
-                         [((('ifdef', 'SOME_GUARD'),), 'x'), ((('ifndef', 'SOME_GUARD'),), 'y'), ((), 'z')])
+                         [((('ifdef', 'SOME_GUARD', 0),), 'x'), ((('ifndef', 'SOME_GUARD', 0),), 'y'), ((), 'z')])
 
     def test_unbalanced_and_if_elif_refused(self):
         for bad in ('#ifdef LAB_ENTRY_1\nx\n', '#if 1\n#endif\n', '#ifdef LAB_ENTRY_1\n#elif 1\n#endif\n'):
@@ -92,10 +92,22 @@ class ActiveTests(unittest.TestCase):
     def test_undef_makes_the_name_unknown_again(self):
         t = '#define A\n#undef A\n#ifdef A\nx\n#endif\n'
         self.assertEqual(N.active(t, None, annotate=True),
-                         [((), '#define A'), ((), '#undef A'), ((('ifdef', 'A'),), 'x')])
+                         [((), '#define A'), ((), '#undef A'), ((('ifdef', 'A', 2),), 'x')])
         u = '#ifdef EXTERNAL\n#undef LAB_ENTRY_14\n#endif\n#ifdef LAB_ENTRY_14\nx\n#endif\n'
         # an #undef under an unknown condition leaves the tag unknown: its later `#ifdef` keeps both branches
-        self.assertEqual(N.active(u, 'LAB_ENTRY_14', annotate=True)[-1], ((('ifdef', 'LAB_ENTRY_14'),), 'x'))
+        self.assertEqual(N.active(u, 'LAB_ENTRY_14', annotate=True)[-1], ((('ifdef', 'LAB_ENTRY_14', 1),), 'x'))
+
+    def test_same_words_before_and_after_a_change_are_different_conditions(self):
+        """Codex round 6 P1: with FLAG initially defined, `leaked` is live only in B."""
+        a = '#ifdef FLAG\n#undef FLAG\n#endif\n#ifdef FLAG\nint leaked = 1;\n#endif\n'
+        b = '#ifdef FLAG\n#undef FLAG\nint leaked = 1;\n#endif\n'
+        for tag in ('LAB_ENTRY_14', None):
+            self.assertNotEqual(N.active(a, tag, annotate=True), N.active(b, tag, annotate=True))
+
+    def test_else_keeps_the_version_of_its_own_ifdef(self):
+        t = '#ifdef FLAG\nx\n#undef FLAG\n#else\ny\n#endif\n'
+        self.assertEqual([c for c, _ in N.active(t, None, annotate=True)],
+                         [(('ifdef', 'FLAG', 0),), (('ifdef', 'FLAG', 0),), (('ifndef', 'FLAG', 0),)])
 
     def test_a_new_tag_only_block_is_invisible_to_existing_builds(self):
         new = ('#ifdef LAB_ENTRY_98\nnewonly\n#ifndef LAB_CONST__98_X\ninput int a = 1;\n#endif\n'
