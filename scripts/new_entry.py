@@ -56,7 +56,10 @@ ENTRY_FILE = re.compile(r'Entry_[A-Za-z0-9_]+\.mqh')
 EXTRA_FILE = re.compile(r'[A-Za-z0-9_]+\.mqh')
 ENUM_CONST = re.compile(r'[A-Z][A-Z0-9_]*')
 INPUT_DECL = re.compile(r'^input\s+([A-Za-z_]\w*)\s+(_\d+_\w+)\s*=\s*([^;]+);\s*(?://\s*(.*))?$')
-INPUT_GROUP = re.compile(r'^input\s+group\s+"[^"\n]*"\s*;?\s*(?://.*)?$')
+INPUT_GROUP = re.compile(r'^input\s+group\s+"[A-Za-z0-9 _=|.,:+()\-]*"\s*;?\s*(?://.*)?$')
+# An input default lands inside a generated `#ifdef` block as code. Only plain constants are accepted: a `/*`, a
+# `//`, a backslash or a `#` in it could swallow the block's closing `#endif` and break EVERY build.
+SAFE_DEFAULT = re.compile(r'-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?|0[xX][0-9A-Fa-f]+|true|false|[A-Za-z_]\w*|"[A-Za-z0-9 _.,:+\-]*"')
 PID_TAG = re.compile(r'^\[P\d{5}\]\s*')
 
 
@@ -81,6 +84,15 @@ def wr(path, text):
 def sha256_file(path):
     with open(path, 'rb') as f:
         return hashlib.sha256(f.read()).hexdigest()
+
+
+def need_plain(label, text):
+    """need_ascii plus: no backslash (a trailing one continues a `//` comment onto the next line) and no `/*`
+    or `*/`. For every manifest-supplied text that ends up in a core file or a comment there."""
+    need_ascii(label, text)
+    for bad in (chr(92), '/*', '*/'):
+        if bad in text:
+            raise Refuse('%s contains %r; not allowed in text that is written into core files' % (label, bad))
 
 
 def need_ascii(label, text):
@@ -155,8 +167,8 @@ def load_manifest(path):
         if not EXTRA_FILE.fullmatch(os.path.basename(p)):
             raise Refuse('manifest: extra file name %r must be <letters/digits/_>.mqh' % os.path.basename(p))
     out['provenance'] = str(m.get('provenance', '')).replace('\n', ' ').strip()
-    need_ascii('manifest provenance/title/stack note', out['provenance'] + out['title'] + out['stack']['note'])
-    need_ascii('manifest preset_overlay', ''.join(k + v for k, v in out['preset_overlay'].items()))
+    need_plain('manifest provenance/title/stack note', out['provenance'] + out['title'] + out['stack']['note'])
+    need_plain('manifest preset_overlay', ''.join(k + v for k, v in out['preset_overlay'].items()))
     if any('\n' in k + v for k, v in out['preset_overlay'].items()):
         raise Refuse('manifest: preset_overlay names and values must be single-line')
     for p in [out['entry_source'], out['inputs_source']] + out['extra_files']:
@@ -180,6 +192,9 @@ def parse_entry_inputs(text, build):
         if not m:
             raise Refuse('inputs_source line %d is not a plain `input <type> %s<Name> = <default>; // label`: %r' % (n, prefix, line))
         typ, name, default, label = m.group(1), m.group(2), m.group(3).strip(), (m.group(4) or '').strip()
+        if not SAFE_DEFAULT.fullmatch(default):
+            raise Refuse('inputs_source line %d: default %r must be a plain constant (number, true/false, an enum '
+                         'constant or a simple "string")' % (n, default))
         if not name.startswith(prefix):
             raise Refuse('inputs_source line %d: %s must start with %s (the build-local prefix)' % (n, name, prefix))
         if name in seen:
@@ -518,9 +533,38 @@ def normalize(text):
                         if l.strip() and not l.strip().startswith('// ' + MARK + ':'))
 
 
+def blank_literals(code):
+    """Blank the inside of string and character literals on comment-free text (newlines kept)."""
+    out, state = [], 'code'
+    for c in code:
+        if state == 'code':
+            out.append(c)
+            if c in '"\'':
+                state = c
+        elif c == state or c == chr(10):
+            state = 'code'
+            out.append(c)
+        else:
+            out.append(' ')
+    return ''.join(out)
+
+
+def lexical_guard(label, text):
+    """The two lexical features that make line-based reasoning about inserted text unsafe, refused outright in the
+    managed core files (the real ones use neither: checked on all four): a block comment opener, which can swallow
+    or expose lines, and a `#` that is not the first thing on its line, i.e. an inline directive."""
+    if '/*' in text:
+        raise Refuse('%s contains a block comment opener; the structural proof does not support block comments' % label)
+    for n, l in enumerate(blank_literals(strip_comments(text)).split(chr(10)), 1):
+        if '#' in l and not l.strip().startswith('#'):
+            raise Refuse('%s line %d has a `#` that is not at the start of the line (inline directive): %r'
+                         % (label, n, l.strip()[:60]))
+
+
 def peel(new_text, new_tags, fallback):
     """Remove everything the tool may have inserted; Refuse if an insertion has any other shape."""
     bs = chr(92)
+    lexical_guard('the changed file', new_text)
     lines = new_text.split(chr(10))
     clean = strip_comments(new_text).split(chr(10))
     for n, l in enumerate(lines, 1):
@@ -575,6 +619,7 @@ def peel(new_text, new_tags, fallback):
 
 def structural_check(rel, old, new, new_tags):
     """-> None, or raises Refuse with the first line where HEAD and the peeled text differ."""
+    lexical_guard('%s at HEAD' % rel, old)
     peeled = normalize(peel(new, new_tags, fallback=rel.endswith('/Inputs.mqh')))
     base = normalize(old)
     if peeled != base:
@@ -635,7 +680,7 @@ def prove(root):
             fail.append('%s: the name %s already appears in the HEAD tree (%s)' % (p, name, ', '.join(hits[:3])))
         if '\r' in rd(os.path.join(root, p)):
             fail.append('%s: contains a bare CR' % p)
-    line_hits = git(root, 'grep', '-I', '-l', '-w', '-e', '__LINE__', 'HEAD', '--', '*.mq5', '*.mqh', '*.mq4', ok_fail=True).strip()
+    line_hits = git(root, 'grep', '-I', '-l', '-w', '-e', '__LINE__', 'HEAD', '--', '*.mq5', '*.mqh', '*.mq4', '*.ini', ok_fail=True).strip()
     if line_hits:
         fail.append('HEAD uses __LINE__ (%s): inserted lines would shift it' % line_hits.replace(chr(10), ', '))
     # second, informational layer: the annotated-condition model must agree too (a disagreement is a failure; a form
@@ -776,7 +821,7 @@ def apply(manifest_path, root, do_compile, keep_on_fail, metaeditor):
     head = git(root, 'rev-parse', 'HEAD').strip()
     entry_text, inputs_text = rd(mf['entry_source']), rd(mf['inputs_source'])
     need_ascii('entry_source', entry_text)
-    need_ascii('inputs_source', inputs_text)
+    need_plain('inputs_source', inputs_text)
     if not re.search(r'\bEntrySignal\s+Entry_Evaluate\s*\(', entry_text):
         raise Refuse('entry_source does not define `EntrySignal Entry_Evaluate()`; the generic path needs it even when the '
                      'entry owns its OnTick')

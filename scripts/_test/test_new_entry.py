@@ -382,6 +382,34 @@ class HookInjectionTests(unittest.TestCase):
         for name, (old, new) in cases.items():
             self.assertFalse(self.peeled_equals(old, new), name)
 
+    def test_structural_refuses_the_round_9_fixtures(self):
+        """Comment delimiters and inline directives that line-based peeling cannot reason about."""
+        head1 = 'input int value = 1; // */ input int value = 2;\n'
+        self.assertFalse(self.peeled_equals(head1, '#ifdef LAB_ENTRY_98\n#endif /*\n' + head1))
+        head2 = '/*\n// new_entry.py: marker\ninput int value = 1; // */ input int value = 2;\n'
+        self.assertFalse(self.peeled_equals(head2, head2.replace('marker', '*/')))
+        self.assertFalse(self.peeled_equals('int existing;\n',
+                                            '#ifdef LAB_ENTRY_98\nint unused; #else\nint leaked;\n#endif\nint existing;\n'))
+        # a '#' inside a string or a comment is fine
+        self.assertTrue(self.peeled_equals('s = "#x"; // # y\n', 's = "#x"; // # y\n' + self.BLOCK))
+
+    def test_inputs_defaults_must_be_plain_constants(self):
+        for ok in ('14', '-1.5', '1e-3', '0x1F', 'true', 'STACK_SINGLE', 'PERIOD_H1', '"abc d"'):
+            N.parse_entry_inputs('input int _98_X = %s; // l\n' % ok, 98)
+        for bad in ('1 /* c', '1 // c', '1\\', '#x', '"a\\"', '1+2', 'f(1)', '"a//b"', '1 */'):
+            with self.assertRaises(N.Refuse, msg=bad):
+                N.parse_entry_inputs('input int _98_X = %s; // l\n' % bad, 98)
+
+    def test_text_with_backslash_or_comment_delimiters_is_refused(self):
+        for bad in ('a\\', 'a /* b', 'a */ b'):
+            with self.assertRaises(N.Refuse, msg=bad):
+                N.need_plain('x', bad)
+        with tempfile.TemporaryDirectory() as d:
+            for over in (dict(provenance='x \\'), dict(stack={'mode': 'STACK_SINGLE', 'confirm': 'CONF_DISTANCE', 'note': 'a /* b'}),
+                         dict(title='t */')):
+                with self.assertRaises(N.Refuse, msg=repr(over)):
+                    N.load_manifest(write_manifest(d, manifest(**over)))
+
     def test_structural_refuses_blocks_that_flip_or_continue(self):
         old = 'a\nb\n'
         for name, new in {

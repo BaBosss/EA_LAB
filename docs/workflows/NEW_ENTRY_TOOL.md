@@ -54,6 +54,16 @@ citations) and `PARAM_LINKAGE.md`, and builds the regression defaults preset. Th
 Any failure restores every touched file and removes every created file (`--keep-on-fail` keeps them for debugging).
 Output is deterministic: reset and re-run gives a byte-identical diff.
 
+## Threat model of the proof
+
+The tool guards against **its own mistakes and a careless or malformed manifest/source**, not against hostile
+content already committed in HEAD. Assumed and stated: HEAD is reviewed code; the four core files use no block
+comment, no inline directive and no line continuation (checked on every run, the tool refuses otherwise); no
+tracked MQL source or project file defines the new tag, names the new files or uses `__LINE__`. Everything the
+manifest and the source files can put into a core file is validated down to plain constants and identifiers:
+inputs defaults are numbers / `true` / `false` / an enum constant / a simple string, hook calls are one
+single-line call, free text has no backslash, no `/*`, no control character, no non-ASCII.
+
 ## Limits to know
 
 - `tpl_regression -DeclaredCoreDelta` and the parity run (R3) are **not** part of the tool; run them as the process
