@@ -585,7 +585,10 @@ def structural_check(rel, old, new, new_tags):
 
 
 def base_hits(root, needle, whole_word):
-    args = ['grep', '-I', '-l', '-i'] + (['-w'] if whole_word else ['-F']) + ['-e', needle, 'HEAD', '--', 'ea_template']
+    # every tracked MQL source / project file in the repo, not just ea_template: a wrapper elsewhere could define the
+    # tag or include the file. (Docs, tests and this tool's own source may mention a tag; they compile nothing.)
+    args = (['grep', '-I', '-l', '-i'] + (['-w'] if whole_word else ['-F'])
+            + ['-e', needle, 'HEAD', '--', '*.mq5', '*.mqh', '*.mq4', '*.ini'])
     return [l for l in git(root, *args, ok_fail=True).split(chr(10)) if l.strip()]
 
 
@@ -632,7 +635,7 @@ def prove(root):
             fail.append('%s: the name %s already appears in the HEAD tree (%s)' % (p, name, ', '.join(hits[:3])))
         if '\r' in rd(os.path.join(root, p)):
             fail.append('%s: contains a bare CR' % p)
-    line_hits = git(root, 'grep', '-I', '-l', '-w', '-e', '__LINE__', 'HEAD', '--', 'ea_template', ok_fail=True).strip()
+    line_hits = git(root, 'grep', '-I', '-l', '-w', '-e', '__LINE__', 'HEAD', '--', '*.mq5', '*.mqh', '*.mq4', ok_fail=True).strip()
     if line_hits:
         fail.append('HEAD uses __LINE__ (%s): inserted lines would shift it' % line_hits.replace(chr(10), ', '))
     # second, informational layer: the annotated-condition model must agree too (a disagreement is a failure; a form
