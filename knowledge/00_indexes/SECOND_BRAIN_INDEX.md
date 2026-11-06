@@ -23,6 +23,8 @@
 - [Facebook Member Hub research card](../02_research_cards/RC-2026-FACEBOOK-HUB-001.md)
 - [Facebook Member Hub 48-family catalog](../10_synthesis/FACEBOOK_MEMBER_HUB_EA_FAMILY_CATALOG_20260922.md)
 - [Facebook Member Hub machine-readable backtest qualification](../10_synthesis/FACEBOOK_MEMBER_HUB_BACKTEST_QUALIFICATION_20260922.json)
+- [CWAY AI-agent optimization source note](../01_sources/CWAY_AI_AGENT_OPTIMIZATION_SOURCE_NOTE_20261106.md)
+- [CWAY AI-agent optimization research card](../02_research_cards/RC-2026-CWAY-AIOPT-001.md)
 - [Research cards](../02_research_cards/)
 - [Strategy mechanisms](../03_strategy_mechanisms/)
 - [Validation knowledge](../06_validation/)
