@@ -115,6 +115,155 @@ class ActiveTests(unittest.TestCase):
         self.assertFalse(self.differs(new))
 
 
+class LexingTests(unittest.TestCase):
+    """Codex round 7: the proof must read directives the way the compiler does, or refuse."""
+
+    def differs(self, a, b):
+        return any(N.active(a, t, annotate=True) != N.active(b, t, annotate=True) for t in ('LAB_ENTRY_14', None))
+
+    def test_function_like_define_defines_the_name(self):
+        a = '#ifndef F\n#define F(x)\n#endif\n#ifndef F\nL\n#endif\n'
+        b = '#ifndef F\n#define F(x)\nL\n#endif\n'
+        self.assertTrue(self.differs(a, b))
+
+    def test_spaced_directive_and_block_comment_after_the_name(self):
+        a = '#ifndef F\n# define F\n#endif\n#ifndef F\nL\n#endif\n'
+        b = '#ifndef F\n# define F\nL\n#endif\n'
+        self.assertTrue(self.differs(a, b))
+        a = '#ifdef F/**/\n#undef F\n#endif\n#ifdef F/**/\nL\n#endif\n'
+        b = '#ifdef F/**/\n#undef F\nL\n#endif\n'
+        self.assertTrue(self.differs(a, b))
+
+    def test_continuation_and_odd_forms_are_refused(self):
+        for bad in ('#define F\\\n(x)\n', '#ifdef A B\n#endif\n', '#ifdef\n#endif\n', '#ifdef A\n#else B\n#endif\n',
+                    '#ifdef A\n#endif junk\n', '#define\n', '#undef A B\n', '#endif\n'):
+            with self.assertRaises(N.Refuse, msg=repr(bad)):
+                N.active(bad, None)
+
+    def test_directive_inside_a_block_comment_is_not_a_directive(self):
+        t = '#ifdef A\nx\n/*\n#endif\n*/\ny\n#endif\n'
+        self.assertIn('y', N.active(t, None))                     # still inside the #ifdef A, not popped early
+        self.assertEqual([c for c, l in N.active(t, None, annotate=True) if l == 'y'], [(('ifdef', 'A', 0),)])
+
+    def test_strip_comments_respects_literals(self):
+        self.assertEqual(N.strip_comments('a "//x" b // c\nd /* e\nf */ g').split('\n'),
+                         ['a "//x" b     ', 'd     ', '     g'])
+        self.assertEqual(N.strip_comments("c = '\"'; // q\n").split('\n')[0], "c = '\"';     ")
+
+
+class SoundnessBruteForce(unittest.TestCase):
+    """Equal annotated output must mean equal live lines for EVERY value of the unknown macros.
+
+    Reference = the real C-preprocessor semantics on concrete macro sets. Programs are sampled over
+    {ifdef/ifndef, else, endif, define, undef, line} with two unknown macros (X, Y) and the build tag, and grouped by
+    the tool's annotated output; every group must have a single behaviour table."""
+
+    NAMES = ('X', 'Y', 'LAB_ENTRY_14')
+
+    @staticmethod
+    def render(prog):
+        out = []
+        for ins in prog:
+            k = ins[0]
+            out.append({'ifdef': '#ifdef %s', 'ifndef': '#ifndef %s', 'define': '#define %s', 'undef': '#undef %s',
+                        'else': '#else', 'endif': '#endif', 'line': '%s'}[k] % (ins[1],) if len(ins) > 1 else '#' + k)
+        return '\n'.join(out) + '\n'
+
+    @staticmethod
+    def live(prog, tag, init):
+        defined = set(init) | ({tag} if tag else set())
+        stack, cur, seen = [], True, []
+        for ins in prog:
+            k = ins[0]
+            if k in ('ifdef', 'ifndef'):
+                c = (ins[1] in defined) == (k == 'ifdef')
+                stack.append((cur, c))
+                cur = cur and c
+            elif k == 'else':
+                p, c = stack.pop()
+                stack.append((p, not c))
+                cur = p and (not c)
+            elif k == 'endif':
+                cur = stack.pop()[0]
+            elif k == 'define' and cur:
+                defined.add(ins[1])
+            elif k == 'undef' and cur:
+                defined.discard(ins[1])
+            elif k == 'line' and cur:
+                seen.append(ins[1])
+        return tuple(seen)
+
+    @classmethod
+    def programs(cls, names, exhaustive_to, sampled, seed=7):
+        import itertools
+        import random
+        rng = random.Random(seed)
+        syms = ([(k, n) for k in ('ifdef', 'ifndef', 'define', 'undef') for n in names]
+                + [('else',), ('endif',), ('line', 'A')])
+        for length in range(1, exhaustive_to + 1):                       # EXHAUSTIVE over the alphabet
+            for combo in itertools.product(syms, repeat=length):
+                yield cls.close(combo)
+        for _ in range(sampled):                                         # sampled, longer
+            yield cls.close([rng.choice(syms) for _ in range(rng.randint(exhaustive_to + 1, exhaustive_to + 6))])
+
+    @staticmethod
+    def close(seq):
+        prog, depth, else_used = [], 0, []
+        for ins in seq:
+            k = ins[0]
+            if k in ('ifdef', 'ifndef'):
+                depth += 1
+                else_used.append(False)
+            elif k == 'else':
+                if depth == 0 or else_used[-1]:
+                    continue
+                else_used[-1] = True
+            elif k == 'endif':
+                if depth == 0:
+                    continue
+                depth -= 1
+                else_used.pop()
+            prog.append(ins)
+        prog += [('endif',)] * depth
+        return tuple(prog)
+
+    # (tag, macro names, exhaustive length, sampled programs). One macro to length 6 covers the 6-instruction
+    # define/undef/ifdef interleavings of the review rounds; two macros to length 4 plus samples cover interplay.
+    SPACES = (
+        (None, ('X',), 6, 0),
+        ('LAB_ENTRY_14', ('LAB_ENTRY_14',), 6, 0),
+        (None, ('X', 'Y'), 4, 30000),
+        ('LAB_ENTRY_14', ('X', 'LAB_ENTRY_14'), 4, 30000),
+    )
+
+    def unsound_example(self, active_fn):
+        """First pair of programs with equal annotated output but different behaviour, else None."""
+        import itertools
+        inits = [set(c) for r in range(3) for c in itertools.combinations(('X', 'Y'), r)]
+        checked = 0
+        for tag, names, upto, sampled in self.SPACES:
+            groups = {}
+            for prog in set(self.programs(names, upto, sampled)):
+                key = tuple(active_fn(self.render(prog), tag, True))
+                sig = tuple(self.live(prog, tag, i) for i in inits)
+                first = groups.setdefault(key, (sig, prog))
+                checked += 1
+                if first[0] != sig:
+                    return (tag, self.render(first[1]), self.render(prog))
+        self.assertGreater(checked, 100000)
+        return None
+
+    def test_equal_annotations_imply_equal_behaviour(self):
+        ex = self.unsound_example(N.active)
+        self.assertIsNone(ex, 'UNSOUND for tag %s:\n%s\nvs\n%s' % ex if ex else '')
+
+    def test_the_brute_force_can_fail(self):
+        """Specificity: the annotation WITHOUT versions (the round-6 defect) must be caught by this very check."""
+        def unversioned(text, tag, annotate=True):
+            return [(tuple((k, n) for k, n, v in c), l) for c, l in N.active(text, tag, True)]
+        self.assertIsNotNone(self.unsound_example(unversioned))
+
+
 class ProofSpecificity(unittest.TestCase):
     def test_proof_can_fail(self):
         for name, ok in N.selftest(REPO):

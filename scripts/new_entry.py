@@ -319,6 +319,56 @@ def add_wrapper_owner(text, build, wrapper_rel):
 
 
 # ------------------------------------------------------------------ neutrality proof
+def strip_comments(text):
+    """Blank out // and /* */ comments (keeping every newline) so directive parsing sees only code.
+    String and character literals are respected, so a quote inside a comment does not open a literal."""
+    out, i, n = [], 0, len(text)
+    state = 'code'
+    while i < n:
+        c = text[i]
+        nxt = text[i + 1] if i + 1 < n else ''
+        if state == 'code':
+            if c == '/' and nxt == '/':
+                state = 'line'
+                out.append('  ')
+                i += 2
+                continue
+            if c == '/' and nxt == '*':
+                state = 'block'
+                out.append('  ')
+                i += 2
+                continue
+            if c in '"\'':
+                state = c
+            out.append(c)
+        elif state == 'line':
+            if c == chr(10):
+                state = 'code'
+                out.append(c)
+            else:
+                out.append(' ')
+        elif state == 'block':
+            if c == '*' and nxt == '/':
+                state = 'code'
+                out.append('  ')
+                i += 2
+                continue
+            out.append(c if c == chr(10) else ' ')
+        else:                                   # inside a string or character literal
+            out.append(c)
+            if c == chr(92) and nxt:
+                out.append(nxt)
+                i += 2
+                continue
+            if c == state or c == chr(10):
+                state = 'code'
+        i += 1
+    return ''.join(out)
+
+
+IDENT_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+
+
 def active(text, tag, annotate=False):
     """Lines of `text` that can be active when `tag` (or nothing) is the only defined build token.
 
@@ -329,8 +379,12 @@ def active(text, tag, annotate=False):
     (conditions, line) pairs). A condition is (kind, name, version): the version of a name goes up at every
     #define / #undef of it, so the same words asked before and after a change are different conditions, and the
     `#else` of a guard keeps the version it was asked at. Comparing annotated sequences therefore means
-    "identical for every possible value of the unknown macros". #if / #elif are refused (the template does not
-    use them) rather than guessed.
+    "identical for every possible value of the unknown macros".
+
+    STRICT LEXING: comments are blanked first (a directive inside a block comment is not a directive, and
+    `#ifdef F/**/` is `#ifdef F`). A line ending in a backslash, `#if`, `#elif`, an `#ifdef` that is not exactly
+    one identifier, an `#else`/`#endif`/`#undef` with trailing tokens, or a `#define` without a leading identifier
+    is REFUSED rather than guessed. `#define F(x)` defines F.
 
     Blank lines and whole-line comments carry no tokens and are dropped. Trailing comments stay: in MQL5 the
     trailing comment of an `input` line is its Inputs-tab label."""
@@ -347,58 +401,77 @@ def active(text, tag, annotate=False):
     def changed(name):
         ver[name] = ver.get(name, 0) + 1
 
-    for l in text.split(chr(10)):
-        s = l.strip()
-        m = re.match(r'#(ifdef|ifndef)\s+(\S+)', s)
-        if m:
-            name, neg = m.group(2), m.group(1) == 'ifndef'
-            if known(name):
-                cond = (name in defined) != neg
-                stack.append((cur, 'known', cond, None))
-                cur = cur and cond
-            else:
-                key = (m.group(1), name, ver.get(name, 0))
-                stack.append((cur, 'unknown', None, key))
-                conds.append(key)
-            continue
-        if re.match(r'#(if|elif)\b', s):
-            raise Refuse('unmodelled preprocessor directive %r (only ifdef/ifndef/else/endif/define/undef are supported)' % s)
-        if s.startswith('#else'):
-            parent, kind, cond, key = stack.pop()
-            if kind == 'known':
-                stack.append((parent, kind, not cond, None))
-                cur = parent and (not cond)
-            else:
-                conds.pop()
-                flipped = ('ifndef' if key[0] == 'ifdef' else 'ifdef', key[1], key[2])
-                stack.append((parent, kind, None, flipped))
-                conds.append(flipped)
-            continue
-        if s.startswith('#endif'):
-            parent, kind, cond, key = stack.pop()
-            if kind == 'unknown':
-                conds.pop()
-            cur = parent
-            continue
+    def refuse(why, line):
+        raise Refuse('unmodelled preprocessor form (%s): %r' % (why, line.strip()[:100]))
+
+    raw_lines = text.split(chr(10))
+    clean_lines = strip_comments(text).split(chr(10))
+    for l, c in zip(raw_lines, clean_lines):
+        if l.endswith(chr(92)):
+            refuse('line continuation', l)
+        s = c.strip()
+        dm = re.match(r'#\s*([A-Za-z_]+)(.*)$', s)
+        if dm:
+            word, rest = dm.group(1), dm.group(2).strip()
+            if word in ('ifdef', 'ifndef'):
+                if not IDENT_RE.fullmatch(rest):
+                    refuse('%s needs exactly one identifier' % word, l)
+                name = rest
+                if known(name):
+                    cond = (name in defined) != (word == 'ifndef')
+                    stack.append((cur, 'known', cond, None))
+                    cur = cur and cond
+                else:
+                    key = (word, name, ver.get(name, 0))
+                    stack.append((cur, 'unknown', None, key))
+                    conds.append(key)
+                continue
+            if word in ('if', 'elif'):
+                refuse('#%s is not supported' % word, l)
+            if word == 'else' or word == 'endif':
+                if rest:
+                    refuse('tokens after #%s' % word, l)
+                if not stack:
+                    raise Refuse('unbalanced preprocessor nesting (#%s with no open condition)' % word)
+                if word == 'else':
+                    parent, kind, cond, key = stack.pop()
+                    if kind == 'known':
+                        stack.append((parent, kind, not cond, None))
+                        cur = parent and (not cond)
+                    else:
+                        conds.pop()
+                        flipped = ('ifndef' if key[0] == 'ifdef' else 'ifdef', key[1], key[2])
+                        stack.append((parent, kind, None, flipped))
+                        conds.append(flipped)
+                else:
+                    parent, kind, cond, key = stack.pop()
+                    if kind == 'unknown':
+                        conds.pop()
+                    cur = parent
+                continue
+            if cur and word == 'undef':
+                nm = IDENT_RE.match(rest)
+                if not nm or rest[nm.end():].strip():
+                    refuse('#undef needs exactly one identifier', l)
+                name = nm.group(0)
+                defined.discard(name)          # no longer KNOWN defined; later conditions on it are unknown
+                if conds:
+                    maybe.add(name)
+                changed(name)
+            elif cur and word == 'define':
+                nm = IDENT_RE.match(rest)
+                if not nm:
+                    refuse('#define without an identifier', l)
+                name = nm.group(0)             # `#define F(x)` defines F as well
+                if conds:
+                    maybe.add(name)            # a define under an unknown condition decides nothing for later lines
+                else:
+                    defined.add(name)
+                    maybe.discard(name)
+                changed(name)
         if not cur:
             continue
-        u = re.match(r'#undef\s+(\S+)', s)
-        if u:
-            name = u.group(1)
-            defined.discard(name)          # no longer KNOWN defined; later conditions on it are unknown
-            if conds:
-                maybe.add(name)
-            changed(name)
-        d = re.match(r'#define\s+(\S+)', s)
-        if d:
-            name = d.group(1)
-            if conds:
-                maybe.add(name)            # a define under an unknown condition decides nothing for later lines
-            else:
-                defined.add(name)
-                maybe.discard(name)
-            changed(name)
-        if s == '' or s.startswith('//'):
+        if s == '':
             continue
         out.append((tuple(conds), l) if annotate else l)
     if stack:
