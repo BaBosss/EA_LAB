@@ -79,6 +79,24 @@ class ActiveTests(unittest.TestCase):
         for name, new in scenarios.items():
             self.assertTrue(self.differs(new), name)
 
+    def test_define_under_an_unknown_condition_does_not_make_the_name_known(self):
+        """Codex round 5 P1: EXTERNAL / FLAG both undefined => the added line compiles."""
+        base = '#ifdef EXTERNAL\n#define FLAG\n#endif\n#ifndef FLAG\n#endif\n'
+        new = '#ifdef EXTERNAL\n#define FLAG\n#endif\n#ifndef FLAG\nint leaked = 1;\n#endif\n'
+        for tag in ('LAB_ENTRY_14', None):
+            self.assertNotEqual(N.active(base, tag, annotate=True), N.active(new, tag, annotate=True))
+        # an unconditional define still decides later conditions
+        sure = '#define FLAG\n#ifndef FLAG\nint never = 1;\n#endif\n'
+        self.assertEqual(N.active(sure, None), ['#define FLAG'])
+
+    def test_undef_makes_the_name_unknown_again(self):
+        t = '#define A\n#undef A\n#ifdef A\nx\n#endif\n'
+        self.assertEqual(N.active(t, None, annotate=True),
+                         [((), '#define A'), ((), '#undef A'), ((('ifdef', 'A'),), 'x')])
+        u = '#ifdef EXTERNAL\n#undef LAB_ENTRY_14\n#endif\n#ifdef LAB_ENTRY_14\nx\n#endif\n'
+        # an #undef under an unknown condition leaves the tag unknown: its later `#ifdef` keeps both branches
+        self.assertEqual(N.active(u, 'LAB_ENTRY_14', annotate=True)[-1], ((('ifdef', 'LAB_ENTRY_14'),), 'x'))
+
     def test_a_new_tag_only_block_is_invisible_to_existing_builds(self):
         new = ('#ifdef LAB_ENTRY_98\nnewonly\n#ifndef LAB_CONST__98_X\ninput int a = 1;\n#endif\n'
                '#ifdef LAB_CONST__98_X\nconst int a = 1;\n#endif\n#endif\nshared\n')

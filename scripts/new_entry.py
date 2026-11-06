@@ -332,10 +332,13 @@ def active(text, tag, annotate=False):
     Blank lines and whole-line comments carry no tokens and are dropped. Trailing comments stay: in MQL5 the
     trailing comment of an `input` line is its Inputs-tab label."""
     defined = set([tag]) if tag else set()
+    maybe = set()      # defined only under an unknown condition: NOT known to be defined (nor known to be undefined)
     out, stack, conds, cur = [], [], [], True
 
     def known(name):
-        return name in defined or re.fullmatch(r'LAB_ENTRY_\d+', name) is not None
+        if name in defined:
+            return True
+        return name not in maybe and re.fullmatch(r'LAB_ENTRY_\d+', name) is not None
 
     for l in text.split(chr(10)):
         s = l.strip()
@@ -351,7 +354,14 @@ def active(text, tag, annotate=False):
                 conds.append((m.group(1), name))
             continue
         if re.match(r'#(if|elif)\b', s):
-            raise Refuse('unmodelled preprocessor directive %r (only ifdef/ifndef/else/endif/define are supported)' % s)
+            raise Refuse('unmodelled preprocessor directive %r (only ifdef/ifndef/else/endif/define/undef are supported)' % s)
+        u = re.match(r'#undef\s+(\S+)', s)
+        if u and cur:
+            # after an #undef the name is no longer KNOWN to be defined; for a non-tag name that makes later
+            # conditions on it unknown (both branches kept), which is the conservative reading
+            defined.discard(u.group(1))
+            if conds:
+                maybe.add(u.group(1))
         if s.startswith('#else'):
             parent, kind, cond, key = stack.pop()
             if kind == 'known':
@@ -373,7 +383,10 @@ def active(text, tag, annotate=False):
             continue
         d = re.match(r'#define\s+(\S+)', s)
         if d:
-            defined.add(d.group(1))
+            if conds:
+                maybe.add(d.group(1))          # a define under an unknown condition decides nothing for later lines
+            else:
+                defined.add(d.group(1))
         if s == '' or s.startswith('//'):
             continue
         out.append((tuple(conds), l) if annotate else l)
