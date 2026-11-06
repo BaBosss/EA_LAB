@@ -11,7 +11,7 @@
 > `powershell -File scripts\param_registry_check.ps1` to confirm the registry itself
 > is still in sync with the code before trusting this doc.
 
-Rows in source registry: 385.
+Rows in source registry: 401.
 
 ## Override pairs
 
@@ -219,6 +219,22 @@ reader that it can be overridden - the reader would only discover this by readin
 | `_30_StochK` | build 30 only | none direct | Stochastic %K period |
 | `_30_StochSlowing` | build 30 only | none direct | Stochastic slowing |
 | `_30_WeightedTP_Points` | build 30 only | none direct | more layers: TP distance from the weighted open |
+| `_31_AtrPeriod` | build 31 only | none direct | ATR period (range filter and SL) |
+| `_31_BBDev` | build 31 only | none direct | Bollinger deviation |
+| `_31_BBPeriod` | build 31 only | none direct | Bollinger period |
+| `_31_BeLockPoints` | build 31 only | none direct | breakeven stop this many points beyond entry |
+| `_31_BreakevenR` | build 31 only | none direct | breakeven trigger in R (risk multiples) |
+| `_31_CutDDPct` | build 31 only | none direct | close all at (balance-equity)/balance >= this |
+| `_31_EndHour` | build 31 only | none direct | trading hours end (server) |
+| `_31_MaxSpreadPoints` | build 31 only | none direct | no entries above this spread (0 = off) |
+| `_31_MinRangeAtr` | build 31 only | none direct | signal bar range at least this x ATR |
+| `_31_PauseBarAfterCut` | build 31 only | none direct | no new orders for the rest of the cut bar |
+| `_31_SL_ATR` | build 31 only | none direct | SL distance = this x ATR |
+| `_31_StartHour` | build 31 only | none direct | trading hours start (server) |
+| `_31_TailBodyMult` | build 31 only | none direct | tail at least this x body |
+| `_31_TailRangeFrac` | build 31 only | none direct | tail at least this fraction of the range |
+| `_31_TP_RR` | build 31 only | none direct | TP distance = SL distance x this |
+| `_31_UseBreakeven` | build 31 only | none direct | move the stop to entry once in profit |
 | `TradeDir` | builds 11/12/13/15 only (checked explicitly in those 4 Entry_Evaluate() functions); builds 14/16/18 use their own fixed-direction input instead and never read this; build17 is bidirectional by design and never reads this | per-entry: none direct, but functionally overlaps with _14_Direction/_16_Direction/_18_Direction on builds that ignore it | Restricts a symmetric entry signal to long-only, short-only, or both; has zero effect on builds 14/16/17/18. |
 | `TrendFilter` | builds 11/12/13 only; no effect on 14/15/16/17/18 | _71_ATRMA+_71_ATRRatio(71); _72_SlopeBar(72) | Adds a confirming filter (ATR-expansion or MA-slope) before the entry signal is allowed to fire; only wired into 3 of the 8 entry modules. |
 
@@ -573,6 +589,6 @@ reader that it can be overridden - the reader would only discover this by readin
 
 ---
 
-Total parameter rows across the context sections above: 385 (must equal the source registry's 385 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
+Total parameter rows across the context sections above: 401 (must equal the source registry's 401 rows, each appearing exactly once - context is a single-valued column so grouping by it partitions the rows).
 
 Override pairs found: 11.

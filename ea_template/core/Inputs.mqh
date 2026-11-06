@@ -29,7 +29,9 @@
 #ifndef LAB_ENTRY_28
 #ifndef LAB_ENTRY_29
 #ifndef LAB_ENTRY_30
+#ifndef LAB_ENTRY_31
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -484,6 +486,21 @@ const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 #endif
 #endif
 // new_entry.py: end stack build 30
+#ifdef LAB_ENTRY_31
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 31: entry-owned pipeline: shared Stack/Exit are not used)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+// new_entry.py: end stack build 31
 // A10 C2 port: stack selectors for builds 23, 26, 27, 28, 29 (single order per signal or entry-owned pipeline).
 #ifdef LAB_ENTRY_23
 #ifndef LAB_CONST_StackMode
@@ -3070,6 +3087,108 @@ input int _30_EndHour = 23; // [P13020] trading hours end (server)
 #endif
 #ifdef LAB_CONST__30_EndHour
 const int _30_EndHour = LAB_CONSTVAL__30_EndHour;
+#endif
+#endif
+
+// new_entry.py: build 31 BBPinBar (inputs source sha256 56c234a39e0007b37fb8c92f915c5826e287bb008eb0897b194b1942df5bd479)
+#ifdef LAB_ENTRY_31
+input group "=== 31 BBPinBar signal (AGY S10) ==="
+#ifndef LAB_CONST__31_BBPeriod
+input int _31_BBPeriod = 35; // [P13100] Bollinger period
+#endif
+#ifdef LAB_CONST__31_BBPeriod
+const int _31_BBPeriod = LAB_CONSTVAL__31_BBPeriod;
+#endif
+#ifndef LAB_CONST__31_BBDev
+input double _31_BBDev = 2.0; // [P13101] Bollinger deviation
+#endif
+#ifdef LAB_CONST__31_BBDev
+const double _31_BBDev = LAB_CONSTVAL__31_BBDev;
+#endif
+#ifndef LAB_CONST__31_AtrPeriod
+input int _31_AtrPeriod = 14; // [P13102] ATR period (range filter and SL)
+#endif
+#ifdef LAB_CONST__31_AtrPeriod
+const int _31_AtrPeriod = LAB_CONSTVAL__31_AtrPeriod;
+#endif
+#ifndef LAB_CONST__31_MinRangeAtr
+input double _31_MinRangeAtr = 0.8; // [P13103] signal bar range at least this x ATR
+#endif
+#ifdef LAB_CONST__31_MinRangeAtr
+const double _31_MinRangeAtr = LAB_CONSTVAL__31_MinRangeAtr;
+#endif
+#ifndef LAB_CONST__31_TailBodyMult
+input double _31_TailBodyMult = 2.0; // [P13104] tail at least this x body
+#endif
+#ifdef LAB_CONST__31_TailBodyMult
+const double _31_TailBodyMult = LAB_CONSTVAL__31_TailBodyMult;
+#endif
+#ifndef LAB_CONST__31_TailRangeFrac
+input double _31_TailRangeFrac = 0.55; // [P13105] tail at least this fraction of the range
+#endif
+#ifdef LAB_CONST__31_TailRangeFrac
+const double _31_TailRangeFrac = LAB_CONSTVAL__31_TailRangeFrac;
+#endif
+input group "=== 31 Single shot exits and account cut ==="
+#ifndef LAB_CONST__31_SL_ATR
+input double _31_SL_ATR = 1.5; // [P13106] SL distance = this x ATR
+#endif
+#ifdef LAB_CONST__31_SL_ATR
+const double _31_SL_ATR = LAB_CONSTVAL__31_SL_ATR;
+#endif
+#ifndef LAB_CONST__31_TP_RR
+input double _31_TP_RR = 2.4; // [P13107] TP distance = SL distance x this
+#endif
+#ifdef LAB_CONST__31_TP_RR
+const double _31_TP_RR = LAB_CONSTVAL__31_TP_RR;
+#endif
+#ifndef LAB_CONST__31_UseBreakeven
+input bool _31_UseBreakeven = true; // [P13108] move the stop to entry once in profit
+#endif
+#ifdef LAB_CONST__31_UseBreakeven
+const bool _31_UseBreakeven = LAB_CONSTVAL__31_UseBreakeven;
+#endif
+#ifndef LAB_CONST__31_BreakevenR
+input double _31_BreakevenR = 1.0; // [P13109] breakeven trigger in R (risk multiples)
+#endif
+#ifdef LAB_CONST__31_BreakevenR
+const double _31_BreakevenR = LAB_CONSTVAL__31_BreakevenR;
+#endif
+#ifndef LAB_CONST__31_BeLockPoints
+input double _31_BeLockPoints = 10; // [P13110] breakeven stop this many points beyond entry
+#endif
+#ifdef LAB_CONST__31_BeLockPoints
+const double _31_BeLockPoints = LAB_CONSTVAL__31_BeLockPoints;
+#endif
+#ifndef LAB_CONST__31_CutDDPct
+input double _31_CutDDPct = 12.0; // [P13111] close all at (balance-equity)/balance >= this
+#endif
+#ifdef LAB_CONST__31_CutDDPct
+const double _31_CutDDPct = LAB_CONSTVAL__31_CutDDPct;
+#endif
+#ifndef LAB_CONST__31_PauseBarAfterCut
+input bool _31_PauseBarAfterCut = true; // [P13112] no new orders for the rest of the cut bar
+#endif
+#ifdef LAB_CONST__31_PauseBarAfterCut
+const bool _31_PauseBarAfterCut = LAB_CONSTVAL__31_PauseBarAfterCut;
+#endif
+#ifndef LAB_CONST__31_MaxSpreadPoints
+input int _31_MaxSpreadPoints = 50; // [P13113] no entries above this spread (0 = off)
+#endif
+#ifdef LAB_CONST__31_MaxSpreadPoints
+const int _31_MaxSpreadPoints = LAB_CONSTVAL__31_MaxSpreadPoints;
+#endif
+#ifndef LAB_CONST__31_StartHour
+input int _31_StartHour = 0; // [P13114] trading hours start (server)
+#endif
+#ifdef LAB_CONST__31_StartHour
+const int _31_StartHour = LAB_CONSTVAL__31_StartHour;
+#endif
+#ifndef LAB_CONST__31_EndHour
+input int _31_EndHour = 23; // [P13115] trading hours end (server)
+#endif
+#ifdef LAB_CONST__31_EndHour
+const int _31_EndHour = LAB_CONSTVAL__31_EndHour;
 #endif
 #endif
 
