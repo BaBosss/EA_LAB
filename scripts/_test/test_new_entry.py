@@ -105,6 +105,17 @@ class HookInjectionTests(unittest.TestCase):
             with self.assertRaises(N.Refuse, msg=repr(over)):
                 self.load(**over)
 
+    def test_bare_cr_and_control_characters_refused(self):
+        """A lone CR ends a line for the compiler but not for the proof's '\\n' split (Codex round 2 lead)."""
+        for over in (dict(stack={'mode': 'STACK_SINGLE', 'confirm': 'CONF_DISTANCE', 'note': 'x\r#ifdef Y'}),
+                     dict(provenance='a\rb'), dict(title='a\x0bb'), dict(title='a\x0cb'),
+                     dict(preset_overlay={'_98_Period': '1\r2'}), dict(preset_overlay={'_98_Period': '1\n2'})):
+            with self.assertRaises(N.Refuse, msg=repr(over)):
+                self.load(**over)
+        for text in ('input int _98_X = 1; // a\rb\n', 'input int _98_X = 1;\x00\n'):
+            with self.assertRaises(N.Refuse):
+                N.need_ascii('inputs_source', text)
+
     def test_extra_file_names_checked(self):
         with tempfile.TemporaryDirectory() as d:
             p = write_manifest(d, manifest(extra_files=['bad name.mqh']))

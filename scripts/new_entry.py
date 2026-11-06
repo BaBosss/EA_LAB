@@ -87,6 +87,11 @@ def need_ascii(label, text):
     bad = sorted(set(c for c in text if ord(c) >= 128))
     if bad:
         raise Refuse('%s contains non-ASCII characters %r; this tool adds none to the repo' % (label, ''.join(bad[:8])))
+    # A bare CR / form feed / vertical tab / NUL ends a line for some readers (MetaEditor, git) but not for the
+    # '\n' splitting the neutrality proof does, so a control character is how text could break out of a comment.
+    ctl = sorted(set(c for c in text if (ord(c) < 32 and c not in '\n\t') or ord(c) == 127))
+    if ctl:
+        raise Refuse('%s contains control characters %r; only \\n and \\t are allowed' % (label, ''.join(ctl)))
 
 
 def git(root, *args, **kw):
@@ -151,6 +156,9 @@ def load_manifest(path):
             raise Refuse('manifest: extra file name %r must be <letters/digits/_>.mqh' % os.path.basename(p))
     out['provenance'] = str(m.get('provenance', '')).replace('\n', ' ').strip()
     need_ascii('manifest provenance/title/stack note', out['provenance'] + out['title'] + out['stack']['note'])
+    need_ascii('manifest preset_overlay', ''.join(k + v for k, v in out['preset_overlay'].items()))
+    if any('\n' in k + v for k, v in out['preset_overlay'].items()):
+        raise Refuse('manifest: preset_overlay names and values must be single-line')
     for p in [out['entry_source'], out['inputs_source']] + out['extra_files']:
         if not os.path.isfile(p):
             raise Refuse('manifest: source file not found: %s' % p)
@@ -399,6 +407,8 @@ def prove(root):
         new = rd(os.path.join(root, rel))
         for d in audit_added_directives(root, rel):
             fail.append('%s: added preprocessor line outside the allowed shapes: %r' % (rel, d))
+        if '\r' in new:
+            fail.append('%s: contains a bare CR (line ends the proof does not split on)' % rel)
         same = 0
         for tag in tagset:
             a, b = active(old, tag), active(new, tag)
@@ -411,6 +421,9 @@ def prove(root):
         report.append('%-52s identical active source for %d/%d existing builds' % (rel, same, len(tagset)))
     new_code = [p for p in new_files if is_code(p)]
     new_names = [os.path.basename(p) for p in new_code]
+    for p in new_code:
+        if '\r' in rd(os.path.join(root, p)):
+            fail.append('%s: contains a bare CR' % p)
     reachable = []
     for dp, _, fs in os.walk(os.path.join(root, 'ea_template')):
         for f in fs:
