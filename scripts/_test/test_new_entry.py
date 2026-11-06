@@ -390,6 +390,12 @@ class HookInjectionTests(unittest.TestCase):
         self.assertFalse(self.peeled_equals(head2, head2.replace('marker', '*/')))
         self.assertFalse(self.peeled_equals('int existing;\n',
                                             '#ifdef LAB_ENTRY_98\nint unused; #else\nint leaked;\n#endif\nint existing;\n'))
+        # round 10: a SECOND directive after the leading one on the same line
+        self.assertFalse(self.peeled_equals('#ifdef EXTERNAL\nint existing;\n#endif\n',
+                                            '#ifdef EXTERNAL\n#ifdef LAB_ENTRY_98\n#endif #else\nint existing;\n#endif\n'))
+        for bad_block in ('#ifdef LAB_ENTRY_98 junk\n#endif\n', '#ifdef LAB_ENTRY_98\n#endif junk\n',
+                          '#ifdef LAB_ENTRY_98\n#if 1\n#endif\n#endif\n', '#ifdef LAB_ENTRY_98\n#ifdef X\n#else junk\n#endif\n#endif\n'):
+            self.assertFalse(self.peeled_equals('a\n', 'a\n' + bad_block), bad_block)
         # a '#' inside a string or a comment is fine
         self.assertTrue(self.peeled_equals('s = "#x"; // # y\n', 's = "#x"; // # y\n' + self.BLOCK))
 

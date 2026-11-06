@@ -556,9 +556,9 @@ def lexical_guard(label, text):
     if '/*' in text:
         raise Refuse('%s contains a block comment opener; the structural proof does not support block comments' % label)
     for n, l in enumerate(blank_literals(strip_comments(text)).split(chr(10)), 1):
-        if '#' in l and not l.strip().startswith('#'):
-            raise Refuse('%s line %d has a `#` that is not at the start of the line (inline directive): %r'
-                         % (label, n, l.strip()[:60]))
+        if l.count('#') > 1 or ('#' in l and not l.strip().startswith('#')):
+            raise Refuse('%s line %d has a `#` that is not the single directive marker at the start of the line '
+                         '(inline or second directive): %r' % (label, n, l.strip()[:60]))
 
 
 def peel(new_text, new_tags, fallback):
@@ -585,13 +585,22 @@ def peel(new_text, new_tags, fallback):
             c = clean[j].strip()
             if lines[j].endswith(bs):
                 raise Refuse('line continuation inside an inserted block (line %d)' % (j + 1))
-            if re.match(r'#\s*(if|ifdef|ifndef)\b', c):
+            if re.match(r'#\s*(if|elif)\b', c):
+                raise Refuse('#if/#elif inside an inserted block is not supported (line %d)' % (j + 1))
+            if re.match(r'#\s*(ifdef|ifndef)\b', c):
+                if not re.fullmatch(r'#\s*(ifdef|ifndef)\s+[A-Za-z_]\w*', c):
+                    raise Refuse('unsupported conditional syntax in an inserted block (line %d): %r' % (j + 1, c[:60]))
                 depth += 1
             elif re.match(r'#\s*endif\b', c):
+                if not re.fullmatch(r'#\s*endif', c):
+                    raise Refuse('tokens after #endif in an inserted block (line %d): %r' % (j + 1, c[:60]))
                 depth -= 1
-            elif depth == 1 and re.match(r'#\s*(else|elif)\b', c):
-                raise Refuse('#else/#elif directly inside a new-build block would be live for every existing build '
-                             '(line %d)' % (j + 1))
+            elif re.match(r'#\s*else\b', c):
+                if not re.fullmatch(r'#\s*else', c):
+                    raise Refuse('tokens after #else in an inserted block (line %d): %r' % (j + 1, c[:60]))
+                if depth == 1:
+                    raise Refuse('#else directly inside a new-build block would be live for every existing build '
+                                 '(line %d)' % (j + 1))
             j += 1
             if depth == 0:
                 break
