@@ -396,6 +396,13 @@ class HookInjectionTests(unittest.TestCase):
         for bad_block in ('#ifdef LAB_ENTRY_98 junk\n#endif\n', '#ifdef LAB_ENTRY_98\n#endif junk\n',
                           '#ifdef LAB_ENTRY_98\n#if 1\n#endif\n#endif\n', '#ifdef LAB_ENTRY_98\n#ifdef X\n#else junk\n#endif\n#endif\n'):
             self.assertFalse(self.peeled_equals('a\n', 'a\n' + bad_block), bad_block)
+        # round 11: an escaped quote must not end the literal early and hide an inline directive after it
+        bq = chr(92)
+        self.assertFalse(self.peeled_equals('int existing;\n', '#ifdef LAB_ENTRY_98\nPrint("' + bq + '""); #else\nint leaked;\n#endif\nint existing;\n'))
+        self.assertFalse(self.peeled_equals('int existing;\n', "#ifdef LAB_ENTRY_98\nint c='" + bq + "''; #else\nint leaked;\n#endif\nint existing;\n"))
+        self.assertTrue(self.peeled_equals('string s="a' + bq + '"#b";\n', 'string s="a' + bq + '"#b";\n' + self.BLOCK))   # a literal '#' after an escaped quote
+        # a continuation in HEAD (including of a // marker comment) is refused too
+        self.assertFalse(self.peeled_equals('// new_entry.py: marker ' + bq + '\nint existing;\n', 'int existing;\n'))
         # a '#' inside a string or a comment is fine
         self.assertTrue(self.peeled_equals('s = "#x"; // # y\n', 's = "#x"; // # y\n' + self.BLOCK))
 

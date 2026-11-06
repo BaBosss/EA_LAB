@@ -535,17 +535,23 @@ def normalize(text):
 
 def blank_literals(code):
     """Blank the inside of string and character literals on comment-free text (newlines kept)."""
-    out, state = [], 'code'
-    for c in code:
+    out, state, i, n = [], 'code', 0, len(code)
+    while i < n:
+        c = code[i]
         if state == 'code':
             out.append(c)
             if c in '"\'':
                 state = c
+        elif c == chr(92) and i + 1 < n and code[i + 1] != chr(10):
+            out.append('  ')                  # a backslash escape: the next character cannot close the literal
+            i += 2
+            continue
         elif c == state or c == chr(10):
             state = 'code'
             out.append(c)
         else:
             out.append(' ')
+        i += 1
     return ''.join(out)
 
 
@@ -555,6 +561,9 @@ def lexical_guard(label, text):
     or expose lines, and a `#` that is not the first thing on its line, i.e. an inline directive."""
     if '/*' in text:
         raise Refuse('%s contains a block comment opener; the structural proof does not support block comments' % label)
+    for n, l in enumerate(text.split(chr(10)), 1):
+        if l.endswith(chr(92)):
+            raise Refuse('%s line %d ends in a backslash (line continuation, also of a // comment)' % (label, n))
     for n, l in enumerate(blank_literals(strip_comments(text)).split(chr(10)), 1):
         if l.count('#') > 1 or ('#' in l and not l.strip().startswith('#')):
             raise Refuse('%s line %d has a `#` that is not the single directive marker at the start of the line '
