@@ -487,130 +487,175 @@ def is_code(rel):
     return rel.endswith('.mqh') or rel.endswith('.mq5')
 
 
-# `active()` models only #ifdef/#ifndef/#else/#endif/#define inside ONE file. A condition on a macro defined in
-# another file (an include guard, a LAB_CONST_* token from a generated wrapper's allowlist header) is not modelled,
-# so a line added under such a condition could be live for an existing build while the proof says "identical".
-# The audit closes that channel structurally: a preprocessor line ADDED to an existing file may only be
-#   * #ifdef/#ifndef on a NEW LAB_ENTRY_<NN> tag (the new build's own switch),
-#   * #endif / nothing else that opens or flips a condition (#else, #elif, #if, #undef, #pragma are refused),
-#   * inside a region opened by such a new tag: LAB_CONST_*/LAB_CONSTVAL_* guards and defines, and the
-#     `#include "entries/Entry_<Name>.mqh"` of the new entry,
-#   * in the generated *_gen.mqh files only: `#define CFG_<NAME>` (the enumeration markers).
-GEN_DEFINE = re.compile(r'#define CFG_[A-Z_]+(?: .*)?')
-IN_REGION_DIRECTIVES = [
-    re.compile(r'#(?:ifdef|ifndef) LAB_CONST_\w+'),
-    re.compile(r'#define (?:LAB_CONSTVAL_\w+|LAB_CONST_\w+)(?: .*)?'),
-    re.compile(r'#include "entries/Entry_[A-Za-z0-9_]+\.mqh"'),
-]
+# ------------------------------------------------------------------ structural neutrality proof
+# WHAT IS CLAIMED. Not "the token streams are equal" (no static model of MQL5 preprocessing is complete: inline
+# directives, macros changed by an included file, __LINE__, non-code includes ... each review round found another
+# one) but something narrower that holds BY CONSTRUCTION:
+#   1. the tool changes only the paths in MANAGED_CHANGED and creates only files matching NEW_FILE_PATTERNS;
+#   2. in each of the four core files, deleting what the tool inserted gives the HEAD text back byte for byte.
+#      "What the tool inserted" is exactly two shapes: whole `#ifdef LAB_ENTRY_<new>` ... matching `#endif` blocks
+#      (no #else/#elif directly inside, no line continuation, none right after a continuation) and the fallback-chain
+#      wrap (`#ifndef LAB_ENTRY_<new>` before the fallback define, one `#endif` after it);
+#   3. the new LAB_ENTRY_<NN> token appears nowhere in the HEAD tree, so no existing build defines it, so every
+#      inserted `#ifdef` block is skipped whole by the preprocessor whatever macros or includes are in play, and the
+#      `#ifndef` wrap is true as before;
+#   4. no new file's name appears anywhere in the HEAD tree, so no existing build includes it;
+#   5. HEAD does not use __LINE__, so the lines the insertions shift change nothing.
+# The annotated-condition model (`active`) stays as a second, informational layer.
+MANAGED_CODE = ('ea_template/core/Inputs.mqh', 'ea_template/core/LabCore.mqh',
+                'ea_template/core/InputSurface_gen.mqh', 'ea_template/core/LockedConstants_gen.mqh')
+MANAGED_CHANGED = set(MANAGED_CODE) | set(['_triage/factory_os/wrapper_owners.csv', 'docs/PARAM_REGISTRY.csv',
+                                           'docs/PARAM_LINKAGE.md', 'factory/magic_allocations.jsonl'])
+NEW_FILE_PATTERNS = [re.compile(p) for p in (r'ea_template/Boss_\d+_[A-Za-z0-9_]+\.mq5',
+                                             r'ea_template/core/entries/[A-Za-z0-9_]+\.mqh',
+                                             r'ea_template/sets/regression/[A-Za-z0-9_]+\.set')]
 
 
-def added_line_numbers(diff_text):
-    """Line numbers (new file) of every added line in a `git diff -U0` of ONE file."""
-    out = set()
-    for m in re.finditer(r'(?m)^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@', diff_text):
-        start, count = int(m.group(1)), int(m.group(2)) if m.group(2) is not None else 1
-        out.update(range(start, start + count))
-    return out
+def normalize(text):
+    """LF endings, without blank lines and without the tool's own whole-line marker comments (both inert, and
+    peel() has already refused every line continuation, the one way a blank or inserted line could matter)."""
+    return chr(10).join(l for l in text.replace(chr(13) + chr(10), chr(10)).split(chr(10))
+                        if l.strip() and not l.strip().startswith('// ' + MARK + ':'))
 
 
-def directive_violations(new_text, added, new_tags, rel=''):
-    bad = []
-    stack, in_new = [], False
-    for n, raw in enumerate(new_text.split(chr(10)), 1):
-        s = raw.strip()
-        if not s.startswith('#'):
+def peel(new_text, new_tags, fallback):
+    """Remove everything the tool may have inserted; Refuse if an insertion has any other shape."""
+    bs = chr(92)
+    lines = new_text.split(chr(10))
+    clean = strip_comments(new_text).split(chr(10))
+    for n, l in enumerate(lines, 1):
+        if l.endswith(bs):
+            raise Refuse('line %d ends in a backslash: a line continuation could join an inserted or blank line to the '
+                         'next one, so the structural proof refuses files that use any' % n)
+    out, i = [], 0
+    while i < len(lines):
+        m = re.fullmatch(r'#\s*ifdef\s+(LAB_ENTRY_\d+)', clean[i].strip())
+        if not (m and m.group(1) in new_tags):
+            out.append(lines[i])
+            i += 1
             continue
-        is_added = n in added
-        m = re.match(r'#(ifdef|ifndef)\s+(\S+)\s*$', s)
-        if m:
-            tag_is_new = m.group(2) in new_tags
-            if is_added and not (tag_is_new or (in_new and IN_REGION_DIRECTIVES[0].fullmatch(s))):
-                bad.append('line %d: %s' % (n, s))
-            stack.append(in_new)
-            # Only the POSITIVE test of a new tag is a region that existing builds skip. `#ifndef LAB_ENTRY_<new>`
-            # (the fallback chain's guard) is true for every existing build, so its body is NOT a new-build region.
-            in_new = in_new or (tag_is_new and m.group(1) == 'ifdef')
-            continue
-        if s.startswith('#endif'):
-            if stack:
-                in_new = stack.pop()
-            continue
-        if re.match(r'#(?:else|elif)', s) and stack:
-            in_new = stack[-1]      # the other branch of any guard is never a new-build-only region
-        if not is_added:
-            continue
-        if re.match(r'#(?:else|elif|if|undef|pragma)', s):
-            bad.append('line %d: %s' % (n, s))
-        elif in_new and any(p.fullmatch(s) for p in IN_REGION_DIRECTIVES[1:]):
-            continue
-        elif rel.endswith('_gen.mqh') and GEN_DEFINE.fullmatch(s):
-            continue
-        else:
-            bad.append('line %d: %s' % (n, s))
-    return bad
+        if out and out[-1].endswith(bs):
+            raise Refuse('an inserted block follows a line ending in a backslash (line %d)' % (i + 1))
+        depth, j = 0, i
+        while j < len(lines):
+            c = clean[j].strip()
+            if lines[j].endswith(bs):
+                raise Refuse('line continuation inside an inserted block (line %d)' % (j + 1))
+            if re.match(r'#\s*(if|ifdef|ifndef)\b', c):
+                depth += 1
+            elif re.match(r'#\s*endif\b', c):
+                depth -= 1
+            elif depth == 1 and re.match(r'#\s*(else|elif)\b', c):
+                raise Refuse('#else/#elif directly inside a new-build block would be live for every existing build '
+                             '(line %d)' % (j + 1))
+            j += 1
+            if depth == 0:
+                break
+        if depth != 0:
+            raise Refuse('unbalanced inserted block starting at line %d' % (i + 1))
+        i = j
+    d = [k for k, l in enumerate(out) if l.strip() == FALLBACK_DEFINE.strip()]
+    wraps = 0
+    if d:
+        if len(d) != 1:
+            raise Refuse('fallback define found %d times' % len(d))
+        at = d[0]
+        while (at - 1 - wraps >= 0 and re.fullmatch(r'#ifndef (LAB_ENTRY_\d+)', out[at - 1 - wraps].strip())
+               and re.fullmatch(r'#ifndef (LAB_ENTRY_\d+)', out[at - 1 - wraps].strip()).group(1) in new_tags):
+            wraps += 1
+        if wraps != len(new_tags) or not fallback:
+            raise Refuse('fallback chain: expected %d wrap(s) before the fallback define, found %d' % (len(new_tags) if fallback else 0, wraps))
+        if any(out[at + 1 + k].strip() != '#endif' for k in range(wraps)):
+            raise Refuse('fallback chain: the wrap is not closed right after the fallback define')
+        out = out[:at - wraps] + [out[at]] + out[at + 1 + wraps:]
+    elif fallback:
+        raise Refuse('fallback define not found')
+    return chr(10).join(out)
 
 
-def audit_added_directives(root, rel, new_text, new_tags):
-    diff = git(root, 'diff', '-U0', 'HEAD', '--', rel)
-    return directive_violations(new_text, added_line_numbers(diff), new_tags, rel)
+def structural_check(rel, old, new, new_tags):
+    """-> None, or raises Refuse with the first line where HEAD and the peeled text differ."""
+    peeled = normalize(peel(new, new_tags, fallback=rel.endswith('/Inputs.mqh')))
+    base = normalize(old)
+    if peeled != base:
+        a, b = base.split(chr(10)), peeled.split(chr(10))
+        k = next((n for n, (x, y) in enumerate(zip(a, b)) if x != y), min(len(a), len(b)))
+        raise Refuse('%s: after removing the tool\'s insertions the text still differs from HEAD at line %d: HEAD %r vs now %r'
+                     % (rel, k + 1, a[k][:80] if k < len(a) else None, b[k][:80] if k < len(b) else None))
+
+
+def base_hits(root, needle, whole_word):
+    args = ['grep', '-I', '-l', '-i'] + (['-w'] if whole_word else ['-F']) + ['-e', needle, 'HEAD', '--', 'ea_template']
+    return [l for l in git(root, *args, ok_fail=True).split(chr(10)) if l.strip()]
 
 
 def prove(root):
-    """HEAD vs working tree. Returns a list of lines; raises Refuse on any difference."""
-    base_inputs = git(root, 'show', 'HEAD:ea_template/core/Inputs.mqh').replace('\r\n', '\n')
+    """Structural neutrality proof, HEAD vs working tree. Returns report lines; raises Refuse on any failure."""
+    changed = [p for p in git(root, 'diff', '--name-only', 'HEAD').split(chr(10)) if p]
+    new_files = [p for p in git(root, 'ls-files', '--others', '--exclude-standard').split(chr(10)) if p]
+    if not changed and not new_files:
+        return ['no changes against HEAD: nothing to prove']
+    report, fail = [], []
+    for p in changed:
+        if p not in MANAGED_CHANGED:
+            fail.append('%s: changed, but new_entry.py never changes this path' % p)
+    for p in new_files:
+        if not any(pat.fullmatch(p) for pat in NEW_FILE_PATTERNS):
+            fail.append('%s: new file outside the shapes new_entry.py creates' % p)
+    base_inputs = git(root, 'show', 'HEAD:ea_template/core/Inputs.mqh').replace(chr(13) + chr(10), chr(10))
     tags = existing_tags(base_inputs)
     if not tags:
         raise Refuse('no existing build tags found at HEAD')
-    tagset = tags + [None]
     new_tags = set(existing_tags(rd(os.path.join(root, 'ea_template', 'core', 'Inputs.mqh')))) - set(tags)
-    changed = [p for p in git(root, 'diff', '--name-only', 'HEAD', '--', 'ea_template').split('\n') if p]
-    new_files = [p for p in git(root, 'ls-files', '--others', '--exclude-standard', '--', 'ea_template').split('\n') if p]
-    report, fail = [], []
-    for rel in sorted(changed):
-        if not is_code(rel):
-            report.append('%-52s non-code change (not part of any build token stream)' % rel)
+    if not new_tags:
+        fail.append('Inputs.mqh declares no new LAB_ENTRY_<NN> build tag')
+    for t in sorted(new_tags):
+        hits = base_hits(root, t, True)
+        if hits:
+            fail.append('%s already appears in the HEAD tree (%s): the tag is not new' % (t, ', '.join(hits[:3])))
+    for rel in MANAGED_CODE:
+        if rel not in changed:
             continue
-        old = git(root, 'show', 'HEAD:' + rel).replace('\r\n', '\n')
-        new = rd(os.path.join(root, rel))
-        for d in audit_added_directives(root, rel, new, new_tags):
-            fail.append('%s: added preprocessor line outside the allowed shapes: %s' % (rel, d))
-        if '\r' in new:
-            fail.append('%s: contains a bare CR (line ends the proof does not split on)' % rel)
-        same = 0
-        for tag in tagset:
-            a, b = active(old, tag, annotate=True), active(new, tag, annotate=True)
-            if a == b:
-                same += 1
-                continue
-            i = next((k for k, (x, y) in enumerate(zip(a, b)) if x != y), min(len(a), len(b)))
-            fail.append('%s [%s]: active source differs at active line %d (base %d lines, now %d)'
-                        % (rel, tag or 'no tag', i + 1, len(a), len(b)))
-        report.append('%-52s identical active source for %d/%d existing builds' % (rel, same, len(tagset)))
-    new_code = [p for p in new_files if is_code(p)]
-    new_names = [os.path.basename(p) for p in new_code]
-    for p in new_code:
+        try:
+            structural_check(rel, git(root, 'show', 'HEAD:' + rel), rd(os.path.join(root, rel)), new_tags)
+            report.append('%-52s HEAD restored byte-for-byte after removing the tool\'s insertions' % rel)
+        except Refuse as e:
+            fail.append(str(e))
+        if '\r' in rd(os.path.join(root, rel)):
+            fail.append('%s: contains a bare CR' % rel)
+    for p in new_files:
+        if not is_code(p):
+            continue
+        name = os.path.basename(p)
+        hits = base_hits(root, name, False)
+        if hits:
+            fail.append('%s: the name %s already appears in the HEAD tree (%s)' % (p, name, ', '.join(hits[:3])))
         if '\r' in rd(os.path.join(root, p)):
             fail.append('%s: contains a bare CR' % p)
-    reachable = []
-    for dp, _, fs in os.walk(os.path.join(root, 'ea_template')):
-        for f in fs:
-            if not is_code(f):
-                continue
-            p = os.path.join(dp, f)
-            rel = os.path.relpath(p, root).replace('\\', '/')
-            if rel in new_code:
-                continue
-            text = rd(p)
-            for tag in tagset:
-                for l in active(text, tag):
-                    for nf in new_names:
-                        if re.match(r'\s*#include\s+"[^"]*%s"' % re.escape(nf), l):
-                            reachable.append('%s includes %s for existing build %s' % (rel, nf, tag or 'no tag'))
-    report.append('new code files: %d; reachable from an existing build: %s' % (len(new_code), 'NONE' if not reachable else 'YES'))
-    fail += reachable
+    line_hits = git(root, 'grep', '-I', '-l', '-w', '-e', '__LINE__', 'HEAD', '--', 'ea_template', ok_fail=True).strip()
+    if line_hits:
+        fail.append('HEAD uses __LINE__ (%s): inserted lines would shift it' % line_hits.replace(chr(10), ', '))
+    # second, informational layer: the annotated-condition model must agree too (a disagreement is a failure; a form
+    # the model refuses to read is only reported, the structural proof above does not depend on it)
+    modelled = 0
+    for rel in MANAGED_CODE:
+        if rel not in changed:
+            continue
+        old, new = git(root, 'show', 'HEAD:' + rel).replace(chr(13) + chr(10), chr(10)), rd(os.path.join(root, rel))
+        try:
+            for tag in tags + [None]:
+                if active(old, tag, annotate=True) != active(new, tag, annotate=True):
+                    fail.append('%s [%s]: the annotated-condition model disagrees with the structural proof' % (rel, tag or 'no tag'))
+            modelled += 1
+        except Refuse as e:
+            report.append('%-52s model layer skipped (%s)' % (rel, str(e)[:70]))
+    if modelled:
+        report.append('annotated-condition model agrees for %d file(s) x %d existing builds + the no-tag build' % (modelled, len(tags)))
+    report.append('new tag(s) %s absent from HEAD; %d new file(s) unreferenced by HEAD; HEAD has no __LINE__'
+                  % (', '.join(sorted(new_tags)) or '-', len([p for p in new_files if is_code(p)])))
     if fail:
         raise Refuse('NEUTRALITY PROOF FAILED:\n  ' + '\n  '.join(report + fail))
-    report.append('PROOF HOLDS: every existing build (%s, no-tag fallback) sees byte-identical active source.'
+    report.append('PROOF HOLDS: every change is an inert insertion; existing builds (%s, no-tag fallback) cannot see it.'
                   % ', '.join(t.replace('LAB_ENTRY_', '') for t in tags))
     return report
 

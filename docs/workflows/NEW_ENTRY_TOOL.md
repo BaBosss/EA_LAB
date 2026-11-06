@@ -46,7 +46,7 @@ citations) and `PARAM_LINKAGE.md`, and builds the regression defaults preset. Th
 
 | Check | Meaning |
 |---|---|
-| neutrality proof | for every existing build tag and the no-tag fallback, every changed code file has byte-identical active source at HEAD and in the tree; no existing build includes a new file |
+| neutrality proof (structural) | only the tool's managed paths changed; in each of the four core files, removing the inserted `#ifdef LAB_ENTRY_<new>` blocks and the fallback-chain wrap gives HEAD back byte for byte (blank lines and the tool's marker comments aside); the new tag and the new file names appear nowhere in the HEAD tree; HEAD has no `__LINE__` and the changed files have no line continuation. Such a block is skipped whole by every existing build whatever macros or includes are in play. A second, informational layer (annotated-condition model) must agree. It is **not** a compiler-equivalence claim: the authoritative gates remain `tpl_regression -DeclaredCoreDelta`, per-build compile 0/0 and the parity run |
 | `check_input_surface_gen`, `param_registry_check`, `magic verify`, `run_preset_tests` | the existing cages |
 | `check_template_presets --only` | the new build's preset covers its surface (family-wide run is red at HEAD for Boss_14/16, unrelated) |
 | MetaEditor compile (default on; `--metaeditor <path>` if not `D:\Meta 5`) | 0 errors / 0 warnings in an isolated copy |

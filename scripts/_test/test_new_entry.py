@@ -337,40 +337,69 @@ class HookInjectionTests(unittest.TestCase):
 
     NEW = {'LAB_ENTRY_98'}
 
-    def audit(self, text, rel='x.mqh', unchanged=()):
-        lines = text.split('\n')
-        return N.directive_violations(text, set(range(1, len(lines) + 1)) - set(unchanged), self.NEW, rel)
+    def peeled_equals(self, old, new, rel='x.mqh'):
+        """True when structural_check accepts new against old; False when it refuses."""
+        try:
+            N.structural_check(rel, old, new, self.NEW)
+            return True
+        except N.Refuse:
+            return False
 
-    def test_directive_audit_accepts_the_tools_own_shapes(self):
-        ok = ('#ifndef LAB_ENTRY_98\n#define LAB_ENTRY_11 // fallback\n#endif\n'
-              '#ifdef LAB_ENTRY_98\n#include "entries/Entry_Probe.mqh"\n#ifndef LAB_CONST__98_X\ninput int a = 1;\n#endif\n'
-              '#ifdef LAB_CONST__98_X\nconst int a = LAB_CONSTVAL__98_X;\n#endif\n#endif\n')
-        self.assertEqual(self.audit(ok, unchanged=(2,)), [])      # line 2 is the existing fallback define
-        self.assertEqual(self.audit('#define CFG_SURFACE_ENUMERATED\n', 'ea_template/core/InputSurface_gen.mqh'), [])
+    BLOCK = '#ifdef LAB_ENTRY_98\nint probe;\n#endif\n'
 
-    def test_directive_audit_refuses_conditions_on_macros_defined_in_other_files(self):
-        """Codex round 2 P1: LAB_CONST_* is defined by generated wrappers' allowlist headers, which active() cannot see."""
-        codex = '#ifdef LAB_CONST_ExitMode\n#include "entries/Entry_Leak.mqh"\n#endif\n'
-        self.assertEqual(len(self.audit(codex)), 2, self.audit(codex))      # the guard AND the include
-        for bad in ('#else', '#ifdef BOSS_LAB_INPUTS_MQH', '#include "entries/Leak.mqh"', '#if 1', '#undef LAB_ENTRY_14',
-                    '#ifdef LAB_ENTRY_14', '#define EVIL 1', '#define CFG_X 1', '#define LAB_CONSTVAL_X 1',
-                    '#include "entries/Entry_Probe.mqh"', '#define LAB_ENTRY_TAG "x"'):
-            self.assertEqual(len(self.audit(bad + '\n')), 1, bad)
+    def test_structural_accepts_inserted_new_tag_blocks_and_marker_comments(self):
+        old = 'a\nb\n'
+        self.assertTrue(self.peeled_equals(old, 'a\n' + self.BLOCK + '// new_entry.py: end x build 98\nb\n'))
+        self.assertTrue(self.peeled_equals(old, 'a\nb\n' + self.BLOCK + self.BLOCK))
+        nested = '#ifdef LAB_ENTRY_98\n#ifdef LAB_CONST_X\nint a;\n#else\nint b;\n#endif\n#endif\n'
+        self.assertTrue(self.peeled_equals(old, 'a\n' + nested + 'b\n'))          # #else is fine one level down
 
-    def test_negated_new_tag_guard_is_not_a_new_build_region(self):
-        """Codex round 3 P1: `#ifndef LAB_ENTRY_98` is TRUE for every existing build."""
-        codex = ('#ifndef LAB_ENTRY_98\n#ifdef LAB_CONST_ExitMode\n#include "entries/Entry_Leak.mqh"\n#endif\n#endif\n')
-        v = self.audit(codex)
-        self.assertEqual(len(v), 2, v)                     # the LAB_CONST guard and the include
-        # the legitimate use: the guard wraps only the existing fallback define, which is not an added line
-        self.assertEqual(self.audit('#ifndef LAB_ENTRY_98\n#define LAB_ENTRY_11 // fallback\n#endif\n', unchanged=(2,)), [])
+    def test_structural_accepts_the_fallback_chain_wrap(self):
+        old = '#ifndef LAB_ENTRY_29\n' + N.FALLBACK_DEFINE + '#endif\n'
+        new = '#ifndef LAB_ENTRY_29\n#ifndef LAB_ENTRY_98\n' + N.FALLBACK_DEFINE + '#endif\n#endif\n'
+        self.assertTrue(self.peeled_equals(old, new, 'ea_template/core/Inputs.mqh'))
+        self.assertFalse(self.peeled_equals(old, old, 'ea_template/core/Inputs.mqh'))      # a wrap is expected there
 
-    def test_unchanged_lines_are_not_audited(self):
-        self.assertEqual(N.directive_violations('#ifdef LAB_CONST_ExitMode\n#endif\n', set(), self.NEW), [])
+    def test_structural_refuses_every_codex_scenario(self):
+        """Rounds 2-8: each of these changed what an existing build compiles, or hid behind the model's gaps."""
+        cases = {
+            'top-level LAB_CONST guard (r2)': ('x\n', '#ifdef LAB_CONST_ExitMode\nint leaked;\n#endif\nx\n'),
+            'ifndef of the new tag around a guard (r3)': ('x\n', '#ifndef LAB_ENTRY_98\nint leaked;\n#endif\nx\n'),
+            'else of a new-tag ifdef (r4)': ('x\n', '#ifdef LAB_ENTRY_98\n#else\nint leaked;\n#endif\nx\n'),
+            'define under an unknown condition (r5)': ('#ifdef EXTERNAL\n#define FLAG\n#endif\n#ifndef FLAG\n#endif\n',
+                                                       '#ifdef EXTERNAL\n#define FLAG\n#endif\n#ifndef FLAG\nint leaked;\n#endif\n'),
+            'undef under a guard (r6)': ('#ifdef FLAG\n#undef FLAG\n#endif\n#ifdef FLAG\n#endif\n',
+                                         '#ifdef FLAG\n#undef FLAG\nint leaked;\n#endif\n#ifdef FLAG\n#endif\n'),
+            'comment context (r8)': ('/*\nint a; // */ int b;\n', 'int a; // */ int b;\n'),
+            'line added inside an unchanged ifndef (r8)': ('#define F\n#include "U.mqh"\n#ifndef F\n#endif\n',
+                                                          '#define F\n#include "U.mqh"\n#ifndef F\nint leaked;\n#endif\n'),
+            'inline define of the new tag (r8)': ('int x; #define LAB_ENTRY_98\n#ifdef LAB_ENTRY_98\n#endif\n',
+                                                  'int x; #define LAB_ENTRY_98\n#ifdef LAB_ENTRY_98\nint leaked;\n#endif\n'),
+            'a deleted line': ('a\nb\n', 'a\n'),
+            'a changed line': ('a\nb\n', 'a\nB\n' + self.BLOCK),
+            'an unguarded added line': ('a\n', 'a\nint leaked;\n'),
+        }
+        for name, (old, new) in cases.items():
+            self.assertFalse(self.peeled_equals(old, new), name)
 
-    def test_added_line_numbers(self):
-        d = '@@ -10,0 +11,2 @@\n+a\n+b\n@@ -20,3 +23 @@\n-x\n+y\n@@ -30,2 +33,0 @@\n-z\n'
-        self.assertEqual(N.added_line_numbers(d), {11, 12, 23})
+    def test_structural_refuses_blocks_that_flip_or_continue(self):
+        old = 'a\nb\n'
+        for name, new in {
+                'else directly inside the block': 'a\n#ifdef LAB_ENTRY_98\n#else\nint leaked;\n#endif\nb\n',
+                'elif directly inside the block': 'a\n#ifdef LAB_ENTRY_98\n#elif 1\nint leaked;\n#endif\nb\n',
+                'unbalanced block': 'a\n#ifdef LAB_ENTRY_98\nint probe;\nb\n',
+                'continuation inside the block': 'a\n#ifdef LAB_ENTRY_98\n#define M \\\n  1\n#endif\nb\n',
+                'block after a continuation line': 'a\\\n' + self.BLOCK + 'b\n'}.items():
+            self.assertFalse(self.peeled_equals(old if 'continuation line' not in name else 'a\\\nb\n', new), name)
+
+    def test_a_block_inside_a_comment_is_not_peeled(self):
+        self.assertFalse(self.peeled_equals('/* open\nclose */\n', '/* open\n' + self.BLOCK + 'close */\n'))
+
+    def test_path_and_hygiene_rules_exist(self):
+        self.assertIn('ea_template/core/Inputs.mqh', N.MANAGED_CHANGED)
+        self.assertNotIn('ea_template/core/Execution.mqh', N.MANAGED_CHANGED)
+        self.assertTrue(any(p.fullmatch('ea_template/Boss_98_Probe.mq5') for p in N.NEW_FILE_PATTERNS))
+        self.assertFalse(any(p.fullmatch('ea_template/core/Values.txt') for p in N.NEW_FILE_PATTERNS))
 
     def test_destination_collision_refused(self):
         with tempfile.TemporaryDirectory() as d:
