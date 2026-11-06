@@ -30,7 +30,9 @@
 #ifndef LAB_ENTRY_29
 #ifndef LAB_ENTRY_30
 #ifndef LAB_ENTRY_31
+#ifndef LAB_ENTRY_32
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -501,6 +503,21 @@ const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
 #endif
 #endif
 // new_entry.py: end stack build 31
+#ifdef LAB_ENTRY_32
+#ifndef LAB_CONST_StackMode
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 (Entry 32: entry-owned pipeline: shared Stack/Exit are not used)
+#endif
+#ifdef LAB_CONST_StackMode
+const ENUM_STACK_MODE StackMode = LAB_CONSTVAL_StackMode;
+#endif
+#ifndef LAB_CONST_StackConfirm
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a
+#endif
+#ifdef LAB_CONST_StackConfirm
+const ENUM_STACK_CONFIRM StackConfirm = LAB_CONSTVAL_StackConfirm;
+#endif
+#endif
+// new_entry.py: end stack build 32
 // A10 C2 port: stack selectors for builds 23, 26, 27, 28, 29 (single order per signal or entry-owned pipeline).
 #ifdef LAB_ENTRY_23
 #ifndef LAB_CONST_StackMode
@@ -3189,6 +3206,120 @@ input int _31_EndHour = 23; // [P13115] trading hours end (server)
 #endif
 #ifdef LAB_CONST__31_EndHour
 const int _31_EndHour = LAB_CONSTVAL__31_EndHour;
+#endif
+#endif
+
+// new_entry.py: build 32 DonchianReclaim (inputs source sha256 700ee79cdc60f55f7695b69cfb1f68b568396cc2e8bd5705216a98e85192be44)
+#ifdef LAB_ENTRY_32
+input group "=== 32 DonchianReclaim signal (AGY S04) ==="
+#ifndef LAB_CONST__32_DonchianBars
+input int _32_DonchianBars = 25; // [P13200] Donchian channel bars (bars 2..N+1, minimum 10)
+#endif
+#ifdef LAB_CONST__32_DonchianBars
+const int _32_DonchianBars = LAB_CONSTVAL__32_DonchianBars;
+#endif
+#ifndef LAB_CONST__32_EmaFast
+input int _32_EmaFast = 20; // [P13201] pullback EMA period
+#endif
+#ifdef LAB_CONST__32_EmaFast
+const int _32_EmaFast = LAB_CONSTVAL__32_EmaFast;
+#endif
+#ifndef LAB_CONST__32_EmaSlow
+input int _32_EmaSlow = 200; // [P13202] trend EMA period (breakout must close beyond it)
+#endif
+#ifdef LAB_CONST__32_EmaSlow
+const int _32_EmaSlow = LAB_CONSTVAL__32_EmaSlow;
+#endif
+#ifndef LAB_CONST__32_AdxPeriod
+input int _32_AdxPeriod = 14; // [P13203] ADX period
+#endif
+#ifdef LAB_CONST__32_AdxPeriod
+const int _32_AdxPeriod = LAB_CONSTVAL__32_AdxPeriod;
+#endif
+#ifndef LAB_CONST__32_AdxMin
+input double _32_AdxMin = 25.0; // [P13204] ADX at or above this to fire
+#endif
+#ifdef LAB_CONST__32_AdxMin
+const double _32_AdxMin = LAB_CONSTVAL__32_AdxMin;
+#endif
+#ifndef LAB_CONST__32_MaxBreakAge
+input int _32_MaxBreakAge = 12; // [P13205] armed breakout expires after this many evaluated bars
+#endif
+#ifdef LAB_CONST__32_MaxBreakAge
+const int _32_MaxBreakAge = LAB_CONSTVAL__32_MaxBreakAge;
+#endif
+#ifndef LAB_CONST__32_MaxDistAtr
+input double _32_MaxDistAtr = 1.5; // [P13206] reclaim close no further than this x ATR from the EMA
+#endif
+#ifdef LAB_CONST__32_MaxDistAtr
+const double _32_MaxDistAtr = LAB_CONSTVAL__32_MaxDistAtr;
+#endif
+#ifndef LAB_CONST__32_AtrPeriod
+input int _32_AtrPeriod = 14; // [P13207] ATR period (distance filter and SL)
+#endif
+#ifdef LAB_CONST__32_AtrPeriod
+const int _32_AtrPeriod = LAB_CONSTVAL__32_AtrPeriod;
+#endif
+input group "=== 32 Single shot exits and account cut ==="
+#ifndef LAB_CONST__32_SL_ATR
+input double _32_SL_ATR = 1.5; // [P13208] SL distance = this x ATR
+#endif
+#ifdef LAB_CONST__32_SL_ATR
+const double _32_SL_ATR = LAB_CONSTVAL__32_SL_ATR;
+#endif
+#ifndef LAB_CONST__32_TP_RR
+input double _32_TP_RR = 2.4; // [P13209] TP distance = SL distance x this
+#endif
+#ifdef LAB_CONST__32_TP_RR
+const double _32_TP_RR = LAB_CONSTVAL__32_TP_RR;
+#endif
+#ifndef LAB_CONST__32_UseBreakeven
+input bool _32_UseBreakeven = true; // [P13210] move the stop to entry once in profit
+#endif
+#ifdef LAB_CONST__32_UseBreakeven
+const bool _32_UseBreakeven = LAB_CONSTVAL__32_UseBreakeven;
+#endif
+#ifndef LAB_CONST__32_BreakevenR
+input double _32_BreakevenR = 1.0; // [P13211] breakeven trigger in R (risk multiples)
+#endif
+#ifdef LAB_CONST__32_BreakevenR
+const double _32_BreakevenR = LAB_CONSTVAL__32_BreakevenR;
+#endif
+#ifndef LAB_CONST__32_BeLockPoints
+input double _32_BeLockPoints = 10; // [P13212] breakeven stop this many points beyond entry
+#endif
+#ifdef LAB_CONST__32_BeLockPoints
+const double _32_BeLockPoints = LAB_CONSTVAL__32_BeLockPoints;
+#endif
+#ifndef LAB_CONST__32_CutDDPct
+input double _32_CutDDPct = 12.0; // [P13213] close all at (balance-equity)/balance >= this
+#endif
+#ifdef LAB_CONST__32_CutDDPct
+const double _32_CutDDPct = LAB_CONSTVAL__32_CutDDPct;
+#endif
+#ifndef LAB_CONST__32_PauseBarAfterCut
+input bool _32_PauseBarAfterCut = true; // [P13214] no new orders for the rest of the cut bar
+#endif
+#ifdef LAB_CONST__32_PauseBarAfterCut
+const bool _32_PauseBarAfterCut = LAB_CONSTVAL__32_PauseBarAfterCut;
+#endif
+#ifndef LAB_CONST__32_MaxSpreadPoints
+input int _32_MaxSpreadPoints = 50; // [P13215] no entries above this spread (0 = off)
+#endif
+#ifdef LAB_CONST__32_MaxSpreadPoints
+const int _32_MaxSpreadPoints = LAB_CONSTVAL__32_MaxSpreadPoints;
+#endif
+#ifndef LAB_CONST__32_StartHour
+input int _32_StartHour = 0; // [P13216] trading hours start (server)
+#endif
+#ifdef LAB_CONST__32_StartHour
+const int _32_StartHour = LAB_CONSTVAL__32_StartHour;
+#endif
+#ifndef LAB_CONST__32_EndHour
+input int _32_EndHour = 23; // [P13217] trading hours end (server)
+#endif
+#ifdef LAB_CONST__32_EndHour
+const int _32_EndHour = LAB_CONSTVAL__32_EndHour;
 #endif
 #endif
 

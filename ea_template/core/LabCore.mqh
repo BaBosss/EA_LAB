@@ -77,6 +77,10 @@
    #include "entries/Entry_BBPinBar.mqh"
 #endif
 // new_entry.py: end include build 31
+#ifdef LAB_ENTRY_32
+   #include "entries/Entry_DonchianReclaim.mqh"
+#endif
+// new_entry.py: end include build 32
 // A10 C2 port: additive builds 23/26/27/28/29.
 #ifdef LAB_ENTRY_23
    #include "entries/Entry_LUX03_OrderBlock.mqh"
@@ -517,6 +521,10 @@ int OnInit()
    BBPinBar_Init();
 #endif
 // new_entry.py: end init build 31
+#ifdef LAB_ENTRY_32
+   DonchianReclaim_Init();
+#endif
+// new_entry.py: end init build 32
 #ifdef LAB_ENTRY_23
    Entry_LUX03_Init();
 #endif
@@ -618,6 +626,10 @@ void OnDeinit(const int reason)
    BBPinBar_Deinit();
 #endif
 // new_entry.py: end deinit build 31
+#ifdef LAB_ENTRY_32
+   DonchianReclaim_Deinit();
+#endif
+// new_entry.py: end deinit build 32
 #ifdef LAB_ENTRY_23
    Entry_LUX03_LogCounters();
 #endif
@@ -776,6 +788,11 @@ void OnTick()
    if(BBPinBar_OnTick()) return;
 #endif
 // new_entry.py: end tick build 31
+#ifdef LAB_ENTRY_32
+   // new_entry.py: entry-owned pipeline (runs its own DD/halt cage first, then always returns).
+   if(DonchianReclaim_OnTick()) return;
+#endif
+// new_entry.py: end tick build 32
 #ifdef LAB_ENTRY_27
    // A10 C2 port: entry-owned pipeline (runs its own DD/halt cage first, then always returns).
    if(TrendRider_OnTick()) return;
