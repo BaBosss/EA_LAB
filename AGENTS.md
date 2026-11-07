@@ -258,8 +258,12 @@ verdict, order status, or decision-feeding field.</sub>
      `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`
    - **MT5 lane 3 (new):** `D:\Meta 5c` portable — an extra lane for light screens/sweeps:
      `-Terminal 'D:\Meta 5c\terminal64.exe' -DataDir 'D:\Meta 5c' -Portable`
-     ⚠️ **5c has no tick cache (deliberate — saves 80GB) → never run Model 4/real-tick on this lane**
-     (M4 must be SERIAL on lane 1 only in any case)
+     **Real ticks:** 5c holds real-tick history (`bases\ThinkMarkets-Live\ticks`: 37 symbols, 2020–2026,
+     ~20 GB, measured 2026-11-07), so Model 4 may run here. The old line "5c has no tick cache — never run
+     Model 4 on this lane" described the lane as created (it saved 80 GB) and was stale by 2026-11-06, when
+     its reports showed 99–100 % real ticks. The owner corrected it on 2026-11-07.
+     Model 4 is still **SERIAL** (see the shared rules below), and the "one install" rule further down still
+     binds: an acceptance pair runs end to end on one lane, and every number names its lane.
    - **MT4 lane 1 (primary):** `D:\Meta4` (data = AppData `2088...`) — the default of `mt4_run.ps1` · batch 036 work
    - **MT4 lane 2 (new):** `D:\Meta4b` portable (config+history+MQL4 complete):
      `-Terminal 'D:\Meta4b\terminal.exe' -InstallDir 'D:\Meta4b' -DataDir 'D:\Meta4b' -Portable`

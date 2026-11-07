@@ -407,7 +407,7 @@ eb7ac6ae66db5cfa50589b253cff83ddf6e1d67c334a84a37962257da0dd6ec4  real  signal-s
 f00c16c01d024a42908daaddfa390cb5898c8dc8be5ca3cdc4702e99b629afee  link  skeptical-research/SKILL.md
 d45ddf304253a6c1b162621cc2167dda0ca8e54f5cdca7841b2a125cdc8e8ce4  real  strategy-and-risk/SKILL.md
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  real  synced/.bucket-73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a
-4dc00dc8beb2b992e7d21693b440e43c5a5ba72a54cb91b1abf9b81e6d2df1b5  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/.last-complete-round
+8a6f76f0a779589100e4d91365aa54249a163cb73fe936dd2498ce6e73be8889  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/.last-complete-round
 79f6d8f5b427252fa3b1c11ecdbdb6bf610b944f7530b4de78f770f38741cfaa  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/built-in-browser/LICENSE.txt
 b5a720afbcde0d6a77c1bc1d34ab56f3d4b09d071b92129783b4faf7f2a3fe62  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/built-in-browser/SKILL.md
 7a87a0c469fedc802e3acef550db9a728f621275984b46c6c51e731d7212520a  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/canvas-design/canvas-fonts/ArsenalSC-OFL.txt
@@ -501,7 +501,7 @@ ffbf11e989df3b8c135f6c97e188982908a794a4b1ab640a48e6602129a0206b  real  synced/7
 29a8c709c7714f89687495c0ff572ac686be2eb43df3c2a704abae2294686a11  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/deep-research/references/researcher.md
 46ae8d5a0b95efad0329ac287ea5248c19fbbe195d8270231c4a78ba6217c024  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/deep-research/SKILL.md
 98e4fb5934042152d57bc9cb8c0736d5d8e31c6c0122b13ff5836f4c2411fa3e  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docs/SKILL.md
-79f6d8f5b427252fa3b1c11ecdbdb6bf610b944f7530b4de78f770f38741cfaa  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/LICENSE.txt
+58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/LICENSE.txt
 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/scripts/__init__.py
 0c991d2bc7304a1248e9f3bf9b1498f0b6e76641fc457e7cbd73c99b4eef3a74  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/scripts/accept_changes.py
 37d116e5f56bb142b208c6c6a4bbcf960495abf470ddb7c6675ccfac864ba3d7  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/scripts/comment.py
@@ -561,7 +561,7 @@ a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d  real  synced/7
 bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/scripts/templates/commentsExtensible.xml
 db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/scripts/templates/commentsIds.xml
 056f63aa1197fd8c9dda980c9f1b9ff016fd5fa4a462df8aec5f384f39d23e37  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/scripts/templates/people.xml
-708ff99f88a3b901a8fe86512b4c887e367640fa9732584bdba9fe15fce770e5  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/SKILL.md
+b555a732276bba637440d124c1e1a3f8a322ad0441ae885a611c82083441cab7  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/docx/SKILL.md
 60af1c2fb7d673aec45664ce9bbced7c7e1bf7121ec91dc3b640f34d77167c34  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/google-workspace/references/charts.md
 1a0bc6a8cbd98590aaaf2afe295d7332b0019717e7aefb85234675059d2a5554  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/google-workspace/references/docs.md
 d29f5223f3cf5e1aed270df55d4ba750d92c587e56b5f10f6755e9afdc536de8  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/google-workspace/references/sheets.md
@@ -572,12 +572,12 @@ c6d92a87fae349b235becf6f7fad110e641b9de100a597fd26e023c3d2dacbf4  real  synced/7
 40ed9169a005513347aacea800b2fda4860d7b9477e0db50dc9c46705eec1fc8  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/google-workspace/scripts/slides_helper.py
 073e4f759b4aa054be72a4f5bb9d8f51d3df3f8e02149605cf5c5dad3412bc83  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/google-workspace/SKILL.md
 5179b0780b7025c93271c181636a23acc8d05cad3b20584639cbaf1cf9c3b07a  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/import-memory/SKILL.md
-af8cda54b151f9760353236516e9c9c51937e55e15102c6994e8f20ddf1fb246  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/manifest.json
+701cfb9f5e6410c42a3804942f5da480b2dfa4f403d2ee002ae449c86a8412ad  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/manifest.json
 3a1de7711d147bad4422825045f87597fd77cca72e7c96d3b0a81735d00dda82  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/morning/assets/fonts/fraunces-latin-600-normal.woff2
 0bc0daaa78b715774d4ad27d7f4ee8b436f48cef8e2f773531a8f22e27c06248  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/morning/assets/fonts/Fraunces-OFL.txt
 a7c4dbcb745799736991b027cceae39aae4880cc00ff43871ae5e87b38023bdd  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/morning/SKILL.md
 d5df5757e23634cd8a1a37e092af6c3b3b63afb3fd3ce86337fce9017cc3ee9f  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/FORMS.md
-79f6d8f5b427252fa3b1c11ecdbdb6bf610b944f7530b4de78f770f38741cfaa  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/LICENSE.txt
+58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/LICENSE.txt
 07af9a8f59e77e88fe9b238a403348244f38a4771c54911c412716d8f88f0ea9  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/REFERENCE.md
 0ced522402dd7b3c82a0be9518cf4e485fa9cc0467d7beab6ddb04cb36fcc3e1  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/scripts/check_bounding_boxes.py
 1fe10b9980a5493c9bbec8c20630c603eaa475b45403751c08f26738736647b8  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/scripts/check_fillable_fields.py
@@ -587,8 +587,8 @@ bb235b36f497bbb1c7c6821cecf527bbba7213520de11219da99f7b13a38c109  real  synced/7
 6814e3fe8f78c2b16d766c132b5a727ff7a31b71d76a7d46bd6e40fe50bc97c5  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/scripts/extract_form_structure.py
 d140872c2e92e41b1e05370ae8d270c5b7f5ebdf55d9905f03bc974a9c708ff5  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/scripts/fill_fillable_fields.py
 8a56e063a49ed53c0b0e1d312ecf8023af76816ed139486ec3b539873de202fd  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/scripts/fill_pdf_form_with_annotations.py
-9f78b8359fbd4943ad260a7a1e436e5a96503406d6c34e99f69223d647d85b9c  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/SKILL.md
-79f6d8f5b427252fa3b1c11ecdbdb6bf610b944f7530b4de78f770f38741cfaa  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/LICENSE.txt
+d1c7caf5f35eb7d37877dd7fc33a095037be2b34fb5d2f7f4d43bde3165bb4ee  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pdf/SKILL.md
+58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/LICENSE.txt
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/scripts/__init__.py
 23a4c66a9f43e651189cbc9f82ba0a8271d19dc8d44cf0c426dda66f7eb6a93a  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/scripts/add_slide.py
 e440b33c43f2e707076cb64b57ca926ce886564b115c19ee23ac487bdb1a6259  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/scripts/apply_theme.js
@@ -645,7 +645,7 @@ a5ed6c647ceaf7f48f60386b347ea5c91071073866bdd148532e9eab04c8c347  real  synced/7
 25ff68611a7cfcfe88644fe3cf011438c9e9a544ae39bad3ae740d96d99a9d43  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/scripts/office/validators/redlining.py
 0deab09d4ae494411ee893f9c69fffc19fe264a6053990a2f066334c0d88d422  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/scripts/slide_text.py
 94ef83a84346aa2d63913de0d42bb2fe902ccdc17bfac6130096ca758381793c  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/scripts/thumbnail.py
-f03b2dd11f393b3563e5feeb090308e0438e2fd137baa1866ec966f2c426b758  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/SKILL.md
+3679488c7e497c9b2f14bf026f39624d4c45b9519d845bc08650ce31598b0d6a  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/pptx/SKILL.md
 e92372af8ac9254a905de7392a8d9f8dd7dccf0ea181d16e2bc58ac52ecea0a8  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/skill-creator/agents/analyzer.md
 fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/skill-creator/agents/comparator.md
 a8ab34e7e5e0ae3414c2f067a805cb1f5372f8f3ac02119e1536f0ad60c27d32  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/skill-creator/agents/grader.md
@@ -664,7 +664,7 @@ f65315971b2a723349234947062de2ffae76cad98884b7f441e453e6dbe01892  real  synced/7
 7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/skill-creator/scripts/run_loop.py
 3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/skill-creator/scripts/utils.py
 1d51c0b077c24489baa7fdb6c7072ff0c94479dab7110dad2fc6039a47a4bed4  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/skill-creator/SKILL.md
-79f6d8f5b427252fa3b1c11ecdbdb6bf610b944f7530b4de78f770f38741cfaa  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/LICENSE.txt
+58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/LICENSE.txt
 1804a5fc0d06bcfe54e45de7be52821f7edb2639f32a3d5c5ff1dd93c94ac5f0  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/scripts/office/helpers/__init__.py
 aed734e9a6c743ae712fc228c868bf0f6abcfb6a53549eefb19081b15d240fda  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/scripts/office/helpers/pptx_chart.py
 06fe06953bf038826b85ecc142f4dc9299a37fa0c4e4dd9b00b10486df33524d  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/scripts/office/helpers/pptx_slide.py
@@ -716,7 +716,7 @@ a5ed6c647ceaf7f48f60386b347ea5c91071073866bdd148532e9eab04c8c347  real  synced/7
 3a100ec5f00ae183bca67f4aaa8e3e902caee60254e141b8120f32c53d85cee7  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/scripts/office/validators/pptx.py
 25ff68611a7cfcfe88644fe3cf011438c9e9a544ae39bad3ae740d96d99a9d43  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/scripts/office/validators/redlining.py
 dcf6db896993bb103e696632440effd22097fc05711f1d5633d13faad5495056  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/scripts/recalc.py
-6712b39718fe815054abca9c3ee72f989613e6f771c8a5c58f30a65a6c905622  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/SKILL.md
+caa1e1c29cf974c8d874bf3d0a70838445e7342b570f856ddb3e4a21ef7c7e8b  real  synced/73aeed0a-ba83-4fd3-9e0d-a70216963a49_9bb2e29d-0330-4b2b-a0a9-5daa136eb03a/xlsx/SKILL.md
 f8e2afc1fbcd6a6e1178c30f290ca9f2286c949a0b74b8b68fd14f198b78ebac  link  tdd/agents/openai.yaml
 73a10b6a26b56197c738a764c1e4205af98c74553f4a713795997f6bc35b917d  link  tdd/mocking.md
 969583080caf842ae86a53501a0091eced13fd89cad65d3aa75c09112318ff33  link  tdd/SKILL.md
