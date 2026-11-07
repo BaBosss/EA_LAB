@@ -433,12 +433,12 @@ AGY EA 100 % on entries and net in Phase 1 (pushed `fc3b00ef..0fa72a28`).
 **How they were tested:**
 - Searched on MAIN only (Model 1); plateau centre frozen; BWD run once; ±20 % one-axis fan; year split.
 - Then Model 4 MAIN + BWD on Meta 5c, ratified for Model 4 in AGENTS.md `9fa5e090`.
-- HOLDOUT 2026H1 is unspent.
+- HOLDOUT 2026H1 was spent on Boss_30 only (2026-11-07). It is still unspent for Boss_31 and Boss_32.
 - Evidence: `D:/EA_LAB_RESET/agy_import/phase2/PHASE2_EVIDENCE.md`.
 
 | EA | Sym/TF | MAIN (M4) | BWD (M4) | Conf | Verdict | Notes |
 |---|---|---:|---:|---|---|---|
-| `Boss_30_StochRsiGrid` | EURUSD H1 | PF **2.57** / 419t / 14.5 % eqDD (lot 0.20) | PF **1.82** / 465t / 19.8 % eqDD (lot 0.20) | A | **BUILD-ON** (frozen finalist; chain incomplete) | See notes below the table. |
+| `Boss_30_StochRsiGrid` | EURUSD H1 | PF **2.57** / 419t / 14.5 % eqDD (lot 0.20) | PF **1.82** / 465t / 19.8 % eqDD (lot 0.20) | A | **CANDIDATE** (owner 2026-11-07; demo attach pending) | See notes below the table. |
 | `Boss_31_BBPinBar` | USDJPY H1 | PF **1.45** / 155t / 0.3 % | PF **0.97** / 140t / 0.5 % | A | **PARKED-VERIFY(user)** | See notes and the brief below. |
 | `Boss_32_DonchianReclaim` | USDJPY H1 | PF **1.49** / 119t / 0.3 % | PF **1.12** / 110t / 0.4 % | A | **PARKED-VERIFY(user)** | See notes and the brief below. |
 
@@ -455,11 +455,27 @@ AGY EA 100 % on entries and net in Phase 1 (pushed `fc3b00ef..0fa72a28`).
 - **Per-deal PF overstates the edge.** 99 % of baskets win; the losing legs sit inside winning baskets.
 - **Where the edge lives:** the signal alone (single shot) is PF < 1, and the same grid with S01/S20 entries
   loses. So the edge is the signal and the grid together. Home is EURUSD only.
-- **Owed before a CANDIDATE decision:**
-  - basket-level MC at ≤ 0.07 lot;
-  - correlation vs the fleet;
-  - HOLDOUT 2026H1;
-  - a demo kill set different from the 12 % cut.
+- **CANDIDATE chain (completed 2026-11-07; the owner approved CANDIDATE and a demo attach the same day):**
+  - **Model 4 at lot 0.07:** MAIN PF 5.82 / 418t / 6.6 % eqDD, BWD PF 3.69 / 456t / 9.0 % eqDD. The cut fired 0×.
+  - **Basket bootstrap MC (480 baskets, 6 years):**
+    - Ruin is 0 % in every variant.
+    - The plain run is uninformative, because 99 % of baskets win.
+    - With 3 injected −12 % cut events: PF p5 1.30. With 6: PF p5 0.66.
+    - Break-even is about 4 cuts per 6 years.
+  - **Monthly correlation:**
+    - vs RSI_MR GridLog EURUSD (990103): MAIN 0.05, **BWD 0.51**. Both lost in 2020-02 and 2022-07.
+    - vs Boss_14 GridLog USDJPY: −0.29 / 0.13.
+    - So the lot is reduced, not the EA cut.
+  - **HOLDOUT 2026H1 (now SPENT):** PF **2.66**, 80 deals / 33 baskets (confidence B), 3.0 % eqDD at 0.07, 0 cuts.
+    - That clears the ≥ 1.2 bar ⇒ deploy track.
+    - It was a quiet regime, so it adds nothing about the tail. Demo-forward is now the only unseen data.
+- **Demo terms** (pre-registered in `_vps_deploy/BOSS30_STOCHRSI_EURUSD/README_ATTACH.md`):
+  - **Account:** lot 0.05 on a **dedicated** 10,000 USD hedging demo account. The cut reads whole-account
+    equity, so a shared account would corrupt it.
+  - **Judge:** at ≥ 30 closed **baskets** (attach + 5.5 months), on per-deal PF ≥ 1.40 and net positive after
+    cut losses.
+  - **Kill:** account eqDD > 15 %, or 2 cuts within 12 months, or 3-month PF < 0.8 at ≥ 15 baskets.
+  - **Sizing:** permanently small-lot, never sized up on PF.
 
 **Boss_31 notes**
 - **Frozen centre:** BB 45 / 1.7, MinRangeAtr 1.0, TailBody 1.5.

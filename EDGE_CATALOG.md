@@ -919,7 +919,7 @@ ETH swap is the same mode as BTC (`INTEREST_CURRENT`, long −9.86 %/yr, short �
 
 **Additional reusable R&D lessons (2026-08-29):** a selected center inside a **narrow historical search surface is not proof of a global optimum**; preserve the searched domain and boundary history in the family ledger before designing a wider prospective lattice. For grid/multi-position research, PF/DD alone are not enough: record the exact lot formula/ladder, aggregate exposure and grid span so a strong PF cannot hide an unacceptable money/risk shape.
 
-## EDGE: StochRSI turn + flat two-sided adverse grid @ EURUSD H1 (AGY S18 → Boss_30, 2026-11-07) 🟨 BUILD-ON (frozen finalist)
+## EDGE: StochRSI turn + flat two-sided adverse grid @ EURUSD H1 (AGY S18 → Boss_30, 2026-11-07) 🟩 CANDIDATE (demo pending)
 
 **What makes the money.**
 - The entry: a Stochastic(14,3,3) %K/%D cross at ≤ 25 / ≥ 75, with RSI(20) ≤ 35 / ≥ 65, on closed bars.
@@ -941,6 +941,15 @@ under other entries (S01, S20) loses. So the profit needs **both** the entry tim
   window and costs about 12 % each time.
 - At 0.10 lot the worst BWD basket floated to 11.99 % and recovered, so the cut was never tested at that size.
 - EURUSD-specific: EURGBP 0.65 / 1.43, AUDNZD 2.58 / 0.77.
+- **Reusable lesson for grid EAs:**
+  - An account-equity cut measures the **whole account**, not the EA. On a shared account other EAs fire it, and
+    a large balance switches it off.
+  - Any grid whose only stop is an account cut needs a **dedicated account**, or a cut rewritten to measure the
+    floating P&L of its own magic only.
+- **Basket MC needs injected tail events.** When 99 % of baskets win, resampling the sample has no tail.
+  Injecting K cut-sized losses per horizon gives the break-even rate instead (here about 4 per 6 years).
+- **CANDIDATE 2026-11-07:** M4 at 0.07 lot gives 5.82 / 3.69 with 0 cuts. The holdout 2026H1 gives PF 2.66
+  (33 baskets). Demo terms are in `_vps_deploy/BOSS30_STOCHRSI_EURUSD/README_ATTACH.md`.
 - Evidence: `D:/EA_LAB_RESET/agy_import/phase2/PHASE2_EVIDENCE.md`.
 
 ## IDEA (parked): BB pin bar (AGY S10 → Boss_31) and Donchian→EMA20 reclaim (AGY S04 → Boss_32) @ USDJPY H1 (2026-11-07) 🟥 PARKED-VERIFY(user)
