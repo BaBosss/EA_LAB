@@ -424,3 +424,66 @@ Zeus locked = เพดาน 3 · Gold_Kangaroo copy = เพดาน 2 (crack
 | EA | Sym/TF | MAIN | BWD | Conf | Verdict | Notes |
 |---|---|---:|---:|---|---|---|
 | `Probe_19_AdaptiveTrendGrid` STOP | XAUUSD H1 | PF **4.64** / 100t / net +4486.59 | PF **0.34** / 49t / net -2095.59 / ~25% eqDD | ★★★ | **PARKED-VERIFY(user)** | ORDER-1273 plateau center = StepATR0.30/Fast20/Slow50/TP1.50, no MAIN boundary. Flat-lot control preserves MAIN pulse (PF 5.78/97t) but BWD remains PF0.30/37t and the existing 25% hard-DD cage fires. LIMIT remains repeated lower-boundary after one expansion. HOLDOUT 2026H1 unspent; no candidate/deploy path. Evidence: `docs/concepts/BOSS19_ADAPTIVE_TREND_GRID_ACCEPTANCE.md`. |
+
+## AGY GrandModular ports, Boss_30 / 31 / 32: Phase 2 optimize + Model 4 — 2026-11-07
+
+**What these are:** template ports of AGY GrandModular entries with their source recovery mode. Each matched the
+AGY EA 100 % on entries and net in Phase 1 (pushed `fc3b00ef..0fa72a28`).
+
+**How they were tested:**
+- Searched on MAIN only (Model 1); plateau centre frozen; BWD run once; ±20 % one-axis fan; year split.
+- Then Model 4 MAIN + BWD on Meta 5c, ratified for Model 4 in AGENTS.md `9fa5e090`.
+- HOLDOUT 2026H1 is unspent.
+- Evidence: `D:/EA_LAB_RESET/agy_import/phase2/PHASE2_EVIDENCE.md`.
+
+| EA | Sym/TF | MAIN (M4) | BWD (M4) | Conf | Verdict | Notes |
+|---|---|---:|---:|---|---|---|
+| `Boss_30_StochRsiGrid` | EURUSD H1 | PF **2.57** / 419t / 14.5 % eqDD (lot 0.20) | PF **1.82** / 465t / 19.8 % eqDD (lot 0.20) | A | **BUILD-ON** (frozen finalist; chain incomplete) | See notes below the table. |
+| `Boss_31_BBPinBar` | USDJPY H1 | PF **1.45** / 155t / 0.3 % | PF **0.97** / 140t / 0.5 % | A | **PARKED-VERIFY(user)** | See notes and the brief below. |
+| `Boss_32_DonchianReclaim` | USDJPY H1 | PF **1.49** / 119t / 0.3 % | PF **1.12** / 110t / 0.4 % | A | **PARKED-VERIFY(user)** | See notes and the brief below. |
+
+**Boss_30 notes**
+- **Frozen centre:** `_30_InitTP_Points` 120. The default 150 sat one step from a DD cliff at 180.
+- **Engine:** a flat two-sided 5-layer adverse grid with a weighted-open basket TP and no per-order SL. The only
+  stop is the 12 % account cut, which resumes after the bar. The cut was **fired 1× in MAIN and 2× in BWD at
+  lot 0.20**.
+- **At lot 0.10:** PF 5.82 / 3.69 and eqDD 8.7 / **12.0 %**, with **0 cut fires**. BWD floating reached 11.99 %,
+  so the cut is UNTESTED at that size.
+- **Per-deal PF overstates the edge.** 99 % of baskets win; the losing legs sit inside winning baskets.
+- **Where the edge lives:** the signal alone (single shot) is PF < 1, and the same grid with S01/S20 entries
+  loses. So the edge is the signal and the grid together. Home is EURUSD only.
+- **Owed before a CANDIDATE decision:**
+  - basket-level MC at ≤ 0.07 lot;
+  - correlation vs the fleet;
+  - HOLDOUT 2026H1;
+  - a demo kill set different from the 12 % cut.
+
+**Boss_31 notes**
+- **Frozen centre:** BB 45 / 1.7, MinRangeAtr 1.0, TailBody 1.5.
+- **Fails the BWD soft-gate on M4.** BWD ±20 % fan: TP 1.92 → 0.93. BWD 2021 is a losing year.
+- **Overfit signature:** optimizing raised MAIN (M1 1.32 → 1.44) and lowered BWD (M1 1.70 → 1.05).
+- **Ranger homes lose:** EURUSD 0.69, EURGBP 0.51, AUDNZD 0.55. The long side carries it, so it is likely
+  USDJPY drift.
+- **Real money closed.**
+
+**Boss_32 notes**
+- **Frozen centre:** Donchian 50, ADX 24, MaxBreakAge 15, MaxDistAtr 1.0.
+- **Fails the pre-registered BWD fan:** ADX 28.8 → 0.69 (n 59); SL 1.2 → 0.99. BWD 2020 (0.47) and 2021 (0.85)
+  are losing years, and 2022 carries the window.
+- **Same overfit signature:** M1 BWD 1.20 → 1.12.
+- **Momentum homes fail on H1:** XAU 0.89, GBPUSD 0.90. EURUSD fails BWD (0.74).
+
+**PARKED-VERIFY briefs**
+- **Boss_31**
+  - *What it is:* a pin bar through a Bollinger band, single shot.
+  - *Which gate killed it:* BWD < 1.0 on M4, and the BWD fan flips.
+  - *Why it is still interesting:* the clean MAIN plateau, and both windows were profitable at AGY's original
+    settings (M4 1.21 / 1.65). A possible long-only USDJPY carry-aligned entry, if the owner wants that bet.
+- **Boss_32**
+  - *What it is:* a Donchian(50) breakout, then an EMA20 reclaim with ADX ≥ 24, single shot.
+  - *Which gate killed it:* the BWD fan flips, and 2020–21 lost.
+  - *Why it is still interesting:* the clean MAIN plateau, and strong trend years (2022 PF 2.17, 2025 PF 3.00).
+    A component for a regime-gated trend sleeve.
+
+**B1:** no row. These lanes ran from the owner's chat, not from an AGENT_TASKBOARD ORDER, so they are not B1-eligible
+(`docs/memory_control/B1_COHORT.md` §2).

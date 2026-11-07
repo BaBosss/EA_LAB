@@ -918,3 +918,37 @@ ETH swap is the same mode as BTC (`INTEREST_CURRENT`, long −9.86 %/yr, short �
 **Reusable lesson:** an adaptive grid can show a broad recent-regime pulse while failing through both participation collapse and adverse-regime loss. Require an interior plateau plus independent-window participation before interpreting high MAIN PF as durable grid edge. Do not infer safety from a working hard-DD cage: here the cage prevents further loss but firing it is itself evidence that the strategy failed the stress regime. Future work, if reopened, should be a new regime-adaptation hypothesis rather than more tuning of the same V0 surface. HOLDOUT 2026H1 remains unspent.
 
 **Additional reusable R&D lessons (2026-08-29):** a selected center inside a **narrow historical search surface is not proof of a global optimum**; preserve the searched domain and boundary history in the family ledger before designing a wider prospective lattice. For grid/multi-position research, PF/DD alone are not enough: record the exact lot formula/ladder, aggregate exposure and grid span so a strong PF cannot hide an unacceptable money/risk shape.
+
+## EDGE: StochRSI turn + flat two-sided adverse grid @ EURUSD H1 (AGY S18 → Boss_30, 2026-11-07) 🟨 BUILD-ON (frozen finalist)
+
+**What makes the money.**
+- The entry: a Stochastic(14,3,3) %K/%D cross at ≤ 25 / ≥ 75, with RSI(20) ≤ 35 / ≥ 65, on closed bars.
+- The engine:
+  - opens a flat-lot basket per side;
+  - adds up to 5 layers at max(100 points, ATR(14)) adverse;
+  - closes the whole basket at 65 points from the volume-weighted open (one layer: 120 points), or at a money
+    target.
+- The only stop is a 12 % account cut.
+
+**Why it is not an escalation illusion.** Lots are flat. The signal alone, single shot, is PF < 1; the same grid
+under other entries (S01, S20) loses. So the profit needs **both** the entry timing and the grid.
+
+**Anti-lessons.**
+- Per-deal PF (5.7 at 0.02 lot) is basket accounting: 99 % of baskets win.
+- The real risk shows only at a size where the account cut fires: lot 0.20 per 10k fired 1–2 times per 3-year
+  window and costs about 12 % each time.
+- At 0.10 lot the worst BWD basket floated to 11.99 % and recovered, so the cut was never tested at that size.
+- EURUSD-specific: EURGBP 0.65 / 1.43, AUDNZD 2.58 / 0.77.
+- Evidence: `D:/EA_LAB_RESET/agy_import/phase2/PHASE2_EVIDENCE.md`.
+
+## IDEA (parked): BB pin bar (AGY S10 → Boss_31) and Donchian→EMA20 reclaim (AGY S04 → Boss_32) @ USDJPY H1 (2026-11-07) 🟥 PARKED-VERIFY(user)
+
+**The pattern in both:**
+- Clean MAIN plateaus.
+- Optimizing on MAIN lowered BWD (overfit).
+- Both work on USDJPY only.
+- 31's profit is long-side (the 2021–25 up-drift); 32's comes from trend years (2022, 2025).
+
+**Lesson.** A "reversion" pattern that loses on every ranger home (EURUSD / EURGBP / AUDNZD, 0.5–0.7) and wins
+only on one trending pair is measuring that pair's drift, not the pattern. Check the ranger homes before
+crediting a reversion entry.
