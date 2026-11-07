@@ -943,7 +943,7 @@ under other entries (S01, S20) loses. So the profit needs **both** the entry tim
 - EURUSD-specific: EURGBP 0.65 / 1.43, AUDNZD 2.58 / 0.77.
 - **Reusable lesson for grid EAs:**
   - An account-equity cut measures the **whole account**, not the EA. On a shared account other EAs fire it, and
-    a large balance switches it off.
+    a large balance weakens it far below the tested setting.
   - Any grid whose only stop is an account cut needs a **dedicated account**, or a cut rewritten to measure the
     floating P&L of its own magic only.
 - **Basket MC needs injected tail events.** When 99 % of baskets win, resampling the sample has no tail.

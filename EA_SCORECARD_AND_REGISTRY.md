@@ -472,9 +472,10 @@ AGY EA 100 % on entries and net in Phase 1 (pushed `fc3b00ef..0fa72a28`).
 - **Demo terms** (pre-registered in `_vps_deploy/BOSS30_STOCHRSI_EURUSD/README_ATTACH.md`):
   - **Account:** lot 0.05 on a **dedicated** 10,000 USD hedging demo account. The cut reads whole-account
     equity, so a shared account would corrupt it.
-  - **Judge:** at ≥ 30 closed **baskets** (attach + 5.5 months), on per-deal PF ≥ 1.40 and net positive after
-    cut losses.
-  - **Kill:** account eqDD > 15 %, or 2 cuts within 12 months, or 3-month PF < 0.8 at ≥ 15 baskets.
+  - **Judge:** at ≥ 30 closed **baskets** (attach + 5.5 months), on per-deal PF ≥ 1.40 and equity-based net
+    > 0. If fewer than 30 baskets have closed, the judge is deferred, no later than attach + 9 months.
+  - **Kill:** peak-to-trough equity drawdown > 15 %, or 2 cuts within 12 months, or 3-month PF < 0.8 at ≥ 15
+    baskets.
   - **Sizing:** permanently small-lot, never sized up on PF.
 
 **Boss_31 notes**

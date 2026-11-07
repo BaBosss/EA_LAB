@@ -21,8 +21,12 @@ The EA's 12 % cut is account-wide:
 
 On a shared account this breaks in two ways:
 1. **Other EAs' floating losses fire Boss_30's cut.** It would close its own baskets for losses it did not make.
-2. **On a large balance the cut is effectively switched off for Boss_30's own risk.** On 100,000 USD the cut
-   needs 12,000 USD of floating loss, which 0.05 lot never reaches.
+2. **On a large balance the cut is far weaker than the tested setting.**
+   - On 100,000 USD the cut needs 12,000 USD of floating loss.
+   - The worst floating loss seen in backtest, scaled to 0.05 lot, is about 640 USD (BWD 9.0 % of 10,000 at
+     0.07). So 12,000 USD is roughly 19× anything observed.
+   - It is not proven unreachable, because there is no per-order stop. But it is no longer the stop that was
+     tested.
 
 Either way, the forward record would not measure the configuration that was tested.
 
@@ -135,18 +139,35 @@ data**, the Boss_16 precedent.
 **Unit of count = closed baskets, not deals.** A basket's legs close together and are not independent trades.
 Counting deals would reach the 30-trade bar about twice as fast on the same evidence.
 
+**Metrics.** The account is dedicated to this EA, so account figures are this EA's figures.
+- **Equity drawdown** = (highest account equity since attach − current equity) ÷ that highest equity.
+  Peak-to-trough, read from equity, so open positions count.
+- **Net** = account equity at the judge read − starting balance (10,000 USD). Equity is marked to market, so an
+  open losing basket counts against it. Any deposit or withdrawal is subtracted out; none is expected.
+- **Per-deal PF** = gross profit ÷ gross loss over closed deals of magic 993001, swap and commission included.
+
 **Judge bar.** All three must hold:
 - **≥ 30 closed baskets**, and at least 3 months;
 - **per-deal PF ≥ 1.40**;
-- **net positive after any cut losses**.
+- **net > 0** (equity-based, as defined above).
 
 **Judge date:** `judge_date = attach + 5.5 months`. At about 1.3–1.5 baskets a week, 30 baskets take about 5
 months. A 3-month judge would see about 17 baskets.
 
+**If fewer than 30 baskets have closed on the judge date:** that is **insufficient evidence, not a pass and not
+a fail.**
+- Record it as a participation shortfall against the pre-registered rate.
+- The judge moves to the date the 30th basket closes, but **no later than attach + 9 months**.
+- If 30 baskets are still not reached by then, the owner decides with the counts in hand.
+- Kill rules stay active throughout.
+
 **Kill.** Any one of these:
-- **Account eqDD > 15 %.**
-  - This is deliberately above the EA's own 12 % cut, so the EA cuts first.
-  - If equity goes past 15 %, the cut failed to act. That is a code fault, not a market result.
+- **Equity drawdown > 15 %**, as defined above.
+  - One cut costs about 12 %, so a single clean cut does not trip this.
+  - Going past 15 % means the cut overshot (a price gap) or a further loss stacked on a cut. Either way the tail
+    is worse than the tested one.
+  - The EA's own cut uses a different formula, `(balance − equity) ÷ balance` from the current balance. The two
+    are not expected to agree after a cut.
 - **2 account cuts within any 12 months.**
   - Break-even is about 4 per 6 years, about 0.67 per year.
   - 2 in a year is three times that rate, so the edge is not paying for its tail.
