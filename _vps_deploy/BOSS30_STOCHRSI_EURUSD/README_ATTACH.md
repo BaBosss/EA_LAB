@@ -23,8 +23,9 @@ On a shared account this breaks in two ways:
 1. **Other EAs' floating losses fire Boss_30's cut.** It would close its own baskets for losses it did not make.
 2. **On a large balance the cut is far weaker than the tested setting.**
    - On 100,000 USD the cut needs 12,000 USD of floating loss.
-   - The worst floating loss seen in backtest, scaled to 0.05 lot, is about 640 USD (BWD 9.0 % of 10,000 at
-     0.07). So 12,000 USD is roughly 19× anything observed.
+   - For scale only: the worst BWD peak-to-trough equity DD at 0.07 lot was 9.0 % of a 10,000 start, about
+     900 USD, or about 640 USD at 0.05. That is an order of magnitude, not a measured floating loss.
+   - So 12,000 USD sits far outside anything observed.
    - It is not proven unreachable, because there is no per-order stop. But it is no longer the stop that was
      tested.
 
@@ -109,8 +110,8 @@ The demo runs at **0.05, below the 0.07 tested.** Monthly P&L correlation with `
 (990103, already on demo) is **0.51 in BWD**. The two EURUSD reversion grids lost together in 2020-02 and
 2022-07. The rule for correlation is to reduce lot, not cut.
 
-At 0.05, expected eqDD is about **4.7 % MAIN / 6.4 % BWD**. This is the 0.07 figures scaled linearly; at that
-size the cut never fired, so the scaling is valid.
+At 0.05, expected eqDD is about **4.7 % MAIN / 6.4 % BWD**. This is the 0.07 figures scaled linearly. It is
+approximate: money P&L scales with lot, but the peak-equity denominator does not.
 
 ---
 
@@ -163,9 +164,11 @@ a fail.**
 
 **Kill.** Any one of these:
 - **Equity drawdown > 15 %**, as defined above.
-  - One cut costs about 12 %, so a single clean cut does not trip this.
-  - Going past 15 % means the cut overshot (a price gap) or a further loss stacked on a cut. Either way the tail
-    is worse than the tested one.
+  - On this metric a single clean cut usually lands at about 12–14 %.
+  - It can pass 15 % on its own when equity had peaked on floating profit above the balance before the cut, as
+    well as on a gap overshoot or a loss stacked on a cut.
+  - The rule fires on the number, whatever the cause. One cut alone does not trip the **cut-count** kill, but it
+    can trip this one. That is accepted as conservative.
   - The EA's own cut uses a different formula, `(balance − equity) ÷ balance` from the current balance. The two
     are not expected to agree after a cut.
 - **2 account cuts within any 12 months.**
@@ -173,7 +176,7 @@ a fail.**
   - 2 in a year is three times that rate, so the edge is not paying for its tail.
 - **3-month per-deal PF < 0.8 at ≥ 15 baskets.** This is the repo default, counted in baskets.
 
-**One cut is not a kill, but it must be recorded.**
+**One cut does not trip the cut-count kill, but it must be recorded.** Check the equity-drawdown kill too.
 - Record the date, the cut %, and whether `PauseBarAfterCut` resumed trading cleanly.
 - After a cut, the judge's "net positive after cut losses" condition becomes the binding one.
 
