@@ -444,9 +444,12 @@ AGY EA 100 % on entries and net in Phase 1 (pushed `fc3b00ef..0fa72a28`).
 
 **Boss_30 notes**
 - **Frozen centre:** `_30_InitTP_Points` 120. The default 150 sat one step from a DD cliff at 180.
-- **Engine:** a flat two-sided 5-layer adverse grid with a weighted-open basket TP and no per-order SL. The only
-  stop is the 12 % account cut, which resumes after the bar. The cut was **fired 1× in MAIN and 2× in BWD at
-  lot 0.20**.
+- **Engine:** a flat two-sided 5-layer adverse grid with a weighted-open basket TP and no per-order SL.
+- **Stops (two):**
+  - The build's own 12 % account cut, which resumes after the bar. It was **fired 1× in MAIN and 2× in BWD at
+    lot 0.20**.
+  - The shared hard kill (ProtectLevel 2: 25 % from peak equity, then halt). It was **fired 0× in every run**,
+    so it is **UNTESTED**.
 - **At lot 0.10:** PF 5.82 / 3.69 and eqDD 8.7 / **12.0 %**, with **0 cut fires**. BWD floating reached 11.99 %,
   so the cut is UNTESTED at that size.
 - **Per-deal PF overstates the edge.** 99 % of baskets win; the losing legs sit inside winning baskets.

@@ -928,7 +928,9 @@ ETH swap is the same mode as BTC (`INTEREST_CURRENT`, long −9.86 %/yr, short �
   - adds up to 5 layers at max(100 points, ATR(14)) adverse;
   - closes the whole basket at 65 points from the volume-weighted open (one layer: 120 points), or at a money
     target.
-- The only stop is a 12 % account cut.
+- There is no per-order SL. Two stops:
+  - the 12 % account cut, which fired at lot 0.20;
+  - the shared 25 % hard kill, which fired 0× (UNTESTED).
 
 **Why it is not an escalation illusion.** Lots are flat. The signal alone, single shot, is PF < 1; the same grid
 under other entries (S01, S20) loses. So the profit needs **both** the entry timing and the grid.
@@ -949,6 +951,6 @@ under other entries (S01, S20) loses. So the profit needs **both** the entry tim
 - Both work on USDJPY only.
 - 31's profit is long-side (the 2021–25 up-drift); 32's comes from trend years (2022, 2025).
 
-**Lesson.** A "reversion" pattern that loses on every ranger home (EURUSD / EURGBP / AUDNZD, 0.5–0.7) and wins
-only on one trending pair is measuring that pair's drift, not the pattern. Check the ranger homes before
-crediting a reversion entry.
+**Lesson (hypothesis, not established).** A "reversion" pattern that loses on every ranger home (EURUSD /
+EURGBP / AUDNZD, 0.5–0.7) and wins only on one trending pair is consistent with exposure to that pair's drift
+rather than a pattern edge. Check the ranger homes before crediting a reversion entry.
